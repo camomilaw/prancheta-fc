@@ -106,7 +106,7 @@
       return;
     }
     const g = A.g, me = club(g.user);
-    const views = { inicio: vInicio, elenco: vElenco, tatica: vTatica, tabela: vTabela, mercado: () => P.marketView(), base: () => P.baseView(), mais: vMais,, financas: vFinancas, editor: () => P.editor.page(false) };
+    const views = { inicio: vInicio, elenco: vElenco, tatica: vTatica, tabela: vTabela, mercado: () => P.marketView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
     const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
     const active = (A.view === 'editor' || A.view === 'financas') ? 'mais' : A.view === 'base' ? 'elenco' : A.view;
     const step = g.cal[g.week];
