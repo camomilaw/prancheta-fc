@@ -211,35 +211,55 @@
   function rowP(p, extra) {
     const c = p.clubId ? club(p.clubId) : null;
     return `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
-      <span class="nm"><b>${esc(p.name)}${p.loan ? '<span class="chip xi">Emprestado</span>' : ''}</b><small>${c ? esc(c.short) + ' · ' + c.div + 'ª' : 'Livre'} · ${p.age} anos · ${esc(p.nat || '')} · ${P.money(P.value(p))}</small></span>
+      <span class="nm"><b>${esc(p.name)}${p.loan ? '<span class="chip xi">Emprestado</span>' : ''}</b><small>${c ? esc(c.short) + ' · ' + c.div + 'ª' : 'Livre'} · ${p.age} anos · ${esc(P.countryName(p.nat))} · ${P.money(P.value(p))}${c ? ' · contrato ' + P.ctrMonths(g0(), p) + 'm' : ''}</small></span>
       ${extra || '<span></span>'}<span class="ovr">${P.ovr(p)}</span></button>`;
   }
+  // Meses restantes de contrato (a temporada tem 12 meses)
+  P.ctrMonths = function (g, p) {
+    if (!p.clubId) return 0;
+    const left = Math.ceil((g.cal.length - g.week) / g.cal.length * 12);
+    return Math.max(0, (p.ctr - g.season) * 12 + left);
+  };
+  const CTR_OPTS = [['any', 'Qualquer contrato'], ['free', 'Livres (sem clube)'], ['6', 'Termina em até 6 meses'], ['12', 'Até 12 meses'], ['18', 'Até 18 meses'], ['24', 'Até 24 meses'], ['25', 'Mais de 24 meses']];
   P.marketView = function () {
     const g = A.g, st = A.st;
-    const f = st.mk || (st.mk = { tab: 'busca', pos: 'ALL', age: 99, min: 0, free: false, sort: 'ovr', div: 0 });
+    const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', min: 0, sort: 'ovr', div: 0 }, st.mk || {});
     const offers = (g.offers || []).filter((o) => g.db.players[o.pid] && g.db.players[o.pid].clubId === g.user);
-    const tabs = `<div class="seg">${[['busca', 'Buscar'], ['prop', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'À venda'], ['tx', 'Transferências']].map(([k, n]) => `<button class="${f.tab === k ? 'on' : ''}" data-a="mkTab" data-k="${k}">${n}</button>`).join('')}</div>`;
+    const tabs = `<div class="seg">${[['busca', 'Buscar'], ['prop', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'À venda'], ['tx', 'Transferências'], ['func', 'Funcionários']].map(([k, n]) => `<button class="${f.tab === k ? 'on' : ''}" data-a="mkTab" data-k="${k}">${n}</button>`).join('')}</div>`;
     const me = club(g.user);
     let body = '';
     if (f.tab === 'busca') {
       const opt = (key, list, cur) => `<select class="sel" data-c="mkF" data-k="${key}">${list.map(([v, n]) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
+      const num = (v) => (v === '' || v == null ? null : Number(v));
+      const amin = num(f.amin), amax = num(f.amax), vmin = num(f.vmin), vmax = num(f.vmax);
       let list = Object.values(g.db.players).filter((p) => p.clubId !== g.user);
-      if (f.free) list = list.filter((p) => !p.clubId);
       if (f.pos !== 'ALL') list = list.filter((p) => p.pos === f.pos);
-      if (f.age < 99) list = list.filter((p) => p.age <= f.age);
+      if (f.nat !== 'ALL') list = list.filter((p) => p.nat === f.nat);
+      if (amin != null) list = list.filter((p) => p.age >= amin);
+      if (amax != null) list = list.filter((p) => p.age <= amax);
       if (f.div) list = list.filter((p) => p.clubId && club(p.clubId).div === Number(f.div));
+      if (f.ctr === 'free') list = list.filter((p) => !p.clubId);
+      else if (f.ctr === '25') list = list.filter((p) => p.clubId && P.ctrMonths(g, p) > 24);
+      else if (f.ctr !== 'any') list = list.filter((p) => p.clubId && P.ctrMonths(g, p) <= Number(f.ctr));
+      if (vmin != null || vmax != null) list = list.filter((p) => { const v = P.value(p) / 1e6; return (vmin == null || v >= vmin) && (vmax == null || v <= vmax); });
       const withO = list.map((p) => ({ p, o: P.ovr(p) })).filter((x) => x.o >= f.min);
-      const sorter = { ovr: (a, b) => b.o - a.o, val: (a, b) => P.value(a.p) - P.value(b.p), age: (a, b) => a.p.age - b.p.age }[f.sort];
+      const sorter = { ovr: (a, b) => b.o - a.o, val: (a, b) => P.value(a.p) - P.value(b.p), age: (a, b) => a.p.age - b.p.age, ctr: (a, b) => P.ctrMonths(g, a.p) - P.ctrMonths(g, b.p) }[f.sort] || ((a, b) => b.o - a.o);
       const res = withO.sort(sorter).slice(0, 40).map((x) => x.p);
-      body = `<div class="filters" style="margin-bottom:10px">
-          ${opt('pos', [['ALL', 'Todas as posições']].concat(P.POS.map((x) => [x, x + ' · ' + P.POS_NAME[x]])), f.pos)}
-          ${opt('age', [[99, 'Qualquer idade'], [21, 'Até 21'], [23, 'Até 23'], [26, 'Até 26'], [29, 'Até 29']], f.age)}
-          ${opt('min', [[0, 'Qualquer força'], [50, 'Força 50+'], [60, 'Força 60+'], [70, 'Força 70+'], [80, 'Força 80+']], f.min)}
-          ${opt('div', [[0, 'Todas as divisões']].concat(Array.from({ length: P.DIVS }, (_, i) => [i + 1, (i + 1) + 'ª divisão'])), f.div)}
-          ${opt('sort', [['ovr', 'Mais fortes'], ['val', 'Mais baratos'], ['age', 'Mais jovens']], f.sort)}
-          <label class="switch"><input type="checkbox" data-c="mkFree" ${f.free ? 'checked' : ''}> Só livres</label></div>
+      const nats = Object.entries(P.COUNTRIES).sort((a, b) => a[1].n.localeCompare(b[1].n));
+      const numIn = (k, ph, step, label) => `<input class="sel num-in" type="number" inputmode="decimal" min="0" step="${step}" data-c="mkF" data-k="${k}" value="${esc(f[k])}" placeholder="${ph}" aria-label="${label}">`;
+      body = `<div class="mk-filters">
+          <div class="field"><span class="label">Posição</span>${opt('pos', [['ALL', 'Todas']].concat(P.POS.map((x) => [x, x + ' · ' + P.POS_NAME[x]])), f.pos)}</div>
+          <div class="field"><span class="label">Nacionalidade</span>${opt('nat', [['ALL', 'Todas']].concat(nats.map(([k, v]) => [k, v.n])), f.nat)}</div>
+          <div class="field"><span class="label">Idade</span><div class="range">${numIn('amin', 'mín', 1, 'Idade mínima')}<span>a</span>${numIn('amax', 'máx', 1, 'Idade máxima')}</div></div>
+          <div class="field"><span class="label">Valor (R$ milhões)</span><div class="range">${numIn('vmin', 'mín', 0.1, 'Valor mínimo em milhões')}<span>a</span>${numIn('vmax', 'máx', 0.1, 'Valor máximo em milhões')}</div></div>
+          <div class="field"><span class="label">Contrato</span>${opt('ctr', CTR_OPTS, f.ctr)}</div>
+          <div class="field"><span class="label">Força mínima</span>${opt('min', [[0, 'Qualquer'], [50, '50+'], [60, '60+'], [70, '70+'], [80, '80+']], f.min)}</div>
+          <div class="field"><span class="label">Divisão</span>${opt('div', [[0, 'Todas']].concat(Array.from({ length: P.DIVS }, (_, i) => [i + 1, (i + 1) + 'ª divisão'])), f.div)}</div>
+          <div class="field"><span class="label">Ordenar</span>${opt('sort', [['ovr', 'Mais fortes'], ['val', 'Mais baratos'], ['age', 'Mais jovens'], ['ctr', 'Contrato acabando']], f.sort)}</div>
+        </div>
+        <div class="row" style="margin:6px 0 10px"><span class="muted" style="flex:1;font-size:.88rem">${withO.length} ${withO.length === 1 ? 'jogador encontrado' : 'jogadores encontrados'}${withO.length > 40 ? ' (mostrando 40)' : ''}</span><button class="btn sm ghost" data-a="mkClear">Limpar filtros</button></div>
         <div class="plist">${res.map((p) => rowP(p)).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
-        <p class="muted" style="font-size:.85rem">Mostrando até 40 jogadores. Toque para ver a ficha e fazer proposta.</p>`;
+        <p class="muted" style="font-size:.85rem">Toque num jogador para ver a ficha e fazer proposta.</p>`;
     } else if (f.tab === 'prop') {
       body = offers.length ? `<div class="plist">${offers.map((o) => {
         const p = g.db.players[o.pid], b = club(o.from);
@@ -249,6 +269,8 @@
     } else if (f.tab === 'venda') {
       const ls = P.squad(g, g.user).filter((p) => p.listed);
       body = ls.length ? `<div class="plist">${ls.map((p) => rowP(p, '<span class="chip sus">À venda</span>')).join('')}</div>` : '<p class="empty">Nenhum jogador à venda. Abra a ficha de um jogador do seu elenco e toque em "Colocar à venda".</p>';
+    } else if (f.tab === 'func') {
+      body = P.staffView ? P.staffView() : '';
     } else {
       const tx = (g.tx || []);
       body = tx.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Jogador</th><th>De</th><th>Para</th><th class="n">Valor</th></tr></thead><tbody>${tx.slice(0, 40).map((t) => {
@@ -295,6 +317,7 @@
   // ---------- Ações ----------
   Object.assign(A.ACT, {
     mkTab(d) { A.st.mk.tab = d.k; A.render(); },
+    mkClear() { const tab = A.st.mk.tab; A.st.mk = { tab }; A.render(); },
     offerOpen(d) { A.st.offer = null; A.playerSheet(d.id, 'offer'); },
     loanOpen(d) { A.st.offer = null; A.playerSheet(d.id, 'loan'); },
     ofYears(d) { A.st.offer.years = Number(d.y); A.playerSheet(d.id, 'offer'); },
@@ -319,8 +342,7 @@
     mkReject(d) { A.g.offers = A.g.offers.filter((o) => o.id !== d.id); A.save(); A.render(); }
   });
   Object.assign(A.CHG, {
-    mkF(el) { const k = el.dataset.k; A.st.mk[k] = ['age', 'min', 'div'].includes(k) ? Number(el.value) : el.value; A.render(); },
-    mkFree(el) { A.st.mk.free = el.checked; A.render(); }
+    mkF(el) { const k = el.dataset.k; A.st.mk[k] = ['min', 'div'].includes(k) ? Number(el.value) : el.value; A.render(); }
   });
   Object.assign(A.INP, {
     ofF(el) { if (A.st.offer) A.st.offer[el.dataset.k] = Math.max(0, Math.round(Number(el.value) || 0)); }

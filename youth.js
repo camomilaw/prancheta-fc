@@ -11,7 +11,11 @@
   P.REGIONS = {
     mundo: { n: 'Mundo inteiro', c: Object.keys(P.COUNTRIES) },
     bra: { n: 'Brasil', c: ['BRA'] },
-    sula: { n: 'América do Sul', c: ['BRA', 'ARG', 'URU', 'COL'] },
+    sula: { n: 'América do Sul', c: ['BRA', 'ARG', 'URU', 'COL', 'CHI', 'PAR', 'PER', 'ECU', 'VEN'] },
+    africa: { n: 'África', c: ['NGA', 'GHA', 'SEN', 'CIV', 'CMR', 'MAR', 'EGY', 'ALG', 'ANG', 'MOZ', 'CPV'] },
+    asia: { n: 'Ásia e Oceania', c: ['JPN', 'KOR', 'CHN', 'HKG', 'KSA', 'AUS'] },
+    nordic: { n: 'Escandinávia e Ilhas Britânicas', c: ['DEN', 'SWE', 'NOR', 'IRL', 'WAL', 'SCO', 'ENG'] },
+    leste: { n: 'Leste Europeu e Alpes', c: ['CRO', 'SRB', 'POL', 'SUI', 'AUT'] },
     arg: { n: 'Argentina e Uruguai', c: ['ARG', 'URU'] },
     nort: { n: 'América do Norte', c: ['MEX', 'USA'] },
     euo: { n: 'Europa Ocidental', c: ['ENG', 'SCO', 'FRA', 'BEL', 'NED'] },
@@ -53,6 +57,7 @@
   function randomPos(r) { return P.weighted(r, P.POS, (x) => P.SQUAD_TEMPLATE[x]); }
 
   function makeCandidates(g) {
+    if (P.staffCandidates) { P.staffCandidates(g); return; }
     const r = Math.random;
     const names = new Set();
     g.y.cands = Array.from({ length: 5 }, () => {
@@ -168,6 +173,7 @@
     for (const s of g.y.staff) {
       if (s.role === 'olheiro' && s.mission && g.week + 1 >= s.mission.next) { makeReport(g, s); s.mission.next += P.YOUTH.reportEvery; }
     }
+    if (P.staffWeek) P.staffWeek(g);
     // salários da base e da equipe técnica
     const yw = Object.keys(g.y.squad).length * P.YOUTH.wage;
     const sw = g.y.staff.reduce((t, s) => t + s.wage, 0);
@@ -181,7 +187,7 @@
     for (const p of Object.values(g.y.squad)) {
       const gap = p.potO - P.ovr(p);
       if (gap <= 0) continue;
-      const pts = P.clamp(gap * 0.35, 0, 8) * f * (p.s.j >= 8 ? 1.2 : 1);
+      const pts = P.clamp(gap * 0.35, 0, 8) * f * (p.s.j >= 8 ? 1.2 : 1) * (P.staffStars ? 1 + 0.08 * P.staffStars(g, 'tsub') : 1);
       for (const at of P.ATTRS) {
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, pts / 5 * (1 + P.gauss(r) * 0.3)), 1, 20);
@@ -232,6 +238,7 @@
     if (fresh.length) P.news(g, `Nova geração na base: ${fresh.join(', ')} chegaram ao Sub-20.`, '');
     seasonSetup(g);
     makeCandidates(g);
+    if (P.staffSeason) P.staffSeason(g);
     if (up.length) P.news(g, `Completaram 20 anos e subiram ao profissional: ${up.join(', ')}.`, 'good');
     if (out.length) P.news(g, `Completaram 20 anos sem espaço no profissional e deixaram o clube: ${out.join(', ')}.`, '');
   };
@@ -278,13 +285,9 @@
         </tbody></table></div><p class="muted" style="font-size:.85rem">O Sub-20 joga na mesma divisão do time principal, nas semanas de liga.</p>`;
     } else if (st.tab === 'olheiros') {
       const scouts = g.y.staff.filter((s) => s.role === 'olheiro');
-      body = `<div class="label" style="margin-bottom:8px">Seus olheiros (${scouts.length}/${P.YOUTH.maxScouts})</div>
+      body = `<div class="label" style="margin-bottom:8px">Seus olheiros (${scouts.length}/${P.STAFF_ROLES.olheiro.max})</div>
         ${scouts.map((s) => scoutCard(g, s)).join('') || '<p class="empty">Nenhum olheiro contratado.</p>'}
-        <div class="label" style="margin:16px 0 8px">Disponíveis para contratar</div>
-        <div class="plist">${g.y.cands.map((c) => `<div class="prow" style="grid-template-columns:1fr auto auto"><span class="nm"><b>${esc(c.name)} <span class="stars">${'★'.repeat(c.stars)}<span class="off">${'★'.repeat(5 - c.stars)}</span></span></b><small>${esc(P.countryName(c.nat))} · ${P.money(c.wage)}/mês · luvas ${P.money(c.fee)}</small></span><span></span><button class="btn sm" data-a="yHire" data-id="${c.id}">Contratar</button></div>`).join('')}</div>
-        <p class="muted" style="font-size:.85rem">Mais estrelas = mais jovens por relatório, potenciais maiores e faixa de potencial mais precisa. A lista muda a cada temporada.</p>
-        <div class="label" style="margin:16px 0 8px">Equipe técnica</div>
-        <p class="muted" style="margin:0;font-size:.88rem">Fisioterapeutas, preparadores físicos e treinador do Sub-20 entram aqui nas próximas atualizações.</p>`;
+        <div class="row" style="margin-top:12px"><span class="muted" style="flex:1;font-size:.88rem">Olheiros e o resto da equipe técnica são contratados no Mercado.</span><button class="btn sm" data-a="stGoMarket" data-r="olheiro">Contratar no Mercado</button></div>`;
     } else {
       body = g.y.reports.length ? g.y.reports.map((rep) => `<div class="report"><div class="row" style="gap:8px"><b style="flex:1;min-width:0">${esc(rep.scout)} <span class="stars">${'★'.repeat(rep.stars)}</span></b><span class="muted" style="font-size:.8rem">${rep.s} · semana ${rep.w}</span></div>
         <div class="muted" style="font-size:.85rem;margin-bottom:6px">${esc(P.FOCUS[rep.focus].n)} · ${esc(P.REGIONS[rep.region].n)}</div>

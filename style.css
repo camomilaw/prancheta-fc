@@ -361,3 +361,13 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .report { padding: 12px 0; border-bottom: 1px solid var(--line); }
 .potbox { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .pot { font-family: var(--f-display); font-weight: 700; font-size: 1.15rem; color: var(--good); }
+
+/* ---------- Busca avançada e equipe técnica ---------- */
+.mk-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 4px; }
+@media (min-width: 700px) { .mk-filters { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.mk-filters .field { min-width: 0; }
+.mk-filters .sel { width: 100%; }
+.range { display: flex; align-items: center; gap: 6px; }
+.range span { color: var(--muted); font-size: .85rem; }
+.num-in { width: 100%; min-width: 0; padding: 0 8px; }
+.staff-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }

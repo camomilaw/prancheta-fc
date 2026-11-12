@@ -60,7 +60,19 @@
     ENG: { n: 'Inglaterra', lang: 'en' }, SCO: { n: 'Escócia', lang: 'en' }, ESP: { n: 'Espanha', lang: 'es' },
     POR: { n: 'Portugal', lang: 'pt' }, FRA: { n: 'França', lang: 'fr' }, BEL: { n: 'Bélgica', lang: 'nl' },
     NED: { n: 'Holanda', lang: 'nl' }, GER: { n: 'Alemanha', lang: 'de' }, ITA: { n: 'Itália', lang: 'it' },
-    TUR: { n: 'Turquia', lang: 'tr' }, GRE: { n: 'Grécia', lang: 'gr' }
+    TUR: { n: 'Turquia', lang: 'tr' }, GRE: { n: 'Grécia', lang: 'gr' },
+    // países só de nacionalidade (sem clubes na Ultraliga)
+    CHI: { n: 'Chile', lang: 'es' }, PAR: { n: 'Paraguai', lang: 'es' }, PER: { n: 'Peru', lang: 'es' },
+    ECU: { n: 'Equador', lang: 'es' }, VEN: { n: 'Venezuela', lang: 'es' }, CAN: { n: 'Canadá', lang: 'en' },
+    IRL: { n: 'Irlanda', lang: 'en' }, WAL: { n: 'País de Gales', lang: 'en' }, AUS: { n: 'Austrália', lang: 'en' },
+    CRO: { n: 'Croácia', lang: 'sl' }, SRB: { n: 'Sérvia', lang: 'sl' }, POL: { n: 'Polônia', lang: 'sl' },
+    SUI: { n: 'Suíça', lang: 'de' }, AUT: { n: 'Áustria', lang: 'de' }, DEN: { n: 'Dinamarca', lang: 'sc' },
+    SWE: { n: 'Suécia', lang: 'sc' }, NOR: { n: 'Noruega', lang: 'sc' }, NGA: { n: 'Nigéria', lang: 'af' },
+    GHA: { n: 'Gana', lang: 'af' }, SEN: { n: 'Senegal', lang: 'af' }, CIV: { n: 'Costa do Marfim', lang: 'af' },
+    CMR: { n: 'Camarões', lang: 'af' }, MAR: { n: 'Marrocos', lang: 'ar' }, EGY: { n: 'Egito', lang: 'ar' },
+    ALG: { n: 'Argélia', lang: 'ar' }, KSA: { n: 'Arábia Saudita', lang: 'ar' }, JPN: { n: 'Japão', lang: 'jp' },
+    KOR: { n: 'Coreia do Sul', lang: 'kr' }, CHN: { n: 'China', lang: 'cn' }, HKG: { n: 'Hong Kong', lang: 'cn' },
+    ANG: { n: 'Angola', lang: 'pt' }, MOZ: { n: 'Moçambique', lang: 'pt' }, CPV: { n: 'Cabo Verde', lang: 'pt' }
   };
   P.countryName = (c) => (P.COUNTRIES[c] ? P.COUNTRIES[c].n : c || '—');
 
@@ -120,11 +132,48 @@
       f: ['Giorgos', 'Nikos', 'Kostas', 'Dimitris', 'Giannis', 'Christos', 'Panagiotis', 'Vasilis', 'Thanasis', 'Michalis', 'Stelios', 'Andreas', 'Manolis', 'Petros', 'Lefteris', 'Sotiris'],
       l: ['Papadopoulos', 'Georgiou', 'Nikolaidis', 'Karagiannis', 'Pappas', 'Vlachos', 'Angelopoulos', 'Dimitriou', 'Oikonomou', 'Makris', 'Christodoulou', 'Konstantinidis', 'Alexiou', 'Galanis', 'Ioannou', 'Spanos'],
       nick: []
+    },
+    sl: {
+      f: ['Luka', 'Ivan', 'Marko', 'Nikola', 'Josip', 'Mateo', 'Filip', 'Dušan', 'Stefan', 'Milan', 'Jakub', 'Piotr', 'Kamil', 'Bartosz', 'Mario', 'Ante', 'Aleksandar', 'Lazar'],
+      l: ['Kovačić', 'Perišić', 'Jurić', 'Babić', 'Marić', 'Petrović', 'Jovanović', 'Nikolić', 'Mitrović', 'Kowalski', 'Nowak', 'Wiśniewski', 'Lewandowski', 'Zieliński', 'Horvat', 'Vlašić', 'Tadić', 'Kostić'],
+      nick: []
+    },
+    sc: {
+      f: ['Erik', 'Magnus', 'Lars', 'Mads', 'Kasper', 'Rasmus', 'Oscar', 'Emil', 'Viktor', 'Anders', 'Jonas', 'Sander', 'Mathias', 'Elias', 'Henrik', 'Oliver'],
+      l: ['Hansen', 'Jensen', 'Nielsen', 'Andersen', 'Larsen', 'Johansson', 'Karlsson', 'Nilsson', 'Eriksson', 'Lindqvist', 'Berg', 'Haugen', 'Olsen', 'Pedersen', 'Dahl', 'Svensson'],
+      nick: []
+    },
+    af: {
+      f: ['Victor', 'Samuel', 'Emmanuel', 'Kelechi', 'Ademola', 'Thomas', 'Mohammed', 'Sadio', 'Ismaïla', 'Idrissa', 'Wilfried', 'Franck', 'Serge', 'André', 'Kwame', 'Jordan', 'Bamidele', 'Yaya'],
+      l: ['Okafor', 'Osimhen', 'Iheanacho', 'Lookman', 'Partey', 'Ayew', 'Kudus', 'Mané', 'Sarr', 'Gueye', 'Diallo', 'Zaha', 'Kessié', 'Haller', 'Aboubakar', 'Anguissa', 'Onana', 'Ndidi'],
+      nick: []
+    },
+    ar: {
+      f: ['Achraf', 'Hakim', 'Youssef', 'Sofyan', 'Mohamed', 'Omar', 'Mahmoud', 'Riyad', 'Ismaël', 'Salem', 'Fahad', 'Karim', 'Amine', 'Bilal', 'Nabil', 'Yassine'],
+      l: ['Hakimi', 'Ziyech', 'En-Nesyri', 'Amrabat', 'Salah', 'Marmoush', 'Trezeguet', 'Mahrez', 'Bennacer', 'Al-Dawsari', 'Al-Shehri', 'Benrahma', 'Ounahi', 'Elneny', 'Bounou', 'Atal'],
+      nick: []
+    },
+    jp: {
+      f: ['Takumi', 'Kaoru', 'Daichi', 'Ritsu', 'Wataru', 'Takefusa', 'Junya', 'Hiroki', 'Kou', 'Ayase', 'Yuto', 'Shogo', 'Kento', 'Daizen', 'Ao', 'Takehiro'],
+      l: ['Minamino', 'Mitoma', 'Kamada', 'Doan', 'Endo', 'Kubo', 'Ito', 'Sakai', 'Itakura', 'Ueda', 'Nagatomo', 'Taniguchi', 'Maeda', 'Tanaka', 'Tomiyasu', 'Suzuki'],
+      nick: []
+    },
+    kr: {
+      f: ['Heung-min', 'Min-jae', 'Kang-in', 'Hee-chan', 'Woo-young', 'Gue-sung', 'Jae-sung', 'Seung-ho', 'In-beom', 'Young-gwon', 'Hyun-woo', 'Ji-sung'],
+      l: ['Son', 'Kim', 'Lee', 'Hwang', 'Jeong', 'Cho', 'Park', 'Paik', 'Kwon', 'Seol', 'Jung', 'Oh'],
+      nick: []
+    },
+    cn: {
+      f: ['Wei', 'Lei', 'Hao', 'Jun', 'Ming', 'Tao', 'Yang', 'Chun', 'Ka-ho', 'Wai-lok', 'Chi-fung', 'Tsz-chun', 'Kin-wai', 'Long', 'Bin', 'Xiang'],
+      l: ['Wu', 'Zhang', 'Wang', 'Li', 'Chen', 'Liu', 'Huang', 'Zhou', 'Chan', 'Wong', 'Leung', 'Cheung', 'Lam', 'Tsang', 'Ho', 'Yip'],
+      nick: []
     }
   };
 
   // Nacionalidade de um jogador: maioria do país do clube
-  const NAT_POOL = ['BRA', 'BRA', 'ARG', 'ARG', 'FRA', 'ESP', 'POR', 'URU', 'COL', 'ENG', 'GER', 'ITA', 'NED', 'BEL', 'MEX', 'TUR'];
+  const NAT_POOL = ['BRA', 'BRA', 'ARG', 'ARG', 'FRA', 'ESP', 'POR', 'URU', 'COL', 'ENG', 'GER', 'ITA', 'NED', 'BEL', 'MEX', 'TUR',
+    'CHI', 'PAR', 'ECU', 'CRO', 'SRB', 'POL', 'SUI', 'DEN', 'SWE', 'NOR', 'NGA', 'GHA', 'SEN', 'CIV', 'CMR', 'MAR', 'EGY', 'ALG',
+    'JPN', 'KOR', 'AUS', 'USA', 'CAN', 'IRL', 'AUT', 'PER', 'VEN', 'KSA', 'CHN', 'HKG', 'ANG', 'CPV', 'MOZ', 'WAL'];
   P.pickNat = (r, clubCountry) => (r() < 0.75 && P.COUNTRIES[clubCountry] ? clubCountry : P.pick(r, NAT_POOL));
 
   P.makeName = function (r, used, nat) {
