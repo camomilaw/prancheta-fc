@@ -64,6 +64,15 @@
   P.clubWeek = function (g, step, ctx) {
     // receita comercial (todos os clubes) e retorno de lesões
     for (const c of g.db.clubs) P.pay(g, c.id, commercial(c) / g.cal.length, 'Patrocínio e camisas');
+    // clubes da IA: custos de operação (base, comissão, estrutura) e reinvestimento do que sobra
+    for (const c of g.db.clubs) {
+      if (c.id === g.user) continue;
+      const tv = P.ECON.tv[c.div - 1];
+      let cost = c.bal > tv * 0.4 ? 0.16 * tv / g.cal.length : 0;
+      const reserve = tv * 1.2;
+      if (c.bal > reserve) cost += (c.bal - reserve) * 0.035;
+      P.pay(g, c.id, -cost, 'Operação');
+    }
     for (const p of Object.values(g.db.players)) if (!p.inj && p.injN) { delete p.injN; p.cond = Math.min(p.cond, 75); }
     // CT: recuperação extra
     const ct = P.facLvl(g, 'ct');

@@ -31,6 +31,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `people.js` | Discurso pós-jogo, insatisfação, conversas individuais e tipos de lesão |
 | `stats.js` | Estatísticas da temporada e da carreira e resumo de fim de temporada |
 | `scout.js` | Relatório do adjunto sobre o próximo adversário e chance de vitória |
+| `backup.js` | Backup da carreira em arquivo (automático a cada temporada) e aviso do último backup |
 | `editor.js` | Editor de clubes, jogadores e banco de dados |
 | `main.js` | Inicialização |
 | `style.css` | Visual (cores no topo do arquivo, tema claro e escuro) |

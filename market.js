@@ -102,6 +102,22 @@
     return '';
   };
 
+  // Clube da IA no vermelho: vende (ou dispensa) os salários mais altos
+  function aiDistress(g, c, rnd, max) {
+    const tv = P.ECON.tv[c.div - 1];
+    let n = 0;
+    while (c.bal < -tv * 0.15 && n < max) {
+      const sq = P.squad(g, c.id).filter((p) => !p.loan);
+      if (sq.length <= 21) return;
+      const p = sq.sort((a, b) => b.wage - a.wage)[0];
+      const fee = Math.round(P.value(p) * (0.55 + rnd() * 0.2) / 10000) * 10000;
+      const buyers = g.db.clubs.filter((b) => b.id !== g.user && b.id !== c.id && b.bal > fee * 1.5 && P.squad(g, b.id).length < 28 && Math.abs(P.levelFromRep(b.rep) - P.ovr(p)) < 12);
+      if (buyers.length) P.transfer(g, p, P.pick(rnd, buyers).id, fee, Math.max(p.wage, P.wageFor(p)), 2 + Math.floor(rnd() * 2));
+      else { P.pay(g, c.id, -P.releaseCost(g, p) * 0.5, 'Rescisões'); p.clubId = null; p.ctr = 0; p.freeSince = g.season; P.dirty(g); P.fixXI(g, c.id); }
+      n++;
+    }
+  }
+
   // ---------- Mundo em movimento (roda toda semana) ----------
   P.marketWeek = function (g, step) {
     const rnd = Math.random;
@@ -157,13 +173,19 @@
       if (after.length > 28) { const worst = after.sort((a, b) => P.ovr(a) - P.ovr(b))[0]; worst.clubId = null; worst.ctr = 0; worst.freeSince = g.season; P.dirty(g); P.fixXI(g, buyer.id); }
     }
 
-    // 3. clubes com elenco curto contratam livres
+    // 3. clubes no vermelho se desfazem de salários
+    for (const c of clubs) if (c.id !== g.user && c.bal < 0) aiDistress(g, c, rnd, 1);
+
+    // 4. clubes com elenco curto contratam livres
+    let fp = null;
+    const freePool = () => fp || (fp = Object.values(g.db.players).filter((p) => !p.clubId).sort((a, b) => P.ovr(b) - P.ovr(a)));
     for (const c of clubs) {
       if (c.id === g.user) continue;
       const n = P.squad(g, c.id).length;
-      if (n >= 20) continue;
-      const free = Object.values(g.db.players).filter((p) => !p.clubId).sort((a, b) => P.ovr(b) - P.ovr(a));
-      const f = free.find((p) => P.ovr(p) <= ovrs[c.id] + 3);
+      if (n >= 23 || (n >= 20 && c.bal < 0)) continue;
+      if (n >= 20 && rnd() < 0.6) continue;
+      const free = freePool();
+      const f = free.find((p) => !p.clubId && P.ovr(p) <= ovrs[c.id] + 3 && P.ovr(p) >= ovrs[c.id] - 14);
       if (f) P.transfer(g, f, c.id, 0, P.wageFor(f), 1 + Math.floor(rnd() * 2), 'free');
     }
   };
@@ -181,17 +203,36 @@
     for (const c of g.db.clubs) {
       if (c.id === g.user) continue;
       const sq = P.squad(g, c.id);
-      sq.filter((p) => p.ctr <= g.season && sq.length > 22 && r() < 0.2).forEach((p) => { p.clubId = null; p.ctr = 0; p.freeSince = g.season + 1; });
+      if (c.bal < 0) { // no vermelho: não renova os mais caros e vende salários altos
+        let n = sq.length;
+        sq.filter((p) => p.ctr <= g.season).sort((a, b) => b.wage - a.wage).forEach((p) => { if (n > 21) { p.clubId = null; p.ctr = 0; p.freeSince = g.season + 1; n--; } });
+        P.dirty(g); aiDistress(g, c, r, 4); continue;
+      }
+      sq.filter((p) => p.ctr <= g.season && sq.length > 25 && r() < 0.2).forEach((p) => { p.clubId = null; p.ctr = 0; p.freeSince = g.season + 1; });
     }
     g.offers = [];
     P.dirty(g);
   };
   // Depois da virada: completa elencos da IA e limpa livres antigos
   P.marketPostSeason = function (g, r, used) {
+    const ovrs = P.clubOvrs(g.db);
+    const free = Object.values(g.db.players).filter((p) => !p.clubId && p.age < 34).sort((a, b) => P.ovr(b) - P.ovr(a));
+    // 1º: livres que servem ao nível do clube (elenco alvo: 24)
+    const clubs = P.shuffle(r, g.db.clubs.filter((c) => c.id !== g.user));
+    for (let round = 0; round < 4; round++) {
+      for (const c of clubs) {
+        if (P.squad(g, c.id).length >= 24 || (c.bal < 0 && P.squad(g, c.id).length >= 21)) continue;
+        const i = free.findIndex((p) => !p.clubId && P.ovr(p) <= ovrs[c.id] + 2 && P.ovr(p) >= ovrs[c.id] - 12);
+        if (i < 0) continue;
+        const p = free[i]; free.splice(i, 1);
+        P.transfer(g, p, c.id, 0, P.wageFor(p), 1 + Math.floor(r() * 2), 'free');
+      }
+    }
+    // 2º: o que faltar vem da base
     for (const c of g.db.clubs) {
       if (c.id === g.user) continue;
       const sq = P.squad(g, c.id);
-      for (let i = sq.length; i < 22; i++) {
+      for (let i = sq.length; i < 24; i++) {
         const lacking = Object.keys(P.SQUAD_TEMPLATE).find((pos) => P.squad(g, c.id).filter((x) => x.pos === pos).length < P.SQUAD_TEMPLATE[pos]) || 'MC';
         const y = P.makePlayer(r, { pos: lacking, level: P.levelFromRep(c.rep) - 1, age: 17 + Math.floor(r() * 3), clubId: c.id, used, country: c.country });
         g.db.players[y.id] = y; P.dirty(g);
