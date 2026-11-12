@@ -2,7 +2,7 @@
 
 Jogo de gerenciamento de futebol no navegador: a agilidade do Brasfoot com atributos, táticas e editor no estilo FM. Funciona no celular e no computador, sem instalar nada.
 
-**Ultraliga:** 160 clubes de 17 países em 8 divisões de 20. Sobem 2 direto + o vencedor do playoff (3º a 6º), descem 3. Copa Ultra em mata-mata com todos os clubes. Os 40 clubes da 7ª e 8ª divisão disputam também a Taça Raízes (grupos + mata-mata). A cada 4 anos, a Supercopa Ultra reúne os campeões da Ultraliga e da Copa Ultra do ciclo. Você pode escolher qualquer clube ou criar o seu.
+**Ultraliga:** 160 clubes de 17 países em 8 divisões de 20. Sobem 2 direto + o vencedor do playoff (3º a 6º), descem 3. Copa Ultra em mata-mata com todos os clubes. Da 3ª à 8ª divisão há também copas por faixa (grupos + mata-mata): Copa Ascensão (3ª e 4ª), Taça Travessia (5ª e 6ª) e Taça Raízes (7ª e 8ª). A cada 4 anos, a Supercopa Ultra reúne os campeões da Ultraliga e da Copa Ultra do ciclo. Você pode escolher qualquer clube ou criar o seu.
 
 **Patch de clubes reais:** o banco padrão é fictício. O arquivo `patch-clubes-reais.json` (fora do repositório) troca nomes, cores e países pelos clubes reais. Importe pelo jogo em Importar ou Editor › Banco e patches.
 
@@ -33,7 +33,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `potential.js` | Potencial dinâmico: sobe com tempo de jogo e boas notas, cai para quem não joga (até 24 anos e Sub-20) |
 | `supercup.js` | Supercopa Ultra: a cada 4 temporadas, campeões da liga e da copa (ou o próximo colocado, se repetidos) em quartas, semi e final; premiação e estádio cheio |
 | `compstats.js` | Estatísticas por competição (liga, copa, playoffs, Supercopa): gols, assistências, nota, jogos e cartões, dentro da aba de cada competição |
-| `raizes.js` | Taça Raízes: 7ª e 8ª divisão em 8 grupos de 5 e mata-mata; premiação, vaga direta na 1ª fase da Copa Ultra; datas sem jogo seu passam direto |
+| `raizes.js` | Copas por divisão: Copa Ascensão (3ª/4ª), Taça Travessia (5ª/6ª) e Taça Raízes (7ª/8ª), 8 grupos de 5 + mata-mata; premiação proporcional (`P.TIERS`, `P.TIER_PRIZE`), vaga direta na Copa Ultra; datas sem jogo seu passam direto |
 | `club.js` | Dificuldade (diretoria e negociações), confiança, demissão, propostas de emprego, estádio e estrutura |
 | `people.js` | Discurso pós-jogo, insatisfação, conversas individuais e tipos de lesão |
 | `stats.js` | Estatísticas da temporada e da carreira e resumo de fim de temporada |

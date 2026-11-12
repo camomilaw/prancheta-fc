@@ -619,3 +619,6 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .rz-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .rz-grp { border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
 .rz-grp.mine { border-color: var(--pitch); grid-column: 1 / -1; }
+.mg-trophy.t-tv { background: color-mix(in srgb, #2f8f8a 22%, var(--surface)); } .mg-t.t-tv { border-left-color: #2f8f8a; }
+.mg-trophy.t-as { background: color-mix(in srgb, #7a5cc8 22%, var(--surface)); } .mg-t.t-as { border-left-color: #7a5cc8; }
+.tier-pick small { font-size: .7rem; margin-left: 2px; }

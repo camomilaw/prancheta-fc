@@ -156,6 +156,7 @@
     if (P.ensureYouth) P.ensureYouth(g);
     if (P.ensureSuper) P.ensureSuper(g);
     if (P.ensureCompStats) P.ensureCompStats(g);
+    if (P.ensureTiers) P.ensureTiers(g);
     if (P.ensureMgr) P.ensureMgr(g);
   };
   P.pay = function (g, cid, v, cat) {
@@ -627,7 +628,7 @@
       const ci = P.CUP_AFTER.indexOf(lr + 1);
       if (ci >= 0) g.cal.push({ t: 'cup', r: ci });
       const ri = P.RZ_AFTER ? P.RZ_AFTER.indexOf(lr + 1) : -1;
-      if (ri >= 0) g.cal.push({ t: 'rz', r: ri }); // Taça Raízes (7ª e 8ª divisão)
+      if (ri >= 0) g.cal.push({ t: 'rz', r: ri }); // copas por faixa de divisão (Ascensão, Travessia, Raízes)
     }
     g.cal.push({ t: 'po', r: 0 }, { t: 'po', r: 1 });
     if (P.scSeason && P.scSeason(g)) P.SC_NAMES.forEach((_, r) => g.cal.push({ t: 'sc', r })); // Supercopa no fim da 4ª temporada
@@ -641,7 +642,7 @@
     if (step.t === 'lg') return 'Rodada ' + (step.r + 1);
     if (step.t === 'cup') return 'Copa Ultra · ' + P.CUP_NAMES[step.r];
     if (step.t === 'sc') return 'Supercopa Ultra · ' + P.SC_NAMES[step.r];
-    if (step.t === 'rz') return 'Taça Raízes · ' + P.RZ_NAMES[step.r];
+    if (step.t === 'rz') return P.tierLabel ? P.tierLabel(step) : 'Copas regionais · ' + P.RZ_NAMES[step.r];
     return 'Playoffs de acesso · ' + (step.r ? 'Final' : 'Semifinal');
   };
 
@@ -656,10 +657,12 @@
       const ranked = g.db.clubs.slice().sort((a, b) => a.div - b.div || ovrs[b.id] - ovrs[a.id]).map((c) => c.id);
       g.cup.byes = ranked.slice(0, 96);
       pool = ranked.slice(96);
-      // campeão da Taça Raízes entra direto na 1ª fase
-      const rb = g.rzBye;
-      if (rb && P.club(g, rb) && !g.cup.byes.includes(rb)) { const last = g.cup.byes.pop(); g.cup.byes.push(rb); pool = pool.filter((x) => x !== rb).concat([last]); }
-      g.rzBye = null;
+      // campeões das copas por divisão entram direto na 1ª fase
+      for (const rb of (g.tierByes || []).concat(g.rzBye ? [g.rzBye] : [])) {
+        if (!P.club(g, rb) || g.cup.byes.includes(rb)) continue;
+        const last = g.cup.byes.pop(); g.cup.byes.push(rb); pool = pool.filter((x) => x !== rb).concat([last]);
+      }
+      g.tierByes = []; g.rzBye = null;
     } else {
       const prev = g.cup.rounds[r - 1].ties.map(koWinner);
       pool = r === 1 ? g.cup.byes.concat(prev) : prev;
@@ -712,7 +715,7 @@
     } else if (step.t === 'sc') {
       P.scMatches(g, step.r).forEach((m) => out.push({ m, comp: 'sc', ko: true }));
     } else if (step.t === 'rz') {
-      P.rzMatches(g, step.r).forEach((x) => out.push({ m: x.m, comp: 'rz', ko: x.ko }));
+      P.rzMatches(g, step.r).forEach((x) => out.push({ m: x.m, comp: x.comp, ko: x.ko }));
     } else {
       P.poDraw(g, step.r);
       for (let d = 2; d <= P.DIVS; d++) {
@@ -819,7 +822,7 @@
       for (const e of r.ev) {
         if (e.t === 'gol') {
           const p = g.db.players[e.p];
-          if (it.comp === 'lg') p.s.g++; else if (it.comp !== 'sc' && it.comp !== 'rz') p.s.cg++;
+          if (it.comp === 'lg') p.s.g++; else if (it.comp === 'cup' || it.comp === 'po') p.s.cg++;
           if (e.as) g.db.players[e.as].s.as++;
         }
         if (e.t === 'vermelho' && !e.two) { const p = g.db.players[e.p]; p.s.cv++; p.susp = Math.max(p.susp, 2); }

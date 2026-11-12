@@ -15,11 +15,12 @@
     if (!ctx.live) { const res = P.endWeek(g, ctx); A.save(); A.startMatchday(res); return; }
     const step = ctx.step, myDiv = club(g.user).div;
     let others = ctx.results.map(({ it }) => ({
-      h: it.m.h, a: it.m.a, div: it.div, pen: it.m.pen || null,
+      h: it.m.h, a: it.m.a, div: it.div, comp: it.comp, pen: it.m.pen || null,
       goals: it.m.ev.filter((e) => e.t === 'gol').map((e) => ({ m: e.m, x: e.x, s: e.s }))
     }));
     if (step.t === 'lg') others = others.filter((o) => o.div === myDiv);
     if (step.t === 'po') others = others.filter((o) => o.div === ctx.live.it.div);
+    if (step.t === 'rz') others = others.filter((o) => o.comp === ctx.live.it.comp);
     A.live = { ctx, side: ctx.live.side, st: ctx.live.st, m: ctx.live.it.m, ko: ctx.live.it.ko, step, T: 0, speed: 1, pause: null, ht: false, others, sel: {}, done: false, msg: '' };
     let el = document.getElementById('md');
     if (!el) { el = document.createElement('div'); el.id = 'md'; el.className = 'md'; document.body.appendChild(el); }
@@ -136,7 +137,7 @@
     if (done && L.ko) verdict = `<p class="verdict ${m.w === A.g.user ? 'good' : 'bad'}">${m.w === A.g.user ? 'Classificado!' : 'Eliminado.'}</p>`;
     const controls = done ? '' : L.pause ? '<span class="chip sus" style="font-size:.75rem">Pausado</span>'
       : `<div class="seg"><button class="${L.speed === 1 ? 'on' : ''}" data-a="lvSpeed" data-s="1">Normal</button><button class="${L.speed === 3 ? 'on' : ''}" data-a="lvSpeed" data-s="3">Rápido</button></div><button class="btn sm" data-a="lvPause">Pausar</button><button class="btn sm" data-a="lvSkip">Pular</button>`;
-    const label = L.step.t === 'lg' ? `Outros jogos da ${club(A.g.user).div}ª divisão` : L.step.t === 'cup' || L.step.t === 'sc' ? 'Outros jogos da fase' : L.step.t === 'rz' ? 'Outros jogos da Taça Raízes' : 'Playoffs';
+    const label = L.step.t === 'lg' ? `Outros jogos da ${club(A.g.user).div}ª divisão` : L.step.t === 'cup' || L.step.t === 'sc' ? 'Outros jogos da fase' : L.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g)}` : 'Playoffs';
     el.innerHTML = `<div class="md-in">
       <div class="row"><h2 style="flex:1;min-width:0">${esc(P.stepLabel(L.step))}</h2>${controls}</div>
       ${A.boardHTML(m, st.goals[0], st.goals[1], clock, { pos: poss })}

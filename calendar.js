@@ -93,7 +93,7 @@
     if (!st) return { pending: false, m: null };
     if (st.t === 'cup' && !g.cup.rounds[st.r]) return { pending: true };
     if (st.t === 'po' && (!g.po || (st.r === 1 && !g.po[2].final))) return { pending: true };
-    if (st.t === 'rz' && !(g.rz && g.rz.season === g.season && (st.r < 5 || g.rz.ko[st.r - 5]))) return { pending: true };
+    if (st.t === 'rz' && !(P.rzReady && P.rzReady(g, st.r))) return { pending: true };
     if (st.t === 'sc' && !(g.scup && g.scup.cur && g.scup.cur.season === g.season && g.scup.cur.rounds[st.r])) return { pending: true };
     const um = P.userMatch(g, st);
     return { pending: false, m: um ? um.m : null, ko: um && um.ko };
@@ -134,7 +134,7 @@
             void won; res = `<b class="res ${r}">${gf}-${ga}</b>`;
           }
           inner = `<span class="opp">${home ? 'C' : 'F'} ${esc(opp.short)}</span>${res}`;
-        } else inner = `<span class="opp muted">${info.pending ? '?' : st.t === 'cup' ? 'Copa' : st.t === 'po' ? 'PO' : st.t === 'sc' ? 'Super' : st.t === 'rz' ? 'Raízes' : '—'}</span>`;
+        } else inner = `<span class="opp muted">${info.pending ? '?' : st.t === 'cup' ? 'Copa' : st.t === 'po' ? 'PO' : st.t === 'sc' ? 'Super' : st.t === 'rz' ? ((P.tierOf && P.tierOf(g)) || { short: 'Copa' }).short : '—'}</span>`;
         if (tr(g).plan[i]) cls += ' planned';
       }
       if (i === cur && !g.over) cls += ' today';
@@ -146,7 +146,7 @@
           <b class="cal-title">${MONTHS[month]} ${year}</b>
           <button class="btn sm" data-a="calMonth" data-d="1" ${month >= maxM ? 'disabled' : ''} aria-label="Próximo mês">›</button></div>
         <div class="cal-grid">${['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'].map((d) => `<div class="cal-wd">${d}</div>`).join('')}${cells}</div>
-        <div class="row legend"><span><i class="lg-dot lg"></i> Liga</span><span><i class="lg-dot cup"></i> Copa Ultra</span><span><i class="lg-dot po"></i> Playoffs</span>${g.cal.some((x) => x.t === 'rz') && P.RZ_DIVS && P.RZ_DIVS.includes((P.club(g, g.user) || {}).div) ? '<span><i class="lg-dot rz"></i> Taça Raízes</span>' : ''}${g.cal.some((x) => x.t === 'sc') ? '<span><i class="lg-dot sc"></i> Supercopa</span>' : ''}<span>C = casa · F = fora</span></div>
+        <div class="row legend"><span><i class="lg-dot lg"></i> Liga</span><span><i class="lg-dot cup"></i> Copa Ultra</span><span><i class="lg-dot po"></i> Playoffs</span>${g.cal.some((x) => x.t === 'rz') && P.tierOf && P.tierOf(g) ? `<span><i class="lg-dot rz"></i> ${esc(P.tierOf(g).n)}</span>` : ''}${g.cal.some((x) => x.t === 'sc') ? '<span><i class="lg-dot sc"></i> Supercopa</span>' : ''}<span>C = casa · F = fora</span></div>
       </div>
       ${dayPanel(g, cs.sel, dates)}`;
   };

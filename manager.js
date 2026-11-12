@@ -10,7 +10,7 @@
   const clubOf = (g, cid) => cid && P.club(g, cid);
   // Critérios do Hall da Fama (números sob o seu comando)
   P.HOF = { j: 150, g: 60, as: 50 };
-  const TITLE_N = { lg: 'Ultraliga', div: 'Título de divisão', cup: 'Copa Ultra', sc: 'Supercopa Ultra', rz: 'Taça Raízes', up: 'Acesso' };
+  const TITLE_N = { lg: 'Ultraliga', div: 'Título de divisão', cup: 'Copa Ultra', sc: 'Supercopa Ultra', rz: 'Taça Raízes', tv: 'Taça Travessia', as: 'Copa Ascensão', up: 'Acesso' };
 
   const cur = (g) => g.mgr.stints[g.mgr.stints.length - 1];
 
@@ -37,7 +37,7 @@
       if (h.pos === 1) titles.push({ s: h.season, t: h.div === 1 ? 'lg' : 'div', div: h.div, cid: h.cid || null });
       if (h.cupMine) titles.push({ s: h.season, t: 'cup', cid: h.cid || null });
       if (h.scMine) titles.push({ s: h.season, t: 'sc', cid: h.cid || null });
-      if (h.rzMine) titles.push({ s: h.season, t: 'rz', cid: h.cid || null });
+      if (h.rzMine || h.tzMine) titles.push({ s: h.season, t: h.tzMine || 'rz', cid: h.cid || null });
       if (/acesso/i.test(h.result) && h.pos !== 1) titles.push({ s: h.season, t: 'up', div: h.div, cid: h.cid || null });
     }
     g.mgr = {
@@ -85,7 +85,7 @@
     if (h.pos === 1) add(h.div === 1 ? 'lg' : 'div', { div: h.div });
     else if (/acesso/i.test(h.result)) add('up', { div: h.div });
     if (h.cupMine) add('cup');
-    if (h.rzMine) add('rz');
+    if (h.tzMine) add(h.tzMine);
     if (h.scMine) add('sc');
   };
 
@@ -110,7 +110,7 @@
     const clubs = new Set(M.stints.map((s) => s.cid)).size;
     const seasons = (g.hist || []).length;
     const bestH = (g.hist || []).slice().sort((a, b) => a.div - b.div || a.pos - b.pos)[0];
-    const cups = ['lg', 'cup', 'sc', 'rz', 'div'].filter((k) => counts[k]);
+    const cups = ['lg', 'cup', 'sc', 'as', 'tv', 'rz', 'div'].filter((k) => counts[k]);
     return `<div class="kv" style="margin-bottom:14px">
         <div><span class="label">Temporadas</span><b>${seasons}${g.over ? '' : ` + atual`}</b></div>
         <div><span class="label">Clubes</span><b>${clubs}</b></div>
@@ -148,7 +148,7 @@
 
   function titulos(g, M) {
     if (!M.titles.length) return '<p class="empty">Nenhum título ou acesso ainda. A primeira taça está esperando.</p>';
-    const order = ['sc', 'lg', 'cup', 'rz', 'div', 'up'];
+    const order = ['sc', 'lg', 'cup', 'as', 'tv', 'rz', 'div', 'up'];
     return order.filter((k) => M.titles.some((t) => t.t === k)).map((k) => {
       const list = M.titles.filter((t) => t.t === k).sort((a, b) => b.s - a.s);
       return `<div class="label" style="margin:12px 0 6px">${esc(TITLE_N[k] === 'Título de divisão' ? 'Títulos de divisão' : TITLE_N[k] === 'Acesso' ? 'Acessos' : TITLE_N[k])} (${list.length})</div>
