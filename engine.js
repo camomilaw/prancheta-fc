@@ -7,7 +7,9 @@
   P.TUNING = {
     attackPerMin: 0.2,      // chance de um ataque acontecer a cada minuto
     chanceBase: 0.40,       // chance de um ataque virar finalização (times iguais)
-    goalBase: 0.78,         // conversão base
+    goalBase: 0.69,         // conversão base (chances claras; os chutes de longe usam longShotQ)
+    longShot: 0.8,          // chance de um ataque sem chance clara terminar em chute de longe
+    longShotQ: 0.11,        // qualidade (xG) desses chutes em relação a uma chance clara
     homeBonus: 1.10,        // vantagem de jogar em casa
     yellowPerMin: 0.0175,   // por time (era 0.02)
     redPerMin: 0.0003,      // vermelho direto
@@ -362,11 +364,13 @@
       [0, 1].forEach((i) => { const miss = 11 - S[i].n; if (miss > 0) { const f = Math.pow(0.88, miss); S[i].att *= f; S[i].mid *= f; S[i].def *= f; } });
     };
     recalc();
-    return { fx, L, S, recalc, ev: [], goals: [0, 0], shots: [0, 0], posAcc: [0, 0], gls: {}, ast: {}, min: 0, end: 90 + 1 + Math.floor(Math.random() * 5) };
+    return { fx, L, S, recalc, ev: [], goals: [0, 0], shots: [0, 0], sot: [0, 0], xg: [0, 0], fouls: [0, 0], corners: [0, 0], posAcc: [0, 0], gls: {}, ast: {}, min: 0, end: 90 + 1 + Math.floor(Math.random() * 5) };
   };
   P.simAdvance = function (st, toMin, stopFn) {
     const T = P.TUNING, rnd = Math.random;
     const { L, S, ev, goals, shots, posAcc, gls, ast, recalc } = st;
+    if (!st.sot) Object.assign(st, { sot: [0, 0], xg: [0, 0], fouls: [0, 0], corners: [0, 0] });
+    const { sot, xg, fouls, corners } = st;
     const active = (side) => L[side].on.filter((s) => !s.off);
     const mm = (min) => ({ m: Math.min(min, 90), x: min > 90 ? min - 90 : 0 });
     const last = Math.min(toMin, st.end);
@@ -385,32 +389,42 @@
         if (insS.pass === 'dir') cp *= 1.08;
         if (insS.pass === 'cur') cp *= 0.95;
         cp = P.clamp(cp, 0.12, 0.8);
-        if (rnd() < cp) {
+        // big = chance clara; senão, muitas vezes o time arrisca de longe (xG baixo)
+        const big = rnd() < cp;
+        if (big || rnd() < T.longShot) {
           shots[side]++;
           const pool = active(side).filter((s) => s.pos !== 'GOL');
           if (pool.length) {
             const sh = P.weighted(rnd, pool, (s) => { const ro = P.roleOf ? P.roleOf(L[side].t, s.i, s.pos) : null; return ATT_W[s.pos] * (s.p.a.fin + s.p.a.cab * (ro && ro.aerial ? 0.8 : 0.4)) * (ro ? ro.a : 1); });
             const a = sh.p.a;
             const q = ((a.fin * 2 + a.com + a.cab * 0.5) / 3.5) * P.fitP(sh.p, sh.pos) * P.condF(sh.p) * P.morF(sh.p);
-            let pg = T.goalBase * q / (q + S[o].gk * 1.05);
+            let pg = T.goalBase * q / (q + S[o].gk * 1.05) * (big ? 1 : T.longShotQ);
             if (insS.pass === 'dir') pg *= 0.94;
             if (insS.pass === 'cur') pg *= 1.05;
             if (insS.build === 'pos') pg *= 1.05;
+            xg[side] += pg; // xG: chance de gol desta finalização
             if (rnd() < pg) {
-              goals[side]++;
+              goals[side]++; sot[side]++;
               gls[sh.p.id] = (gls[sh.p.id] || 0) + 1;
               let asId = null;
               const mates = pool.filter((s) => s !== sh);
-              if (mates.length && rnd() < 0.75) {
+              if (mates.length && rnd() < (big ? 0.75 : 0.45)) {
                 const as = P.weighted(rnd, mates, (s) => (MID_W[s.pos] + ATT_W[s.pos]) * (s.p.a.pas + s.p.a.vis + s.p.a.cru * 0.5));
                 asId = as.p.id; ast[asId] = (ast[asId] || 0) + 1;
               }
               ev.push(Object.assign(mm(min), { t: 'gol', s: side, p: sh.p.id, as: asId }));
-            } else if (rnd() < 0.25) {
-              ev.push(Object.assign(mm(min), { t: 'chance', s: side, p: sh.p.id }));
-            }
+            } else if (rnd() < (big ? 0.36 : 0.26)) {
+              sot[side]++; // no gol, defendido
+              if (rnd() < (big ? 0.7 : 0.15)) ev.push(Object.assign(mm(min), { t: 'chance', s: side, p: sh.p.id }));
+              if (rnd() < 0.45) corners[side]++;
+            } else if (rnd() < 0.45) corners[side]++; // bloqueada ou desviada para fora
           }
-        }
+        } else if (rnd() < 0.5) corners[side]++; // ataque cortado para escanteio
+      }
+      // faltas (pressão alta faz mais faltas); cartões abaixo também contam como falta
+      for (const side of [0, 1]) {
+        const pre = L[side].t.pre;
+        if (rnd() < 0.115 * (pre === 'alt' ? 1.25 : pre === 'bai' ? 0.85 : 1)) fouls[side]++;
       }
 
       for (const side of [0, 1]) {
@@ -421,11 +435,12 @@
           const s = P.weighted(rnd, act, (x) => (DEF_W[x.pos] + 0.2) * (L[side].yel[x.p.id] ? T.bookedCare : 1));
           const id = s.p.id;
           L[side].yel[id] = (L[side].yel[id] || 0) + 1;
+          fouls[side]++;
           if (L[side].yel[id] >= 2) { s.off = true; ev.push(Object.assign(mm(min), { t: 'vermelho', s: side, p: id, two: true })); recalc(); }
           else ev.push(Object.assign(mm(min), { t: 'amarelo', s: side, p: id }));
         } else if (rnd() < T.redPerMin) {
           const s = P.weighted(rnd, act, (x) => DEF_W[x.pos] + 0.2);
-          s.off = true; ev.push(Object.assign(mm(min), { t: 'vermelho', s: side, p: s.p.id })); recalc();
+          s.off = true; fouls[side]++; ev.push(Object.assign(mm(min), { t: 'vermelho', s: side, p: s.p.id })); recalc();
         }
         // jogadores cansados (condição < 65) aumentam o risco de lesão
         if (rnd() < T.injuryPerMin * (act.some((x) => x.p.cond < 65) ? 1.8 : 1)) {
@@ -485,7 +500,7 @@
     const tot = posAcc[0] + posAcc[1];
     return {
       hg: goals[0], ag: goals[1], ev,
-      st: { pos: Math.round(posAcc[0] / tot * 100), sh: shots },
+      st: { pos: Math.round(posAcc[0] / tot * 100), sh: shots, sot: st.sot, xg: st.xg.map((v) => Math.round(v * 100) / 100), fo: st.fouls, co: st.corners },
       notes, played: [Array.from(L[0].played), Array.from(L[1].played)],
       yel: [L[0].yel, L[1].yel], inj: L.map((lu) => lu.on.filter((s) => s.injured).map((s) => [s.p.id, s.injured, s.injN])),
       L

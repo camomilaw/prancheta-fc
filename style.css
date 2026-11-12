@@ -585,3 +585,15 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .mail-tag.sus { background: color-mix(in srgb, var(--warn) 28%, transparent); }
 .mail-prev { font-size: .8rem; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .mail-go { font-size: .76rem; font-weight: 700; color: var(--good); margin-top: 2px; }
+
+/* Estatísticas da partida */
+.mstats { display: flex; flex-direction: column; gap: 9px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.ms-row { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; row-gap: 4px; font-size: .86rem; }
+.ms-row > b { font-family: var(--f-display); font-size: 1.02rem; font-variant-numeric: tabular-nums; color: var(--muted); }
+.ms-row > b:last-of-type { text-align: right; }
+.ms-row > b.lead { color: var(--ink); }
+.ms-n { text-align: center; color: var(--muted); font-size: .8rem; }
+.ms-bar { grid-column: 1 / -1; display: flex; gap: 3px; height: 5px; }
+.ms-bar i { display: block; height: 100%; border-radius: 3px; background: var(--line); transition: width .3s; }
+.ms-bar i:first-child { background: var(--accent); }
+.ms-bar i:last-child { background: color-mix(in srgb, var(--ink) 45%, transparent); }

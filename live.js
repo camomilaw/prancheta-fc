@@ -142,7 +142,7 @@
       ${A.boardHTML(m, st.goals[0], st.goals[1], clock, { pos: poss })}
       ${verdict}
       ${L.pause ? pausePanel(L) : ''}
-      ${done ? `<div class="kv"><div><span class="label">Finalizações</span><b class="num">${st.shots[0]} × ${st.shots[1]}</b></div><div><span class="label">Posse</span><b class="num">${poss}% × ${100 - poss}%</b></div></div>` : ''}
+      ${A.matchStatsHTML(A.statsFrom({ pos: poss, sh: st.shots, sot: st.sot, xg: st.xg, fo: st.fouls, co: st.corners }, st.ev))}
       <ul class="feed" aria-live="polite">${evs.map((e) => A.evLine(e, m)).join('')}</ul>
       ${L.others.length ? `<div class="label">${label}</div><div class="others">${others}</div>` : ''}
       ${done && P.teamTalkPanel ? P.teamTalkPanel() : ''}

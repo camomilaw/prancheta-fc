@@ -578,9 +578,8 @@
     const clock = m.pen ? `Fim de jogo · pênaltis ${m.pen[0]} × ${m.pen[1]}` : 'Fim de jogo';
     A.openSheet(`<div class="bar-top"><h2>${esc(it.label || 'Relatório')}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       ${boardHTML(m, m.hg, m.ag, clock, m.st)}
-      <div class="kv">${m.st ? `<div><span class="label">Finalizações</span><b class="num">${m.st.sh[0]} × ${m.st.sh[1]}</b></div>
-        <div><span class="label">Posse</span><b class="num">${m.st.pos}% × ${100 - m.st.pos}%</b></div>` : ''}
-        ${best ? `<div><span class="label">Destaque</span><b>${esc(best.name)} ${String(bestId[1]).replace('.', ',')}</b><span class="muted" style="font-size:.8rem">${esc((club(best.clubId) || {}).short || '')}</span></div>` : ''}</div>
+      ${m.st ? A.matchStatsHTML(A.statsFrom(m.st, m.ev)) : ''}
+      <div class="kv">${best ? `<div><span class="label">Destaque</span><b>${esc(best.name)} ${String(bestId[1]).replace('.', ',')}</b><span class="muted" style="font-size:.8rem">${esc((club(best.clubId) || {}).short || '')}</span></div>` : ''}</div>
       <ul class="feed">${(m.ev || []).map((e) => evLine(e, m)).join('') || '<li><span></span><span></span><span class="muted">Jogo sem lances marcantes.</span></li>'}</ul>
       <p class="muted" style="margin:0;font-size:.85rem">${m.neutral ? 'Campo neutro' : esc(H.stadium) + ' · ' + esc(H.city)} · ${esc(H.name)} × ${esc(Aw.name)}</p>`);
   };
@@ -594,6 +593,32 @@
       ${st ? `<div class="possess"><span>${st.pos}%</span><span class="tr"><i style="width:${st.pos}%"></i></span><span style="text-align:right">${100 - st.pos}%</span></div>` : ''}
     </div>`;
   }
+
+  // ---------- Estatísticas da partida (ao vivo e no relatório) ----------
+  // d: { pos, sh, sot, xg, fo, co } em pares [mandante, visitante]; os cartões vêm dos eventos
+  A.statsFrom = function (d, ev) {
+    if (!d) return null;
+    const cnt = (t, s) => (ev || []).filter((e) => e.s === s && (t === 'y' ? e.t === 'amarelo' : e.t === 'vermelho')).length;
+    return Object.assign({}, d, { yc: [cnt('y', 0), cnt('y', 1)], rc: [cnt('r', 0), cnt('r', 1)] });
+  };
+  A.matchStatsHTML = function (d) {
+    if (!d) return '';
+    const rows = [['Posse de bola', [d.pos, 100 - d.pos], (v) => v + '%']];
+    if (d.sh) rows.push(['Finalizações', d.sh]);
+    if (d.sot) rows.push(['No gol', d.sot]);
+    if (d.xg) rows.push(['xG (gols esperados)', d.xg, (v) => (Math.round(v * 100) / 100).toFixed(2).replace('.', ',')]);
+    if (d.co) rows.push(['Escanteios', d.co]);
+    if (d.fo) rows.push(['Faltas', d.fo]);
+    if (d.yc) rows.push(['Cartões amarelos', d.yc]);
+    if (d.rc && (d.rc[0] || d.rc[1])) rows.push(['Cartões vermelhos', d.rc]);
+    return `<div class="mstats">${rows.map(([n, v, f]) => {
+      const a = Number(v[0]) || 0, b = Number(v[1]) || 0, t = a + b;
+      const pa = t ? a / t * 100 : 50;
+      const fmt = f || ((x) => x);
+      return `<div class="ms-row"><b class="${a > b ? 'lead' : ''}">${fmt(v[0])}</b><span class="ms-n">${n}</span><b class="${b > a ? 'lead' : ''}">${fmt(v[1])}</b>
+        <span class="ms-bar"><i style="width:${pa}%"></i><i style="width:${100 - pa}%"></i></span></div>`;
+    }).join('')}</div>`;
+  };
 
   A.evLine = (e, m) => evLine(e, m);
   A.boardHTML = (...a) => boardHTML(...a);
@@ -638,7 +663,7 @@
       let verdict = '';
       if (done && (md.step.t !== 'lg')) verdict = `<p class="verdict ${m.w === A.g.user ? 'good' : 'bad'}">${m.w === A.g.user ? 'Classificado!' : 'Eliminado.'}</p>`;
       main = `${boardHTML(m, h, a, clock, m.st)}${verdict}
-        ${done && m.st ? `<div class="kv"><div><span class="label">Finalizações</span><b class="num">${m.st.sh[0]} × ${m.st.sh[1]}</b></div><div><span class="label">Posse</span><b class="num">${m.st.pos}% × ${100 - m.st.pos}%</b></div></div>` : ''}
+        ${done && m.st ? A.matchStatsHTML(A.statsFrom(m.st, m.ev)) : ''}
         <ul class="feed" aria-live="polite">${evs.map((e) => evLine(e, m)).join('')}</ul>`;
     } else {
       main = `<div class="card"><b>Seu time não jogou nesta semana.</b><div class="muted">Veja os resultados abaixo.</div></div>`;
