@@ -74,6 +74,7 @@
           ${f('stadium', 'Estádio', 'maxlength="50"')}
           <div class="field"><label class="label" for="cf-country">País</label><select id="cf-country" data-c="cf" data-k="country">${A.countryOpts(c.country)}</select></div>
           <div class="field"><label class="label" for="cf-rep">Reputação (1-100)</label><input id="cf-rep" type="number" min="1" max="100" data-c="cf" data-k="rep" value="${c.rep}"></div>
+          ${A.g ? `<div class="field"><label class="label" for="cf-bal">Saldo (R$ milhões)</label><input id="cf-bal" type="text" inputmode="decimal" autocomplete="off" data-c="cf" data-k="bal" value="${String(Math.round((c.bal || 0) / 1e5) / 10).replace('.', ',')}"><small class="muted" style="font-size:.76rem">Hoje: ${P.money(c.bal || 0)}. Aceita valor negativo.</small></div>` : ''}
           <div class="field"><label class="label" for="cf-c0">Cor principal</label><input id="cf-c0" type="color" data-c="cfColor" data-i="cfColorLive" data-n="0" value="${esc(c.colors[0])}"></div>
           <div class="field"><label class="label" for="cf-c1">Cor secundária</label><input id="cf-c1" type="color" data-c="cfColor" data-i="cfColorLive" data-n="1" value="${esc(c.colors[1])}"></div>
         </div>
@@ -207,6 +208,15 @@
       const c = club(A.st.ed.cid), k = el.dataset.k;
       let v = el.value;
       if (k === 'rep') v = P.clamp(Math.round(Number(v) || 65), 1, 100);
+      if (k === 'bal') {
+        const n = Number(String(v).replace(',', '.'));
+        if (String(v).trim() === '' || !isFinite(n)) { el.value = String(Math.round((c.bal || 0) / 1e5) / 10).replace('.', ','); return; }
+        c.bal = Math.round(P.clamp(n, -10000, 10000) * 1e6); // em milhões
+        el.value = String(Math.round(c.bal / 1e5) / 10).replace('.', ',');
+        const hint = el.parentElement.querySelector('small'); if (hint) hint.textContent = `Hoje: ${P.money(c.bal)}. Aceita valor negativo.`;
+        changed([]); if (A.toast) A.toast(`Saldo do ${c.name}: ${P.money(c.bal)}`);
+        return;
+      }
       if (k === 'short') v = v.toUpperCase().slice(0, 3) || c.short;
       if (k === 'name' && !v.trim()) v = c.name;
       c[k] = v; el.value = v;

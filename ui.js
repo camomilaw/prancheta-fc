@@ -985,11 +985,33 @@
   });
 
   // ---------- Delegação de eventos ----------
+  // Telas que se redesenham sozinhas (partida ao vivo, rodada, simulação) trocam o botão
+  // entre apertar e soltar o mouse, e o navegador descarta o clique. Aqui o toque é
+  // reconhecido pelo botão equivalente (mesma ação e mesmos dados) que estiver sob o ponteiro.
+  const keyOf = (el) => el.dataset.a + '|' + JSON.stringify(Object.assign({}, el.dataset));
+  let press = null, rescued = null;
+  const run = (el, e) => { const fn = ACT[el.dataset.a]; if (fn) fn(el.dataset, el, e); };
+  document.addEventListener('pointerdown', (e) => {
+    rescued = null; // cada novo toque começa do zero
+    const el = e.button === 0 && e.target.closest ? e.target.closest('[data-a]') : null;
+    press = el ? { el, key: keyOf(el), x: e.clientX, y: e.clientY } : null;
+  }, true);
+  document.addEventListener('pointerup', (e) => {
+    const p = press; press = null;
+    if (!p || p.el.isConnected) return; // o botão continua lá: o clique normal resolve
+    if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 12) return;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const el = under && under.closest('[data-a]');
+    if (!el || el.disabled || keyOf(el) !== p.key) return;
+    rescued = { key: p.key, t: Date.now() };
+    run(el, e);
+  }, true);
   document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-a]');
     if (!el || el.disabled) return;
-    const fn = ACT[el.dataset.a];
-    if (fn) fn(el.dataset, el, e);
+    // no toque, o navegador ainda pode mandar o clique do mesmo gesto depois do resgate: não repete
+    if (rescued && Date.now() - rescued.t < 800 && rescued.key === keyOf(el)) { rescued = null; return; }
+    run(el, e);
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') A.closeSheet();
