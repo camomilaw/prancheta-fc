@@ -6,7 +6,9 @@
 (function (P) {
   const A = P.app, esc = P.esc;
 
-  P.YOUTH = { maxSquad: 24, startSquad: 18, wage: 2000, reportEvery: 8, maxScouts: 3, maxAge: 19 };
+  P.YOUTH = { maxSquad: 24, startSquad: 18, wage: 2000, reportEvery: 8, maxScouts: 3, maxAge: 19, gemChance: 1 / 150 };
+  // Joia rara: de vez em nunca aparece um garoto de potencial de craque, seja qual for o clube
+  const gemPot = (r) => 85 + Math.floor(r() * 11); // 85 a 95
 
   P.REGIONS = {
     mundo: { n: 'Mundo inteiro', c: Object.keys(P.COUNTRIES) },
@@ -148,13 +150,15 @@
     const r = Math.random;
     const m = s.mission, reg = P.REGIONS[m.region], foc = P.FOCUS[m.focus];
     const n = 1 + Math.floor(s.stars / 2);
-    const players = [];
+    const players = [], gems = [];
     for (let i = 0; i < n; i++) {
       const pos = foc.pos ? P.pick(r, foc.pos) : randomPos(r);
       // o talento que aceita vir acompanha o tamanho do clube (reputação); olheiro melhor acha um pouco acima
       const base = P.levelFromRep(P.club(g, g.user).rep) * 5 + 6;
-      const potO = base + (s.stars - 3) * 3 + P.gauss(r) * 6 + (r() < 0.04 ? 8 : 0);
+      const gem = r() < P.YOUTH.gemChance;
+      const potO = gem ? gemPot(r) : base + (s.stars - 3) * 3 + P.gauss(r) * 6 + (r() < 0.04 ? 8 : 0);
       const p = youthPlayer(r, { pos, potO, nat: P.pick(r, reg.c), boost: foc.b });
+      if (gem) { p.gem = true; gems.push(p.name); }
       const err = STAR_ERR[s.stars];
       const off = Math.round((r() * 2 - 1) * err * 0.7);
       p.lo = P.clamp(p.potO - err + off, 35, 99); p.hi = P.clamp(p.potO + err + off, p.lo + 2, 99);
@@ -166,6 +170,7 @@
     g.y.reports.unshift({ id: P.uid('r'), sid: s.id, scout: s.name, stars: s.stars, region: m.region, focus: m.focus, s: g.season, w: g.week + 1, players });
     if (g.y.reports.length > 8) g.y.reports.length = 8;
     P.news(g, `Relatório do olheiro ${s.name}: ${n} jovens (${P.FOCUS[m.focus].n.toLowerCase()}, ${reg.n}). Veja em Sub-20 › Relatórios.`, 'good');
+    if (gems.length) P.news(g, `${s.name} está empolgado: "${gems.join(' e ')} pode ser uma joia rara, daquelas que aparecem uma vez na vida." Veja em Sub-20 › Relatórios.`, 'good');
   }
 
   // ---------- Hooks do motor ----------
@@ -237,7 +242,9 @@
     const r = Math.random, fresh = [];
     const n = Object.keys(g.y.squad).length;
     for (let i = 0; i < Math.max(4, 16 - n) && n + i < P.YOUTH.maxSquad; i++) {
-      const y = youthPlayer(r, { pos: randomPos(r), potO: P.levelFromRep(me.rep) * 5 + 4 + P.gauss(r) * 8 + (r() < 0.05 ? 10 : 0) + (P.facLvl ? (P.facLvl(g, 'base') - 3) * 3 : 0), age: 15 + Math.floor(r() * 2), nat: P.pickNat(r, me.country) });
+      const gem = r() < P.YOUTH.gemChance;
+      const y = youthPlayer(r, { pos: randomPos(r), potO: gem ? gemPot(r) : P.levelFromRep(me.rep) * 5 + 4 + P.gauss(r) * 8 + (r() < 0.05 ? 10 : 0) + (P.facLvl ? (P.facLvl(g, 'base') - 3) * 3 : 0), age: 15 + Math.floor(r() * 2), nat: P.pickNat(r, me.country) });
+      if (gem) { y.gem = true; P.news(g, `Os treinadores da base não param de falar de ${y.name} (${y.age} anos): pode ser uma joia rara, daquelas que aparecem uma vez na vida.`, 'good'); }
       g.y.squad[y.id] = y; fresh.push(y.name);
     }
     if (fresh.length) P.news(g, `Nova geração na base: ${fresh.join(', ')} chegaram ao Sub-20.`, '');
@@ -266,7 +273,7 @@
   const potTxt = (p) => (p.lo ? `${p.lo}-${p.hi}` : `${Math.max(P.ovr(p), p.potO - 4)}-${p.potO + 3}`) + (p.potT ? (p.potT > 0 ? ' ↑' : ' ↓') : '');
   function yrow(p, extra) {
     return `<button class="prow" data-a="ySheet" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
-      <span class="nm"><b>${esc(p.name)}${(A.g.y.xi || []).includes(p.id) ? '<span class="chip xi">Titular</span>' : ''}</b><small>${esc(p.nat)} · ${p.age} anos · pot. ${potTxt(p)} · ${p.s.j} J · ${p.s.g} G</small></span>
+      <span class="nm"><b>${esc(p.name)}${p.gem ? '<span class="chip gem">Joia rara</span>' : ''}${(A.g.y.xi || []).includes(p.id) ? '<span class="chip xi">Titular</span>' : ''}</b><small>${esc(p.nat)} · ${p.age} anos · pot. ${potTxt(p)} · ${p.s.j} J · ${p.s.g} G</small></span>
       ${extra || '<span></span>'}<span class="ovr">${P.ovr(p)}</span></button>`;
   }
   P.baseView = function () {
@@ -297,7 +304,7 @@
       body = g.y.reports.length ? g.y.reports.map((rep) => `<div class="report"><div class="row" style="gap:8px"><b style="flex:1;min-width:0">${esc(rep.scout)} <span class="stars">${'★'.repeat(rep.stars)}</span></b><span class="muted" style="font-size:.8rem">${rep.s} · semana ${rep.w}</span></div>
         <div class="muted" style="font-size:.85rem;margin-bottom:6px">${esc(P.FOCUS[rep.focus].n)} · ${esc(P.REGIONS[rep.region].n)}</div>
         <div class="plist">${rep.players.map((p) => `<div class="prow" style="grid-template-columns:44px 1fr auto"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
-          <span class="nm"><b>${esc(p.name)}</b><small>${esc(P.countryName(p.nat))} · ${p.age} anos · atual ~${P.ovr(p)}</small></span>
+          <span class="nm"><b>${esc(p.name)}${p.gem ? '<span class="chip gem">Joia rara</span>' : ''}</b><small>${esc(P.countryName(p.nat))} · ${p.age} anos · atual ~${P.ovr(p)}</small></span>
           <span class="potbox"><span class="pot">${p.lo}-${p.hi}</span>${p.signed ? '<span class="chip xi">Contratado</span>' : `<button class="btn sm" data-a="ySign" data-r="${rep.id}" data-id="${p.id}">${P.money(p.fee)}</button>`}</span></div>`).join('')}</div></div>`).join('')
         : '<p class="empty">Nenhum relatório ainda. Contrate um olheiro e envie-o numa missão: o primeiro relatório chega em 4 semanas.</p>';
     }

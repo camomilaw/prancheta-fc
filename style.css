@@ -646,3 +646,4 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 @keyframes cele-fall { to { transform: translateY(110vh) rotate(540deg); } }
 @keyframes cele-cup { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
 @keyframes cele-in { from { opacity: 0; transform: scale(.96); } }
+.chip.gem { background: linear-gradient(90deg, #b8860b, #ffd95a); color: #3a2a00; }
