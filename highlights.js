@@ -42,9 +42,41 @@
     const goalY = H / 2 + (R() < 0.5 ? -1 : 1) * (1 + R() * 2.3);
     const name = (o) => (o ? short(o.p.name) : '');
     const steps = [];
+    let endCap = null;
+    const gkName = gk ? short(gk.p.name) : 'o goleiro';
+    const isPen = e.sp === 'pen' || e.t === 'penmiss';
+    // desfecho de uma defesa: segura (pausa com a bola nas mãos), espalma para a linha de fundo,
+    // ou espalma e um defensor chega antes e afasta para longe
+    const saveEnd = (y, allowClear) => {
+      const r = R();
+      if (r < 0.52) { steps.push({ k: 'gkhold', dur: 1300, cap: '' }); endCap = `${gkName} segura firme!`; return; }
+      if (r < 0.76 || !allowClear) {
+        steps.push({ k: 'loose', to: [W + 2.5, P.clamp(y + (y < H / 2 ? -10 : 10), 1, H - 1)], dur: 520, cap: `${gkName} espalma…` });
+        endCap = `${gkName} espalma para escanteio!`; return;
+      }
+      const def = D.filter((o) => o.pos !== 'GOL').sort((a, b) => Math.hypot(a.x - (W - 12), a.y - H / 2) - Math.hypot(b.x - (W - 12), b.y - H / 2))[0];
+      const meet = [W - 12, P.clamp(y + (y < H / 2 ? -7 : 7), 6, H - 6)];
+      steps.push({ k: 'pass', to: def, meet, dur: 620, cap: `${gkName} espalma… ${name(def)} chega antes` });
+      steps.push({ k: 'loose', to: [W - 52 - R() * 12, 4 + R() * (H - 8)], dur: 1150, arc: 9, cap: `${name(def)} afasta para longe!` });
+      endCap = `${name(def)} afasta o perigo!`;
+    };
     const shot = (who, cap, dur, arc) => {
-      steps.push({ k: 'shot', who, to: scored ? [W + 1.2, goalY] : [W - 2.2, goalY], dur, arc, cap, save: !scored });
-      if (!scored) steps.push({ k: 'loose', to: [W - 9, goalY + (goalY > H / 2 ? 9 : -9)], dur: 650, cap: '' });
+      const save = [W - 2.2, goalY];
+      // rebote (raro): o goleiro espalma, a bola sobra para um atacante e ele finaliza de novo
+      if (!isPen && R() < (scored ? 0.12 : 0.1)) {
+        steps.push({ k: 'shot', who, to: save, dur, arc, cap, save: true });
+        const others = A.filter((o) => o.pos !== 'GOL' && o !== who).sort((a, b) => b.x - a.x);
+        const rb = R() < 0.45 ? who : (others[0] || who);
+        const meet = [W - 9 - R() * 4, P.clamp(H / 2 + (R() - 0.5) * 12, 8, H - 8)];
+        steps.push({ k: 'pass', to: rb, meet, dur: 650, cap: `${gkName} espalma! A bola sobra para ${name(rb)}…` });
+        const y2 = H / 2 + (R() < 0.5 ? -1 : 1) * (1 + R() * 2.3);
+        steps.push({ k: 'shot', who: rb, to: scored ? [W + 1.2, y2] : [W - 2.2, y2], dur: 420, cap: `${name(rb)} pega o rebote…`, save: !scored });
+        if (!scored) saveEnd(y2, false);
+        if (!scored && !endCap) endCap = `${gkName} defende o rebote!`;
+        return;
+      }
+      steps.push({ k: 'shot', who, to: scored ? [W + 1.2, goalY] : save, dur, arc, cap, save: !scored });
+      if (!scored) saveEnd(goalY, !isPen);
     };
     let holder;
     if (e.sp === 'pen' || e.t === 'penmiss') {
@@ -100,8 +132,11 @@
       shot(shooter, `${name(shooter)} finaliza…`, 650);
     }
     const mode = e.sp === 'pen' || e.t === 'penmiss' ? 'pen' : e.sp === 'fal' ? 'fk' : e.sp === 'esc' ? 'corner' : 'open';
-    return { steps, shooter, gk, scored, holder, goalY, mode };
+    return { steps, shooter, gk, scored, holder, goalY, mode, endCap };
   }
+
+  // para testes: monta o roteiro de um lance sem desenhar
+  P._hlScript = (e, st) => script(e, layout(st.L[e.s], true), layout(st.L[1 - e.s], false));
 
   // Toca um lance. opts: { st (estado da simulação), e (evento), m (partida), onReveal, onEnd }
   P.playHighlight = function (host, opts) {
@@ -275,7 +310,7 @@
         if (!ended) {
           ended = true;
           cap.className = 'hl-cap big ' + (sc.scored ? 'goal' : 'save');
-          cap.textContent = sc.scored ? 'GOOOL!' : e.t === 'penmiss' ? 'Pênalti perdido!' : `Defende ${sc.gk ? short(sc.gk.p.name) : 'o goleiro'}!`;
+          cap.textContent = sc.scored ? 'GOOOL!' : e.t === 'penmiss' ? 'Pênalti perdido! ' + (sc.endCap || '') : (sc.endCap || `Defende ${sc.gk ? short(sc.gk.p.name) : 'o goleiro'}!`);
           if (sc.scored) reveal();
           setTimeout(end, sc.scored ? 1700 : 1300);
         }
@@ -322,6 +357,10 @@
         const qb = 1 - Math.pow(1 - k, 1.6); // a bola sai forte e perde velocidade
         ballPos = [lerp(stp.from[0], stp.meet[0], qb), lerp(stp.from[1], stp.meet[1], qb)];
         setBall(ballPos[0], ballPos[1], stp.arc ? Math.sin(Math.PI * k) * stp.arc : 0);
+      } else if (stp.k === 'gkhold') {
+        // o goleiro segura: a bola fica com ele e o lance pausa um instante
+        if (sc.gk) { sc.gk.run = true; label(sc.gk, true); ballPos = [sc.gk.x - 0.9, sc.gk.y]; }
+        setBall(ballPos[0], ballPos[1]);
       } else if (stp.k === 'shot' || stp.k === 'loose') {
         ballPos = [lerp(stp.from[0], stp.to[0], q), lerp(stp.from[1], stp.to[1], q)];
         setBall(ballPos[0], ballPos[1], stp.arc ? Math.sin(Math.PI * k) * stp.arc : 0);

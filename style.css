@@ -659,3 +659,4 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .hl-cap.big { position: absolute; left: 8px; right: 8px; top: 42%; bottom: auto; transform: translateY(-50%); border-radius: 10px; font-family: var(--f-display); font-size: 2rem; letter-spacing: .04em; background: rgba(0, 0, 0, .45); animation: hl-pop .35s ease-out; }
 .hl-cap.big.goal { color: var(--accent); }
 @keyframes hl-pop { from { transform: translateY(-50%) scale(.7); opacity: 0; } }
+.hl-cap.big.save { font-size: 1.3rem; letter-spacing: .02em; line-height: 1.15; }
