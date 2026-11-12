@@ -83,7 +83,7 @@
       const p = s.p;
       if (s.off && !s.injured) return `<div class="slot gone" style="${pos}"><span class="dot red">✕</span><span class="nm">${esc(short(p.name))}</span><span class="ps">Expulso</span></div>`;
       const showP = s.p.id === L.sel.out && inSel ? inSel : p;
-      const f = P.fit(showP.pos, s.pos);
+      const f = P.fitP(showP, s.pos);
       const mark = s.injured ? '<i class="mk inj">+</i>' : lu.yel[p.id] ? '<i class="mk yc"></i>' : '';
       return `<button class="slot ${L.sel.out === p.id ? 'sel' : ''} ${showP !== p ? 'swap' : ''}" style="${pos}" data-a="lvOut" data-id="${p.id}" ${left <= 0 ? 'disabled' : ''} aria-label="${esc(p.name)}, ${s.pos}, ${Math.round(p.cond)}% físico${s.injured ? ', lesionado' : ''}">
           <span class="dot ${s.injured ? 'off' : f < 1 ? 'fit' : ''}" style="--c:${condC(showP.cond)}">${P.ovrAt(showP, s.pos)}${mark}</span>
@@ -91,7 +91,7 @@
     }).join('');
     const benchHTML = bench.map((p) => {
       const pos = tgtPos || p.pos;
-      const f = P.fit(p.pos, pos);
+      const f = P.fitP(p, pos);
       return `<button class="bn-item ${L.sel.in === p.id ? 'on' : ''}" data-a="lvIn" data-id="${p.id}" ${left <= 0 ? 'disabled' : ''}>
         <span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
         <span class="nm"><b>${esc(p.name)}</b><small data-pos="${p.pos}"><i class="cb" style="--c:${condC(p.cond)}"></i>${Math.round(p.cond)}%</small></span>

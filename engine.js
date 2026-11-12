@@ -100,11 +100,16 @@
     if (natural === 'GOL' || slot === 'GOL') return 0.25;
     return NEAR[natural].includes(slot) ? 0.88 : 0.7;
   };
+  // Encaixe considerando posições aprendidas no treino (p.pm: maestria 0-1 por posição)
+  P.fitP = function (p, pos) {
+    const b = P.fit(p.pos, pos), m = p.pm && p.pm[pos];
+    return m ? b + (1 - b) * Math.min(1, m) : b;
+  };
   P.ovrAt = function (p, pos) {
     const r = P.roles(p), w = POS_W[pos];
     let s = 0;
     for (const k in w) s += r[k] * w[k];
-    return P.clamp(Math.round(s * 5 * P.fit(p.pos, pos)), 1, 99);
+    return P.clamp(Math.round(s * 5 * P.fitP(p, pos)), 1, 99);
   };
   P.ovr = (p) => P.ovrAt(p, p.pos);
   P.condF = (p) => 0.75 + 0.25 * p.cond / 100;
@@ -256,7 +261,7 @@
       if (s.off) continue;
       n++;
       const p = s.p, r = P.roles(p);
-      const f = P.fit(p.pos, s.pos) * P.condF(p) * P.morF(p) * (s.chem || 1);
+      const f = P.fitP(p, s.pos) * P.condF(p) * P.morF(p) * (s.chem || 1);
       const role = P.roleOf ? P.roleOf(tac, s.i, s.pos) : null;
       const pc = (tac.roles && tac.roles[s.i] && tac.roles[s.i].post) || 'equ';
       const post = (P.POSTURE && P.POSTURE[pc]) || { a: 1, m: 1, d: 1 };
@@ -385,7 +390,7 @@
           if (pool.length) {
             const sh = P.weighted(rnd, pool, (s) => { const ro = P.roleOf ? P.roleOf(L[side].t, s.i, s.pos) : null; return ATT_W[s.pos] * (s.p.a.fin + s.p.a.cab * (ro && ro.aerial ? 0.8 : 0.4)) * (ro ? ro.a : 1); });
             const a = sh.p.a;
-            const q = ((a.fin * 2 + a.com + a.cab * 0.5) / 3.5) * P.fit(sh.p.pos, sh.pos) * P.condF(sh.p) * P.morF(sh.p);
+            const q = ((a.fin * 2 + a.com + a.cab * 0.5) / 3.5) * P.fitP(sh.p, sh.pos) * P.condF(sh.p) * P.morF(sh.p);
             let pg = T.goalBase * q / (q + S[o].gk * 1.05);
             if (insS.pass === 'dir') pg *= 0.94;
             if (insS.pass === 'cur') pg *= 1.05;

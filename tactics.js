@@ -152,7 +152,7 @@
             const p = pl(t.xi[i]);
             const cc = p ? (p.cond >= 80 ? '#4cc27f' : p.cond >= 60 ? '#e5b23a' : '#f0695e') : '#999';
             const name = p ? (p.name.length <= 11 ? p.name : p.name.split(' ')[0].slice(0, 10)) : 'vazio';
-            const f = p ? P.fit(p.pos, sl.pos) : 1;
+            const f = p ? P.fitP(p, sl.pos) : 1;
             const rk = p ? P.ROLES[sl.pos][P.roleKey(t, i, sl.pos)].n : '';
             const post = (t.roles && t.roles[i] && t.roles[i].post) || 'equ';
             return `<button class="slot" style="left:${sl.x}%;top:${100 - sl.y}%" data-a="tSlot" data-i="${i}" ${i ? 'data-drag="1"' : ''} aria-label="${p ? esc(p.name) + ', ' + sl.pos + ', ' + esc(rk) : 'vazio'}">

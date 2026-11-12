@@ -106,9 +106,9 @@
       return;
     }
     const g = A.g, me = club(g.user);
-    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), calendario: () => P.calendarView(), clube: () => P.clubView(), stats: () => P.statsView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false), tecnico: () => P.managerView() };
+    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), calendario: () => P.calendarView(), clube: () => P.clubView(), stats: () => P.statsView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false), tecnico: () => P.managerView(), treino: () => P.trainingView() };
     const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
-    const active = (A.view === 'editor' || A.view === 'financas' || A.view === 'clube' || A.view === 'stats' || A.view === 'tecnico') ? 'mais' : A.view === 'base' ? 'elenco' : A.view === 'calendario' ? 'inicio' : A.view;
+    const active = (A.view === 'editor' || A.view === 'financas' || A.view === 'clube' || A.view === 'stats' || A.view === 'tecnico') ? 'mais' : (A.view === 'base' || A.view === 'treino') ? 'elenco' : A.view === 'calendario' ? 'inicio' : A.view;
     const step = g.cal[g.week];
     const meta = g.over ? `Temporada ${g.season} encerrada` : `${divName(me.div)} · ${P.stepLabel(step)} · ${g.season}`;
     const hasGame = !g.over && P.userMatch(g);
@@ -352,7 +352,7 @@
     sortPlayers(list, st.sort);
     const avgAge = (total.reduce((s, p) => s + p.age, 0) / total.length).toFixed(1).replace('.', ',');
     const val = total.reduce((s, p) => s + P.value(p), 0);
-    return `<div class="card"><div class="head"><h2>Elenco</h2><button class="btn sm" data-a="go" data-v="base">Sub-20 e olheiros</button><span class="muted">${total.length} jogadores · média ${avgAge} anos · ${P.money(val)}</span></div>
+    return `<div class="card"><div class="head"><h2>Elenco</h2><button class="btn sm" data-a="go" data-v="treino">Treinamento</button><button class="btn sm" data-a="go" data-v="base">Sub-20 e olheiros</button><span class="muted">${total.length} jogadores · média ${avgAge} anos · ${P.money(val)}</span></div>
       <div class="filters" style="margin-bottom:8px">
         <div class="seg">${[['ALL', 'Todos'], ['GOL', 'GOL'], ['DEF', 'DEF'], ['MEI', 'MEI'], ['ATA', 'ATA']].map(([k, n]) => `<button class="${st.filter === k ? 'on' : ''}" data-a="filter" data-k="${k}">${n}</button>`).join('')}</div>
         <span class="spacer"></span>
@@ -437,7 +437,7 @@
           ${slots.map((sl, i) => {
             const p = pl(t.xi[i]);
             if (!p) return `<button class="slot" style="left:${sl.x}%;top:${100 - sl.y}%" data-a="slot" data-i="${i}"><span class="dot off">?</span><span class="nm">vazio</span><span class="ps">${sl.pos}</span></button>`;
-            const f = P.fit(p.pos, sl.pos);
+            const f = P.fitP(p, sl.pos);
             const cc = p.cond >= 80 ? '#4cc27f' : p.cond >= 60 ? '#e5b23a' : '#f0695e';
             const first = p.name.split(' ')[0];
             const short = p.name.length <= 11 ? p.name : first.slice(0, 10);

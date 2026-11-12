@@ -26,6 +26,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `staff.js` | Equipe técnica: olheiros, fisioterapeuta, preparador físico, treinador do Sub-20, auxiliar técnico |
 | `tactics.js` | Táticas avançadas: posição livre, funções e postura, entrosamento, instruções de equipe |
 | `calendar.js` | Calendário com datas, plano de treino por semana (adjunto decide quando vazio) e simulação até uma data |
+| `training.js` | Treinamento individual: atributo por grupo (profissional e Sub-20) ou por jogador, treino de posição com maestria (`p.pm`) e tempo estimado |
 | `live.js` | Partida ao vivo: pausa em expulsão, lesão e intervalo; substituições pelo campinho (titulares nas posições, banco ao lado) e mentalidade durante o jogo |
 | `potential.js` | Potencial dinâmico: sobe com tempo de jogo e boas notas, cai para quem não joga (até 24 anos e Sub-20) |
 | `supercup.js` | Supercopa Ultra: a cada 4 temporadas, campeões da liga e da copa (ou o próximo colocado, se repetidos) em quartas, semi e final; premiação e estádio cheio |
