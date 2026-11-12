@@ -8,7 +8,8 @@
   const KIND = {
     prop: { tag: 'Proposta', go: 'Ver propostas' },
     inj: { tag: 'Lesão', go: 'Ajustar a tática' },
-    sus: { tag: 'Suspensão', go: 'Ajustar a tática' }
+    sus: { tag: 'Suspensão', go: 'Ajustar a tática' },
+    adp: { tag: 'Adaptação', go: 'Ver o jogador' }
   };
   const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '') || 'tecnico';
 
@@ -75,6 +76,7 @@
       const m = box(g).list.find((x) => x.id === d.id); if (!m) { A.render(); return; }
       m.read = true;
       if (m.k === 'prop') { A.st.mk = Object.assign(A.st.mk || {}, { tab: 'prop' }); A.view = 'mercado'; }
+      else if (m.k === 'adp' && m.pid) { A.save(); A.render(); if (A.g.db.players[m.pid]) A.playerSheet(m.pid); else if (A.youthSheet && A.g.y && A.g.y.squad[m.pid]) A.youthSheet(m.pid); return; }
       else A.view = 'tatica';
       A.save(); A.render(); window.scrollTo(0, 0);
     },

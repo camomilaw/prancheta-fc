@@ -55,7 +55,7 @@
       if (p.age > 24) continue;
       for (const at of P.ATTRS) {
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
-        p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, aux * 0.05), 1, 20);
+        p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, aux * 0.05 * (P.adF ? P.adF(g, p) : 1)), 1, 20);
       }
     }
   };
@@ -97,7 +97,7 @@
       <div class="row" style="margin:18px 0 8px"><span class="label" style="flex:1">Disponíveis nesta temporada</span>
         <select class="sel" data-c="stRoleSel" aria-label="Função"><option value="all">Todas as funções</option>${roles.map(([k, r]) => `<option value="${k}" ${role === k ? 'selected' : ''}>${r.n}</option>`).join('')}</select></div>
       <div class="plist">${cands.map((c) => `<div class="staff-row"><div style="flex:1;min-width:0"><b>${esc(c.name)}</b> ${stars(c.stars)}
-          <div class="muted" style="font-size:.85rem">${P.STAFF_ROLES[c.role].n} · ${esc(P.countryName(c.nat))} · ${esc(P.STAFF_ROLES[c.role].eff(c.stars))}</div>
+          <div class="muted" style="font-size:.85rem">${P.STAFF_ROLES[c.role].n} · ${esc(P.countryName(c.nat))} (${esc((P.LANG_N || {})[(P.COUNTRIES[c.nat] || {}).lang] || '')}) · ${esc(P.STAFF_ROLES[c.role].eff(c.stars))}</div>${P.adaptStaffHint ? P.adaptStaffHint(g, c) : ''}
           <div class="muted" style="font-size:.85rem">${P.money(c.wage)}/mês · luvas ${P.money(c.fee)}</div></div>
         <button class="btn sm primary" data-a="stHire" data-id="${c.id}">Contratar</button></div>`).join('') || '<p class="empty">Ninguém disponível para essa função.</p>'}</div>
       <p class="muted" style="font-size:.85rem">A lista de candidatos muda a cada temporada. Salários entram em Finanças › Equipe técnica.</p>`;

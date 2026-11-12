@@ -223,7 +223,7 @@
     for (const p of Object.values(g.y.squad)) {
       const gap = p.potO - P.ovr(p);
       if (gap <= 0) continue;
-      const pts = P.clamp(gap * 0.25, 0, 6) * f * (p.s.j >= 8 ? 1.2 : 1) * (P.staffStars ? 1 + 0.08 * P.staffStars(g, 'tsub') : 1) * (P.facLvl ? 1 + (P.facLvl(g, 'base') - 3) * 0.06 : 1);
+      const pts = P.clamp(gap * 0.25, 0, 6) * f * (p.s.j >= 8 ? 1.2 : 1) * (P.staffStars ? 1 + 0.08 * P.staffStars(g, 'tsub') : 1) * (P.facLvl ? 1 + (P.facLvl(g, 'base') - 3) * 0.06 : 1) * (P.adF ? P.adF(g, p) : 1);
       for (const at of P.ATTRS) {
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, pts / 5 * (1 + P.gauss(r) * 0.3)), 1, 20);
@@ -373,6 +373,7 @@
         <div style="text-align:right"><div class="label">Força</div><div class="big-ovr">${P.ovr(p)}</div></div></div>
       <div class="kv"><div><span class="label">Jogos</span><b>${p.s.j}</b></div><div><span class="label">Gols</span><b>${p.s.g}</b></div><div><span class="label">Nota</span><b>${p.s.j ? (p.s.nt / p.s.j).toFixed(1).replace('.', ',') : '–'}</b></div></div>
       <div class="attrs">${Object.entries(groups).map(([gn, list]) => `<div class="grp"><h4 class="label">${gn}</h4>${list.map((at) => `<div class="attr"><span>${at.n}</span><b class="${vcls(p.a[at.k])}">${p.a[at.k]}</b></div>`).join('')}</div>`).join('')}</div>
+      ${P.adaptBlock ? P.adaptBlock(g, p) : ''}
       ${A.st.yb.confirm === id ? `<div class="confirm"><b>Dispensar ${esc(p.name)}?</b><div class="row"><button class="btn" data-a="ySheet" data-id="${id}">Cancelar</button><button class="btn danger" data-a="yRelease" data-id="${id}">Dispensar</button></div></div>` : ''}
       <div class="row"><button class="btn" data-a="yXi" data-id="${id}">${inXi ? 'Tirar dos titulares' : 'Escalar como titular'}</button><button class="btn danger" data-a="yReleaseAsk" data-id="${id}">Dispensar</button><span class="spacer"></span><button class="btn primary" data-a="yPromote" data-id="${id}">Promover ao profissional</button></div>`);
   };

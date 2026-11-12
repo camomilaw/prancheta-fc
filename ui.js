@@ -69,7 +69,7 @@
   const vcls = (v) => (v <= 6 ? 'v1' : v <= 10 ? 'v2' : v <= 15 ? 'v3' : 'v4');
   const condCls = (c) => (c >= 80 ? '' : c >= 60 ? 'mid' : 'low');
   const condBar = (p) => `<span class="cond ${condCls(p.cond)}" title="Condição ${Math.round(p.cond)}%"><i style="width:${Math.round(p.cond)}%"></i></span>`;
-  const status = (p) => (p.inj ? `<span class="chip inj">${p.injN ? esc(p.injN) + ' · ' : 'Lesão '}${p.inj}s</span>` : '') + (p.susp ? '<span class="chip sus">Suspenso</span>' : '') + (p.unh ? '<span class="chip sus">Insatisfeito</span>' : '');
+  const status = (p) => (p.inj ? `<span class="chip inj">${p.injN ? esc(p.injN) + ' · ' : 'Lesão '}${p.inj}s</span>` : '') + (p.susp ? '<span class="chip sus">Suspenso</span>' : '') + (p.unh ? '<span class="chip sus">Insatisfeito</span>' : '') + (P.adaptChip && p.ad ? P.adaptChip(p) : '');
   const avgNote = (p) => (p.s.j ? (p.s.nt / p.s.j).toFixed(1).replace('.', ',') : '–');
   const ord = (n) => n + 'º';
   const divName = (d) => `${d}ª divisão`;
@@ -448,6 +448,7 @@
       </div>
       <div class="attrs">${Object.entries(groups).map(([gname, list]) => `<div class="grp"><h4 class="label">${gname}</h4>${list.map((at) => `<div class="attr"><span>${at.n}</span><b class="${vcls(p.a[at.k])}">${p.a[at.k]}</b></div>`).join('')}</div>`).join('')}</div>
       ${P.traitsBlock ? P.traitsBlock(p) : ''}
+      ${P.adaptBlock ? P.adaptBlock(g, p) : ''}
       <div><div class="label" style="margin-bottom:6px">Rende em</div><div class="row">${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}" style="padding:4px 10px">${b.pos} ${b.v}</span>`).join('')}</div></div>
       ${action}
       <div class="row">${mine && !mode && P.talkButton ? P.talkButton(p) : ''}${!mode && g ? P.marketButtons(p) : ''}${mine && !mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);

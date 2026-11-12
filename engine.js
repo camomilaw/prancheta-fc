@@ -1068,6 +1068,7 @@
       let base = p.age <= 21 ? 0.9 : p.age <= 24 ? 0.5 : p.age <= 29 ? 0.1 : p.age <= 32 ? -0.3 : -0.8;
       if (p.age <= 24 && P.ovr(p) / 5 >= p.pot) base = Math.min(base, 0.1);
       if (avgNote >= 7) base += 0.2;
+      if (base > 0 && p.clubId === g.user && P.adF) base *= P.adF(g, p);
       for (const at of P.ATTRS) {
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         let d = base + P.gauss(r) * 0.6;
