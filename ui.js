@@ -122,6 +122,8 @@
       <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span>${k === 'inicio' && P.unread && P.unread(g) ? `<i class="nav-dot" aria-label="${P.unread(g)} e-mails não lidos">${P.unread(g)}</i>` : ''}</button>`).join('')}</nav>
       <main class="main" id="view">${(views[A.view] || vInicio)()}</main>
     </div>`;
+    // faixas de abas com rolagem: mostra a aba ativa
+    root.querySelectorAll('.tabs-x').forEach((bar) => { const on = bar.querySelector('.on'); if (on) bar.scrollLeft = on.offsetLeft - bar.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2; });
     if (P.firedModal) P.firedModal(g);
   };
 

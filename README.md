@@ -24,6 +24,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `traits.js` | Características dos jogadores (Líder, Lida bem sob pressão, Especialista em faltas…), todas com efeito no motor |
 | `ui.js` | Todas as telas (início, elenco, tática, tabela, dia de jogo, mais) e as ações dos botões |
 | `slots.js` | 3 espaços de carreira no mesmo aparelho (IndexedDB), migração do save antigo |
+| `market.js` | Mercado: busca com filtros (inclui lista de empréstimo), propostas, venda, lista de empréstimo dos seus jogadores e dos clubes da IA, janelas |
 | `staff.js` | Equipe técnica: olheiros, fisioterapeuta, preparador físico, treinador do Sub-20, auxiliar técnico |
 | `tactics.js` | Táticas avançadas: posição livre, funções e postura, entrosamento, instruções de equipe |
 | `calendar.js` | Calendário com datas, plano de treino por semana (adjunto decide quando vazio) e simulação até uma data |

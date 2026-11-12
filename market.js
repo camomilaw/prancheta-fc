@@ -48,12 +48,12 @@
 
   // ---------- Execução ----------
   P.transfer = function (g, p, toCid, fee, wage, years, kind) {
-    const from = p.clubId;
-    if (fee) { P.pay(g, toCid, -fee, 'Contratações'); if (from) P.pay(g, from, fee, 'Vendas'); }
-    p.clubId = toCid; p.wage = wage; p.ctr = g.season + years; p.listed = false;
+    const from = p.clubId, oldCtr = p.ctr;
+    if (fee) { P.pay(g, toCid, -fee, kind === 'loan' ? 'Empréstimos' : 'Contratações'); if (from) P.pay(g, from, fee, kind === 'loan' ? 'Empréstimos' : 'Vendas'); }
+    p.clubId = toCid; p.wage = wage; p.ctr = g.season + years; p.listed = false; p.loanList = false;
     p.mor = Math.max(p.mor, 70); p.cond = Math.max(p.cond, 80);
     delete p.loan;
-    if (kind === 'loan') { p.loan = { from, till: g.season, wage: p.wage }; p.ctr = Math.max(p.ctr, g.season); }
+    if (kind === 'loan') { p.loan = { from, till: g.season, wage: p.wage }; p.ctr = Math.max(oldCtr || 0, g.season); } // empréstimo não mexe no contrato
     P.dirty(g);
     if (from && g.tac[from]) P.fixXI(g, from);
     if (g.tac[toCid]) P.fixXI(g, toCid);
@@ -70,8 +70,8 @@
     if (!free && !P.windowOpen(g)) return { ok: false, msg: P.windowText(g) + '. Jogadores livres podem ser contratados a qualquer momento.' };
     if (P.squad(g, g.user).length >= P.MARKET.maxSquad) return { ok: false, msg: `Seu elenco já tem ${P.MARKET.maxSquad} jogadores. Dispense ou venda alguém antes.` };
     if (loan) {
-      if (P.squad(g, p.clubId).length <= 20 || isStarter(g, p)) return { ok: false, msg: `O ${P.club(g, p.clubId).name} não empresta um jogador importante.` };
-      fee = Math.round(P.value(p) * P.MARKET.loanFee / 10000) * 10000;
+      if (!p.loanList && (P.squad(g, p.clubId).length <= 20 || isStarter(g, p))) return { ok: false, msg: `O ${P.club(g, p.clubId).name} não empresta um jogador importante.` };
+      fee = P.loanFeeOf(p);
       if (me.bal < fee) return { ok: false, msg: `A taxa de empréstimo é ${P.money(fee)} e o saldo não cobre.` };
       P.transfer(g, p, g.user, fee, p.wage, 0, 'loan');
       return { ok: true, msg: `${p.name} chegou por empréstimo até o fim da temporada. Taxa: ${P.money(fee)}.` };
@@ -92,15 +92,41 @@
     return { ok: true, msg: `Negócio fechado! ${p.name} assinou até ${p.ctr}.` };
   };
 
+  // Taxa de empréstimo: quem está na lista de empréstimo do clube sai pela metade
+  P.loanFeeOf = (p) => Math.round(P.value(p) * P.MARKET.loanFee * (p.loanList ? 0.5 : 1) / 10000) * 10000;
+
   P.acceptOffer = function (g, oid) {
     const o = (g.offers || []).find((x) => x.id === oid); if (!o) return null;
     const p = g.db.players[o.pid];
     if (!p || p.clubId !== g.user) { g.offers = g.offers.filter((x) => x.id !== oid); return null; }
     if (P.squad(g, g.user).length <= P.MARKET.minSquad) return 'Seu elenco ficaria pequeno demais.';
+    if (o.kind === 'loan') {
+      P.transfer(g, p, o.from, o.fee, p.wage, 0, 'loan');
+      P.news(g, `${p.name} foi emprestado ao ${P.club(g, o.from).name} até o fim da temporada (taxa de ${P.money(o.fee)}). O salário fica por conta deles.`, 'good');
+      return '';
+    }
     P.transfer(g, p, o.from, o.fee, Math.max(p.wage, P.wageFor(p)), 3);
     P.news(g, `${p.name} foi vendido ao ${P.club(g, o.from).name} por ${P.money(o.fee)}.`, 'good');
     return '';
   };
+
+  // Lista de empréstimo dos clubes da IA: jovens e reservas sobrando (renovada a cada janela)
+  function refreshAiLoanList(g) {
+    const key = g.season + ':' + (g.week < P.MARKET.windows[1][0] ? 0 : 1);
+    if (g.loanKey === key) return;
+    g.loanKey = key;
+    for (const c of g.db.clubs) {
+      if (c.id === g.user) continue;
+      const sq = P.squad(g, c.id).filter((p) => !p.loan);
+      sq.forEach((p) => { p.loanList = false; });
+      const spare = sq.length - 21;
+      if (spare <= 0) continue;
+      const cands = sq.filter((p) => !isStarter(g, p) && (p.age <= 23 || sq.length >= 26))
+        .sort((a, b) => (a.age <= 21 ? 0 : 1) - (b.age <= 21 ? 0 : 1) || P.ovr(b) - P.ovr(a));
+      cands.slice(0, Math.min(3, spare)).forEach((p) => { p.loanList = true; });
+    }
+  }
+  P.refreshAiLoanList = refreshAiLoanList;
 
   // Clube da IA no vermelho: vende (ou dispensa) os salários mais altos
   function aiDistress(g, c, rnd, max) {
@@ -142,6 +168,23 @@
         if (P.mail) P.mail(g, { k: 'prop', pid: p.id, oid, subj: `${b.name} quer o ${p.name}`, body: `Chefe, o ${b.name} (${b.div}ª divisão) ofereceu ${P.money(fee)} pelo ${p.name}, que tem força ${P.ovr(p)} e valor de mercado de ${P.money(P.value(p))}. A proposta vale por 2 semanas.` });
       }
     }
+
+    // 1b. propostas de empréstimo pelos seus jogadores na lista de empréstimo
+    const lend = mine.filter((p) => p.loanList);
+    if (lend.length && mine.length > P.MARKET.minSquad && rnd() < 0.6) {
+      const p = P.pick(rnd, lend), me = P.club(g, g.user);
+      if (!(g.offers || []).some((o) => o.pid === p.id)) {
+        const takers = clubs.filter((c) => c.id !== g.user && c.div >= me.div - 1 && c.div <= me.div + 3 && P.squad(g, c.id).length < 28 && P.ovr(p) >= (ovrs[c.id] || 60) - 8);
+        if (takers.length) {
+          const b = P.pick(rnd, takers), oid = P.uid('o');
+          const fee = Math.round(P.value(p) * P.MARKET.loanFee * (0.6 + rnd() * 0.6) / 10000) * 10000;
+          g.offers.push({ id: oid, pid: p.id, from: b.id, fee, until: g.week + 2, kind: 'loan' });
+          P.news(g, `O ${b.name} quer o ${p.name} emprestado (taxa de ${P.money(fee)}). Veja em Mercado › Propostas.`, 'warn');
+          if (P.mail) P.mail(g, { k: 'prop', pid: p.id, oid, subj: `${b.name} quer o ${p.name} emprestado`, body: `Chefe, o ${b.name} (${b.div}ª divisão) quer o ${p.name} por empréstimo até o fim da temporada. Pagam ${P.money(fee)} de taxa e o salário dele. A proposta vale por 2 semanas.` });
+        }
+      }
+    }
+    refreshAiLoanList(g);
 
     // 2. transferências entre clubes da IA
     const tries = 10;
@@ -267,9 +310,10 @@
   const CTR_OPTS = [['any', 'Qualquer contrato'], ['free', 'Livres (sem clube)'], ['6', 'Termina em até 6 meses'], ['12', 'Até 12 meses'], ['18', 'Até 18 meses'], ['24', 'Até 24 meses'], ['25', 'Mais de 24 meses']];
   P.marketView = function () {
     const g = A.g, st = A.st;
-    const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', min: 0, sort: 'ovr', div: 0 }, st.mk || {});
+    if (!g.loanKey && P.windowOpen(g)) refreshAiLoanList(g);
+    const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', min: 0, sort: 'ovr', div: 0, lst: 'any' }, st.mk || {});
     const offers = (g.offers || []).filter((o) => g.db.players[o.pid] && g.db.players[o.pid].clubId === g.user);
-    const tabs = `<div class="seg">${[['busca', 'Buscar'], ['prop', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'À venda'], ['tx', 'Transferências'], ['func', 'Funcionários']].map(([k, n]) => `<button class="${f.tab === k ? 'on' : ''}" data-a="mkTab" data-k="${k}">${n}</button>`).join('')}</div>`;
+    const tabs = `<div class="seg tabs-x">${[['busca', 'Buscar'], ['prop', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'À venda'], ['emp', 'Empréstimos'], ['tx', 'Transferências'], ['func', 'Funcionários']].map(([k, n]) => `<button class="${f.tab === k ? 'on' : ''}" data-a="mkTab" data-k="${k}">${n}</button>`).join('')}</div>`;
     const me = club(g.user);
     let body = '';
     if (f.tab === 'busca') {
@@ -282,6 +326,7 @@
       if (amin != null) list = list.filter((p) => p.age >= amin);
       if (amax != null) list = list.filter((p) => p.age <= amax);
       if (f.div) list = list.filter((p) => p.clubId && club(p.clubId).div === Number(f.div));
+      if (f.lst === 'emp') list = list.filter((p) => p.clubId && p.loanList && !p.loan);
       if (f.ctr === 'free') list = list.filter((p) => !p.clubId);
       else if (f.ctr === '25') list = list.filter((p) => p.clubId && P.ctrMonths(g, p) > 24);
       else if (f.ctr !== 'any') list = list.filter((p) => p.clubId && P.ctrMonths(g, p) <= Number(f.ctr));
@@ -299,20 +344,30 @@
           <div class="field"><span class="label">Contrato</span>${opt('ctr', CTR_OPTS, f.ctr)}</div>
           <div class="field"><span class="label">Força mínima</span>${opt('min', [[0, 'Qualquer'], [50, '50+'], [60, '60+'], [70, '70+'], [80, '80+']], f.min)}</div>
           <div class="field"><span class="label">Divisão</span>${opt('div', [[0, 'Todas']].concat(Array.from({ length: P.DIVS }, (_, i) => [i + 1, (i + 1) + 'ª divisão'])), f.div)}</div>
+          <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer jogador'], ['emp', 'Na lista de empréstimo']], f.lst)}</div>
           <div class="field"><span class="label">Ordenar</span>${opt('sort', [['ovr', 'Mais fortes'], ['val', 'Mais baratos'], ['age', 'Mais jovens'], ['ctr', 'Contrato acabando']], f.sort)}</div>
         </div>
         <div class="row" style="margin:6px 0 10px"><span class="muted" style="flex:1;font-size:.88rem">${withO.length} ${withO.length === 1 ? 'jogador encontrado' : 'jogadores encontrados'}${withO.length > 40 ? ' (mostrando 40)' : ''}</span><button class="btn sm ghost" data-a="mkClear">Limpar filtros</button></div>
-        <div class="plist">${res.map((p) => rowP(p)).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
+        <div class="plist">${res.map((p) => rowP(p, p.loanList && !p.loan ? `<span class="chip loan">Empréstimo · ${P.money(P.loanFeeOf(p))}</span>` : '')).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
         <p class="muted" style="font-size:.85rem">Toque num jogador para ver a ficha e fazer proposta.</p>`;
     } else if (f.tab === 'prop') {
       body = offers.length ? `<div class="plist">${offers.map((o) => {
         const p = g.db.players[o.pid], b = club(o.from);
-        return `<div class="offer"><div class="row" style="gap:8px">${P.badge(b, 28)}<div style="flex:1;min-width:0"><b>${esc(b.name)}</b> <span class="muted">(${b.div}ª div)</span><div class="muted" style="font-size:.85rem">quer <b>${esc(p.name)}</b> · ${p.pos} · força ${P.ovr(p)} · vale ${P.money(P.value(p))}</div></div><b class="num">${P.money(o.fee)}</b></div>
+        return `<div class="offer"><div class="row" style="gap:8px">${P.badge(b, 28)}<div style="flex:1;min-width:0"><b>${esc(b.name)}</b> <span class="muted">(${b.div}ª div)</span><div class="muted" style="font-size:.85rem">quer <b>${esc(p.name)}</b>${o.kind === 'loan' ? ' <span class="chip loan">por empréstimo</span>' : ''} · ${p.pos} · força ${P.ovr(p)} · vale ${P.money(P.value(p))}</div></div><b class="num">${P.money(o.fee)}${o.kind === 'loan' ? '<small class="muted" style="display:block;font-size:.7rem;font-weight:400;text-align:right">taxa</small>' : ''}</b></div>
           <div class="row"><span class="muted" style="font-size:.8rem;flex:1">Vale até a semana ${o.until}</span><button class="btn sm" data-a="mkReject" data-id="${o.id}">Recusar</button><button class="btn sm primary" data-a="mkAccept" data-id="${o.id}">Aceitar</button></div></div>`;
       }).join('')}</div>` : `<p class="empty">Nenhuma proposta no momento. Coloque jogadores à venda pela ficha deles para atrair interessados.</p>`;
     } else if (f.tab === 'venda') {
       const ls = P.squad(g, g.user).filter((p) => p.listed);
       body = ls.length ? `<div class="plist">${ls.map((p) => rowP(p, '<span class="chip sus">À venda</span>')).join('')}</div>` : '<p class="empty">Nenhum jogador à venda. Abra a ficha de um jogador do seu elenco e toque em "Colocar à venda".</p>';
+    } else if (f.tab === 'emp') {
+      const out = Object.values(g.db.players).filter((p) => p.loan && p.loan.from === g.user);
+      const inn = P.squad(g, g.user).filter((p) => p.loan);
+      const ll = P.squad(g, g.user).filter((p) => p.loanList && !p.loan);
+      const sec = (t, arr, chip, empty) => `<div class="label" style="margin:12px 0 6px">${t} (${arr.length})</div>${arr.length ? `<div class="plist">${arr.map((p) => rowP(p, chip(p))).join('')}</div>` : `<p class="empty" style="padding:4px 0">${empty}</p>`}`;
+      body = `<p class="muted" style="margin:0;font-size:.86rem">Jogadores na lista de empréstimo recebem propostas de clubes que pagam uma taxa e o salário até o fim da temporada; depois eles voltam com o contrato intacto. Para pegar alguém emprestado, use o filtro "Lista" em Buscar.</p>
+        ${sec('Na sua lista de empréstimo', ll, () => '<span class="chip loan">Na lista</span>', 'Ninguém. Abra a ficha de um jogador do elenco e toque em "Lista de empréstimo".')}
+        ${sec('Emprestados a outros clubes', out, (p) => `<span class="chip xi">${esc(club(p.clubId).short)} · ${p.s.j} J</span>`, 'Nenhum jogador seu está emprestado.')}
+        ${sec('Recebidos por empréstimo', inn, (p) => `<span class="chip sus">de ${esc(club(p.loan.from).short)}</span>`, 'Nenhum.')}`;
     } else if (f.tab === 'func') {
       body = P.staffView ? P.staffView() : '';
     } else {
@@ -353,7 +408,7 @@
   P.marketButtons = function (p) {
     const g = A.g;
     if (!g) return '';
-    if (p.clubId === g.user) return p.loan ? '' : `<button class="btn" data-a="mkList" data-id="${p.id}">${p.listed ? 'Tirar da venda' : 'Colocar à venda'}</button>`;
+    if (p.clubId === g.user) return p.loan ? '' : `<button class="btn" data-a="mkList" data-id="${p.id}">${p.listed ? 'Tirar da venda' : 'Colocar à venda'}</button><button class="btn" data-a="mkLoanList" data-id="${p.id}">${p.loanList ? 'Tirar da lista de empréstimo' : 'Lista de empréstimo'}</button>`;
     const free = !p.clubId;
     return `<button class="btn primary" data-a="offerOpen" data-id="${p.id}">${free ? 'Contratar' : 'Fazer proposta'}</button>${free || p.loan ? '' : `<button class="btn" data-a="loanOpen" data-id="${p.id}">Empréstimo</button>`}`;
   };
@@ -382,7 +437,8 @@
       A.playerSheet(d.id, 'loan');
     },
     mkList(d) { const p = A.g.db.players[d.id]; p.listed = !p.listed; A.save(); A.render(); A.playerSheet(d.id); A.toast(p.listed ? `${p.name} está à venda` : `${p.name} saiu da lista de venda`); },
-    mkAccept(d) { const err = P.acceptOffer(A.g, d.id); if (err) { A.toast(err); return; } A.save(); A.render(); A.toast('Venda concluída'); },
+    mkLoanList(d) { const p = A.g.db.players[d.id]; p.loanList = !p.loanList; A.save(); A.render(); A.playerSheet(d.id); A.toast(p.loanList ? `${p.name} está na lista de empréstimo` : `${p.name} saiu da lista de empréstimo`); },
+    mkAccept(d) { const err = P.acceptOffer(A.g, d.id); if (err) { A.toast(err); return; } A.save(); A.render(); A.toast('Negócio fechado'); },
     mkReject(d) { A.g.offers = A.g.offers.filter((o) => o.id !== d.id); A.save(); A.render(); }
   });
   Object.assign(A.CHG, {

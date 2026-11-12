@@ -608,3 +608,4 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .cap-mark { position: absolute; top: -5px; left: -6px; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-style: normal; font-size: .64rem; font-weight: 800; line-height: 17px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
 .sp-opt .sel { width: 100%; }
 .sp-tag { font-size: .74rem; font-weight: 700; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--accent) 25%, transparent); }
+.chip.loan { background: color-mix(in srgb, var(--info) 24%, var(--surface)); color: var(--ink); }
