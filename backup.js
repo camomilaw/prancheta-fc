@@ -83,13 +83,10 @@
     if (done) A.toast(`Temporada ${A.g.season} começou. Backup da temporada ${A.g.season - 1} baixado.`);
   };
 
-  // Ao continuar a carreira: lembrete se o backup está velho
-  const origCont = A.ACT.continue;
-  A.ACT.continue = function (d) {
-    origCont.call(this, d);
-    const g = A.g;
-    if (g && g.hist.length && behind(g) >= 2) setTimeout(() => A.toast(`Faz ${behind(g)} temporadas sem backup. Baixe em Mais › Backup.`), 600);
-  };
+  // Ao abrir uma carreira: lembrete se o backup está velho
+  (A.onLoad = A.onLoad || []).push((g) => {
+    if (g.hist.length && behind(g) >= 2) setTimeout(() => A.toast(`Faz ${behind(g)} temporadas sem backup. Baixe em Mais › Backup.`), 600);
+  });
 
   A.ACT.bkNow = () => { A.downloadBackup(); A.render(); };
   // Restaurar: lê o arquivo e substitui a carreira atual

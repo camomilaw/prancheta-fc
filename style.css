@@ -443,3 +443,10 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .pitch.mini { max-width: 300px; }
 .pitch.mini .slot { pointer-events: none; }
 .pitch.mini .dot { width: 32px; height: 32px; font-size: .9rem; }
+
+/* Espaços de carreira */
+.slot-row { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; flex-wrap: wrap; }
+.slot-row.empty { border-style: dashed; }
+.slot-row .slot-n { font-family: var(--f-display); font-weight: 700; font-size: 1.2rem; color: var(--muted); width: 1.2em; text-align: center; }
+.slot-row .slot-info { flex: 1 1 150px; min-width: 0; }
+.slot-row .slot-btns { display: flex; gap: 8px; margin-left: auto; }

@@ -22,6 +22,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `data.js` | Posições, atributos, países, geração de clubes e jogadores, aplicação de patch |
 | `engine.js` | Força, formações, táticas, simulação, calendário semanal, Copa Ultra, playoffs, acesso/rebaixamento, criação de clube |
 | `ui.js` | Todas as telas (início, elenco, tática, tabela, dia de jogo, mais) e as ações dos botões |
+| `slots.js` | 3 espaços de carreira no mesmo aparelho (IndexedDB), migração do save antigo |
 | `staff.js` | Equipe técnica: olheiros, fisioterapeuta, preparador físico, treinador do Sub-20, auxiliar técnico |
 | `tactics.js` | Táticas avançadas: posição livre, funções e postura, entrosamento, instruções de equipe |
 | `calendar.js` | Calendário com datas, plano de treino por semana (adjunto decide quando vazio) e simulação até uma data |

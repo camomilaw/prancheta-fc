@@ -128,8 +128,6 @@
   // ---------- Tela inicial ----------
   function renderSetup() {
     const s = A.setup, db = s.db;
-    const saved = A.loadSave();
-    const savedClub = saved && saved.db.clubs.find((c) => c.id === saved.user);
     const ovrs = P.clubOvrs(db);
     const q = s.q.trim().toLowerCase();
     let list = q ? db.clubs.filter((c) => (c.name + ' ' + c.city + ' ' + P.countryName(c.country)).toLowerCase().includes(q)) : P.divClubs(db, s.divF);
@@ -140,13 +138,14 @@
         <svg width="64" height="88" viewBox="0 0 64 88" aria-hidden="true"><rect x="2" y="2" width="60" height="84" rx="6" fill="var(--pitch)"/><rect x="2" y="2" width="60" height="84" rx="6" fill="none" stroke="var(--pitch-line)" stroke-width="2"/><path d="M2 44h60" stroke="var(--pitch-line)" stroke-width="2"/><circle cx="32" cy="44" r="9" fill="none" stroke="var(--pitch-line)" stroke-width="2"/><circle cx="20" cy="66" r="4" fill="#fff"/><circle cx="44" cy="66" r="4" fill="#fff"/><circle cx="32" cy="26" r="4" fill="var(--accent)"/><path d="M22 62 L30 30" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 3"/></svg>
         <div><h1>Prancheta <span>FC</span></h1><p>Ultraliga: 160 clubes de 17 países em 8 divisões. Suba da 8ª até o topo, dispute a Copa Ultra e edite tudo como quiser.</p></div>
       </div>
-      ${saved && savedClub ? `<div class="card row"><div>${P.badge(savedClub, 36)}</div><div style="flex:1;min-width:0"><div class="label">Carreira salva</div><b>${esc(saved.manager)} · ${esc(savedClub.name)}</b><div class="muted">${divName(savedClub.div)} · temporada ${saved.season}</div></div><button class="btn primary" data-a="continue">Continuar</button></div>` : ''}
+      ${P.slotsCard ? P.slotsCard() : ''}
       <div class="card" style="display:flex;flex-direction:column;gap:14px">
         <div class="row"><h2 style="flex:1">Nova carreira</h2>
           <button class="btn sm" data-a="setupEdit">Editar banco</button>
           <button class="btn sm" data-a="setupImport">Importar</button></div>
         ${s.importing ? importBox() : ''}
         <div class="field" style="max-width:360px"><label class="label" for="mgr">Nome do técnico</label><input id="mgr" data-i="mgr" value="${esc(s.manager)}" placeholder="Seu nome" maxlength="30"></div>
+        ${P.slotPick ? P.slotPick() : ''}
         ${P.setupExtra ? P.setupExtra() : ''}
         <div class="create-cta"><div style="flex:1;min-width:0"><b>Criar meu clube</b><div class="muted" style="font-size:.88rem">Nome, cores, estádio, país, divisão e elenco do seu jeito.</div></div><button class="btn" data-a="createOpen">Criar clube</button></div>
         <div class="label">Ou escolha um dos 160 clubes</div>
@@ -678,13 +677,13 @@
         ${g.hist.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>Div</th><th class="n">Pos</th><th>Resultado</th><th class="hide-sm">Campeão</th><th class="hide-sm">Copa</th></tr></thead><tbody>${g.hist.slice().reverse().map((h) => `<tr><td>${h.season}</td><td>${h.div}ª</td><td class="n">${ord(h.pos)}</td><td>${esc(h.result)}${h.cupMine ? ' · copa' : ''}</td><td class="hide-sm">${esc(h.champ)}</td><td class="hide-sm">${esc(h.cup)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty" style="padding:0">O histórico aparece ao fim da primeira temporada.</p>'}
       </div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Salvar e transferir</h2></div>
-        <p class="muted" style="margin:0">O jogo salva sozinho neste navegador depois de cada semana. Para continuar em outro aparelho ou site, exporte a carreira e importe lá.</p>
+        <p class="muted" style="margin:0">O jogo salva sozinho neste aparelho depois de cada semana. Para continuar em outro aparelho ou site, exporte a carreira e importe lá.</p>
         <div class="row"><button class="btn" data-a="exportGame">Exportar carreira</button><button class="btn" data-a="importGame">Importar carreira</button></div>
         <div id="io-box">${st.io || ''}</div>
       </div>
-      <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Novo jogo</h2></div>
-        <p class="muted" style="margin:0">Volta para a escolha de clube. A carreira atual é apagada deste navegador.</p>
-        ${st.confirm === 'newgame' ? '<div class="confirm"><b>Apagar a carreira atual?</b><div class="row"><button class="btn" data-a="confirm" data-k="">Cancelar</button><button class="btn danger" data-a="newGameYes">Apagar e recomeçar</button></div></div>' : '<div><button class="btn danger" data-a="confirm" data-k="newgame">Começar novo jogo</button></div>'}
+      <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Trocar de carreira</h2></div>
+        <p class="muted" style="margin:0">Volta para a tela inicial, onde ficam seus 3 espaços de carreira. Esta carreira continua salva${A.slot ? ` no espaço ${A.slot}` : ''}.</p>
+        <div><button class="btn" data-a="newGameYes">Ir para a tela inicial</button></div>
       </div>
       <div class="card" style="grid-column:1/-1"><div class="head"><h2>Como funciona</h2></div>
         <ul class="muted" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">
