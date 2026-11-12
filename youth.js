@@ -181,6 +181,7 @@
     if (sw) P.pay(g, g.user, -sw * 12 / g.cal.length, 'Equipe técnica');
     // meio da temporada: jovens evoluem um pouco
     if (g.week === 24) grow(g, 0.5);
+    if (g.week === 24 && P.potentialUpdate) P.potentialUpdate(g, 'mid');
   };
   function grow(g, f) {
     const r = Math.random;
@@ -258,7 +259,7 @@
 
   // ---------- Tela: Sub-20 e equipe técnica ----------
   const club = (cid) => A.g.db.clubs.find((c) => c.id === cid);
-  const potTxt = (p) => (p.lo ? `${p.lo}-${p.hi}` : `${Math.max(P.ovr(p), p.potO - 4)}-${p.potO + 3}`);
+  const potTxt = (p) => (p.lo ? `${p.lo}-${p.hi}` : `${Math.max(P.ovr(p), p.potO - 4)}-${p.potO + 3}`) + (p.potT ? (p.potT > 0 ? ' ↑' : ' ↓') : '');
   function yrow(p, extra) {
     return `<button class="prow" data-a="ySheet" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
       <span class="nm"><b>${esc(p.name)}${(A.g.y.xi || []).includes(p.id) ? '<span class="chip xi">Titular</span>' : ''}</b><small>${esc(p.nat)} · ${p.age} anos · pot. ${potTxt(p)} · ${p.s.j} J · ${p.s.g} G</small></span>

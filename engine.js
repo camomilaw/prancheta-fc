@@ -873,6 +873,7 @@
     if (moves[g.user] < me.div) result = 'Acesso';
     if (moves[g.user] > me.div) result = 'Rebaixado';
     if (pos === 1) result = me.div === 1 ? 'Campeão da Ultraliga' : 'Campeão e acesso';
+    if (P.potentialUpdate) P.potentialUpdate(g, 'end');
     const top = P.scorers(g, 1, 1)[0];
     g.hist.push({
       season: g.season, div: me.div, pos, result,

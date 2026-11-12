@@ -428,3 +428,7 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .sub-item .pos-tag { font-size: .72rem; }
 .sub-item.on { border-color: var(--pitch); background: color-mix(in srgb, var(--pitch) 12%, var(--surface)); }
 .sub-ico { font-weight: 700; color: var(--info); }
+
+/* ---------- Potencial dinâmico ---------- */
+.pot-t { font-size: .75rem; margin-left: 4px; font-family: var(--f-body); font-weight: 700; }
+.pot-t.up { color: var(--good); } .pot-t.dn { color: var(--bad); }
