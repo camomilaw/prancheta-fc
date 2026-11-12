@@ -106,9 +106,9 @@
       return;
     }
     const g = A.g, me = club(g.user);
-    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
+    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), calendario: () => P.calendarView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
     const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
-    const active = (A.view === 'editor' || A.view === 'financas') ? 'mais' : A.view === 'base' ? 'elenco' : A.view;
+    const active = (A.view === 'editor' || A.view === 'financas') ? 'mais' : A.view === 'base' ? 'elenco' : A.view === 'calendario' ? 'inicio' : A.view;
     const step = g.cal[g.week];
     const meta = g.over ? `Temporada ${g.season} encerrada` : `${divName(me.div)} · ${P.stepLabel(step)} · ${g.season}`;
     const hasGame = !g.over && P.userMatch(g);
@@ -116,6 +116,7 @@
       <header class="top">
         ${P.badge(me, 34)}
         <div class="who"><h1>${esc(me.name)}</h1><div class="meta">${esc(g.manager)} · ${esc(meta)}</div></div>
+        ${P.calendarView ? `<button class="btn icon-btn" data-a="go" data-v="calendario" aria-label="Calendário" title="Calendário"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>` : ''}
         ${g.over ? '<button class="btn primary" data-a="newSeason">Nova temporada</button>' : `<button class="btn primary" data-a="play">${hasGame ? 'Jogar' : 'Avançar'}</button>`}
       </header>
       <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span></button>`).join('')}</nav>
@@ -254,7 +255,7 @@
             <div class="side">${P.badge(a, 52)}<b>${esc(a.name)}</b><span class="sub">${a.div}ª div · ${ord(posOf(a.id))} · ${form(a.id)}</span></div>
           </div>
           ${um.ko ? '<p class="muted" style="text-align:center;margin:10px 0 0;font-size:.85rem">Jogo único. Empate vai para os pênaltis.</p>' : ''}
-          <div class="row" style="margin-top:14px"><button class="btn" data-a="go" data-v="tatica">Ajustar tática</button><span class="spacer"></span><button class="btn primary" data-a="play">Jogar</button></div></div>`;
+          <div class="row" style="margin-top:14px"><button class="btn" data-a="go" data-v="tatica">Ajustar tática</button><button class="btn" data-a="go" data-v="calendario">Calendário</button><span class="spacer"></span><button class="btn primary" data-a="play">Jogar</button></div></div>`;
       } else {
         top = `<div class="card"><div class="head"><span class="label">${esc(P.stepLabel(step))}</span></div>
           <p style="margin:0 0 12px">Seu time não joga nesta semana. Os jogadores descansam e recuperam o físico.</p>

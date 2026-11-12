@@ -40,6 +40,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { min-height: 100%; }
 body {
   background: var(--bg); color: var(--ink);
@@ -387,3 +388,31 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .chem-row { display: grid; grid-template-columns: 1fr 80px 28px; gap: 8px; align-items: center; padding: 4px 0; font-size: .9rem; }
 .chem-row .tr { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
 .chem-row .tr i { display: block; height: 100%; }
+
+/* ---------- Calendário e simulação ---------- */
+.icon-btn { width: 40px; padding: 0; flex: none; }
+.cal-nav { justify-content: center; margin-bottom: 10px; }
+.cal-title { font-family: var(--f-display); font-size: 1.2rem; min-width: 150px; text-align: center; text-transform: capitalize; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-wd { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0; }
+.cal-cell { min-height: 54px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 3px; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; font-size: .7rem; min-width: 0; overflow: hidden; text-align: left; }
+.cal-cell.empty, .cal-cell:disabled { border-color: transparent; background: transparent; cursor: default; }
+.cal-cell:disabled .dn { color: var(--muted); opacity: .6; }
+.cal-cell .dn { font-weight: 700; font-size: .75rem; }
+.cal-cell .opp { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.cal-cell.lg { box-shadow: inset 0 3px 0 var(--pitch); }
+.cal-cell.cup { box-shadow: inset 0 3px 0 var(--accent); }
+.cal-cell.po { box-shadow: inset 0 3px 0 var(--info); }
+.cal-cell.planned::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--info); margin-top: auto; }
+.cal-cell.today { border-color: var(--ink); border-width: 2px; }
+.cal-cell.sel { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }
+.res { font-family: var(--f-display); font-size: .8rem; padding: 0 4px; border-radius: 4px; color: #fff; }
+.res.V { background: var(--good); } .res.E { background: var(--muted); } .res.D { background: var(--bad); }
+.lg-dot { display: inline-block; width: 12px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+.lg-dot.lg { background: var(--pitch); } .lg-dot.cup { background: var(--accent); } .lg-dot.po { background: var(--info); }
+.seg button.auto.on { box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
+.sim-bg { position: fixed; inset: 0; z-index: 90; background: rgba(8, 14, 10, .7); display: flex; align-items: center; justify-content: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sim-box { background: var(--bg); border-radius: 18px; padding: 22px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
+.sim-bar { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.sim-bar i { display: block; height: 100%; background: var(--pitch); transition: width .15s; }

@@ -24,6 +24,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `ui.js` | Todas as telas (início, elenco, tática, tabela, dia de jogo, mais) e as ações dos botões |
 | `staff.js` | Equipe técnica: olheiros, fisioterapeuta, preparador físico, treinador do Sub-20, auxiliar técnico |
 | `tactics.js` | Táticas avançadas: posição livre, funções e postura, entrosamento, instruções de equipe |
+| `calendar.js` | Calendário com datas, plano de treino por semana (adjunto decide quando vazio) e simulação até uma data |
 | `editor.js` | Editor de clubes, jogadores e banco de dados |
 | `main.js` | Inicialização |
 | `style.css` | Visual (cores no topo do arquivo, tema claro e escuro) |

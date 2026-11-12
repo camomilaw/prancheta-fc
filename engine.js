@@ -589,6 +589,7 @@
     const ovrs = P.clubOvrs(g.db);
     const userDiv = (P.club(g, g.user) || {}).div;
     const warn = [];
+    if (P.trainWeek) P.trainWeek(g, step);
 
     // 1. escalações
     for (const { m } of items) {
