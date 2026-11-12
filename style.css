@@ -416,3 +416,15 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .sim-box { background: var(--bg); border-radius: 18px; padding: 22px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
 .sim-bar { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
 .sim-bar i { display: block; height: 100%; background: var(--pitch); transition: width .15s; }
+
+/* ---------- Partida ao vivo ---------- */
+.pause-card { display: flex; flex-direction: column; gap: 12px; border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.sub-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sub-cols > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sub-item { display: grid; grid-template-columns: 38px 1fr auto; gap: 6px; align-items: center; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 5px 6px; min-width: 0; }
+.sub-item .nm { min-width: 0; }
+.sub-item .nm b { display: block; font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub-item .nm small { font-size: .7rem; color: var(--muted); }
+.sub-item .pos-tag { font-size: .72rem; }
+.sub-item.on { border-color: var(--pitch); background: color-mix(in srgb, var(--pitch) 12%, var(--surface)); }
+.sub-ico { font-weight: 700; color: var(--info); }

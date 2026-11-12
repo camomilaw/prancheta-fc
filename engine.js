@@ -341,9 +341,11 @@
     return { cid, t, on, bench, subs: 0, home, yel: {}, played: new Set(on.map((s) => s.p.id)) };
   }
 
-  P.simulate = function (g, fx) {
-    const T = P.TUNING, rnd = Math.random;
+  // Simulação em etapas: simInit cria o jogo, simAdvance avança minutos
+  // (pode parar num evento), simFinish fecha as notas. P.simulate faz tudo de uma vez.
+  P.simInit = function (g, fx, opts) {
     const L = [lineup(g, fx.h, !fx.neutral), lineup(g, fx.a, false)];
+    if (opts && opts.manual != null) L[opts.manual].manual = true;
     const S = [null, null];
     const recalc = () => {
       S[0] = P.strength(L[0].on, L[0].t, { home: !fx.neutral, oppMen: L[1].t.men, opp: P.insOf(L[1].t), oppPace: P.paceOf(L[1].on) });
@@ -351,13 +353,17 @@
       [0, 1].forEach((i) => { const miss = 11 - S[i].n; if (miss > 0) { const f = Math.pow(0.88, miss); S[i].att *= f; S[i].mid *= f; S[i].def *= f; } });
     };
     recalc();
-    const ev = [], goals = [0, 0], shots = [0, 0], posAcc = [0, 0];
-    const gls = {}, ast = {};
+    return { fx, L, S, recalc, ev: [], goals: [0, 0], shots: [0, 0], posAcc: [0, 0], gls: {}, ast: {}, min: 0, end: 90 + 1 + Math.floor(Math.random() * 5) };
+  };
+  P.simAdvance = function (st, toMin, stopFn) {
+    const T = P.TUNING, rnd = Math.random;
+    const { L, S, ev, goals, shots, posAcc, gls, ast, recalc } = st;
     const active = (side) => L[side].on.filter((s) => !s.off);
-    const end = 90 + 1 + Math.floor(rnd() * 5);
     const mm = (min) => ({ m: Math.min(min, 90), x: min > 90 ? min - 90 : 0 });
-
-    for (let min = 1; min <= end; min++) {
+    const last = Math.min(toMin, st.end);
+    while (st.min < last) {
+      const min = ++st.min;
+      const evStart = ev.length;
       const pH = Math.pow(S[0].mid, 2) / (Math.pow(S[0].mid, 2) + Math.pow(S[1].mid, 2));
       posAcc[0] += pH; posAcc[1] += 1 - pH;
       if (min === 46) ev.push({ m: 45, x: 0, t: 'int' });
@@ -418,7 +424,7 @@
           s.off = true; s.injured = weeks;
           const e = Object.assign(mm(min), { t: 'lesao', s: side, p: s.p.id, w: weeks });
           const lu = L[side];
-          if (lu.subs < 5 && lu.bench.length) {
+          if (lu.subs < 5 && lu.bench.length && !lu.manual) {
             lu.bench.sort((a, b) => P.ovrAt(b, s.pos) * P.condF(b) - P.ovrAt(a, s.pos) * P.condF(a));
             const sub = lu.bench.shift();
             lu.on.push({ p: sub, pos: s.pos, i: s.i, off: false, chem: 1 });
@@ -428,8 +434,30 @@
           ev.push(e); recalc();
         }
       }
+      if (stopFn) for (let k = evStart; k < ev.length; k++) if (stopFn(ev[k])) return ev[k];
     }
-
+    return null;
+  };
+  // Substituição durante o jogo (sai um jogador em campo ou um lesionado ainda não trocado)
+  P.simSub = function (st, side, outId, inId) {
+    const lu = st.L[side];
+    if (lu.subs >= 5) return 'Já foram feitas as 5 substituições.';
+    const s = lu.on.find((x) => x.p.id === outId && (!x.off || (x.injured && !x.replaced)));
+    const inP = lu.bench.find((p) => p.id === inId);
+    if (!s || !inP) return 'Substituição inválida.';
+    if (!s.off) s.off = true;
+    s.replaced = true;
+    lu.on.push({ p: inP, pos: s.pos, i: s.i, off: false, chem: 1 });
+    lu.bench = lu.bench.filter((p) => p.id !== inId);
+    lu.played.add(inId); lu.subs++;
+    st.ev.push({ m: Math.min(Math.max(st.min, 1), 90), x: st.min > 90 ? st.min - 90 : 0, t: 'sub', s: side, p: inId, o: outId });
+    st.recalc();
+    return '';
+  };
+  P.simFinish = function (st) {
+    const rnd = Math.random;
+    const { L, ev, goals, shots, posAcc, gls, ast } = st;
+    while (st.min < st.end) P.simAdvance(st, st.end);
     const notes = {};
     for (const side of [0, 1]) {
       const res = Math.sign(goals[side] - goals[1 - side]);
@@ -452,6 +480,7 @@
       L
     };
   };
+  P.simulate = function (g, fx) { const st = P.simInit(g, fx); P.simAdvance(st, st.end); return P.simFinish(st); };
 
   // Disputa de pênaltis: 5 cobranças e depois alternadas
   P.penalties = function (L) {
@@ -582,8 +611,21 @@
   };
 
   // ---------- Jogar uma semana ----------
-  P.playWeek = function (g) {
-    if (g.over) return null;
+  // Uma semana em duas metades: beginWeek simula os outros jogos e prepara o seu
+  // (ao vivo, se interactive); endWeek fecha tudo. playWeek faz as duas direto.
+  P.playWeek = function (g) { return g.over ? null : P.endWeek(g, P.beginWeek(g, false)); };
+  const applyResult = (ctx, it, r) => {
+    const m = it.m;
+    m.hg = r.hg; m.ag = r.ag; m.ev = r.ev; m.st = r.st; m.notes = r.notes; m.done = true;
+    if (it.ko) {
+      if (r.hg === r.ag) m.pen = P.penalties(r.L);
+      m.w = koWinner(m);
+    }
+    delete r.L;
+    ctx.playing.add(m.h); ctx.playing.add(m.a);
+    ctx.results.push({ it, r });
+  };
+  P.beginWeek = function (g, interactive) {
     const step = g.cal[g.week];
     const items = P.stepMatches(g, step);
     const ovrs = P.clubOvrs(g.db);
@@ -603,21 +645,18 @@
     }
     if (warn.length) P.news(g, 'Escalação ajustada: ' + warn.join(', ') + ' entrou no lugar de quem estava fora.', 'warn');
 
-    // 2. jogos
-    const results = [];
-    const playing = new Set();
+    // 2. jogos (o seu fica para depois, se for ao vivo)
+    const ctx = { step, userDiv, results: [], playing: new Set(), live: null };
     for (const it of items) {
-      const m = it.m;
-      const r = P.simulate(g, m);
-      m.hg = r.hg; m.ag = r.ag; m.ev = r.ev; m.st = r.st; m.notes = r.notes; m.done = true;
-      if (it.ko) {
-        if (r.hg === r.ag) m.pen = P.penalties(r.L);
-        m.w = koWinner(m);
-      }
-      delete r.L;
-      playing.add(m.h); playing.add(m.a);
-      results.push({ it, r });
+      const mineM = it.m.h === g.user || it.m.a === g.user;
+      if (interactive && mineM) { ctx.live = { it, side: it.m.h === g.user ? 0 : 1, st: P.simInit(g, it.m, { manual: it.m.h === g.user ? 0 : 1 }) }; continue; }
+      applyResult(ctx, it, P.simulate(g, it.m));
     }
+    return ctx;
+  };
+  P.endWeek = function (g, ctx) {
+    if (ctx.live) { const { it, st } = ctx.live; applyResult(ctx, it, P.simFinish(st)); ctx.live = null; }
+    const { step, userDiv, results, playing } = ctx;
 
     // 3. suspensões cumpridas (só de quem jogou na semana) e lesões
     for (const p of Object.values(g.db.players)) {

@@ -560,6 +560,7 @@
     else if (e.t === 'lesao') { ico = I.cross; txt = `${name} <span class="muted">(${esc(c.short)})</span> se machuca${e.sub && pl(e.sub) ? `, entra ${esc(pl(e.sub).name)}` : ''}`; }
     else if (e.t === 'chance') { ico = I.save; txt = `<span class="muted">Defesa do goleiro em chute de</span> ${name}`; }
     else if (e.t === 'int') { txt = '<span class="muted">Fim do primeiro tempo</span>'; }
+    else if (e.t === 'sub') { ico = '<span class="sub-ico">⇄</span>'; const o = pl(e.o); txt = `<span class="muted">(${esc(c.short)})</span> Entra ${name}${o ? `, sai ${esc(o.name)}` : ''}`; }
     return `<li><span class="m">${min}</span><span>${ico}</span><span>${txt}</span></li>`;
   }
   A.reportSheet = function (ri) {
@@ -587,6 +588,10 @@
       ${st ? `<div class="possess"><span>${st.pos}%</span><span class="tr"><i style="width:${st.pos}%"></i></span><span style="text-align:right">${100 - st.pos}%</span></div>` : ''}
     </div>`;
   }
+
+  A.evLine = (e, m) => evLine(e, m);
+  A.boardHTML = (...a) => boardHTML(...a);
+  A.ogRow = (...a) => ogRow(...a);
 
   // ---------- Dia de jogo (animação) ----------
   const key = (e) => (e.x ? 90 + e.x : e.m);
