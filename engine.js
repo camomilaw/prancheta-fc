@@ -116,6 +116,7 @@
       if (!p.ctr) p.ctr = g.season + (Math.random() < 0.15 ? 0 : 1 + Math.floor(Math.random() * 3));
     }
     if (!g.fin) g.fin = { s: g.season, cat: {}, prev: null, log: [] };
+    if (P.ensureYouth) P.ensureYouth(g);
   };
   P.pay = function (g, cid, v, cat) {
     const c = P.club(g, cid); if (!c) return;
@@ -631,6 +632,7 @@
     if (g.fin.log.length > 30) g.fin.log.length = 30;
     if (after < 0 && before >= 0) P.news(g, 'O saldo do clube ficou negativo. A diretoria pede corte de gastos.', 'bad');
     if (P.marketWeek) P.marketWeek(g, step);
+    if (P.youthWeek) P.youthWeek(g, step);
     if (g.week === 30) {
       const exp = P.squad(g, g.user).filter((p) => p.ctr <= g.season);
       if (exp.length) P.news(g, `${exp.length} ${exp.length === 1 ? 'contrato termina' : 'contratos terminam'} nesta temporada: ${exp.map((p) => p.name).join(', ')}. Renove pela ficha do jogador ou eles saem de graça.`, 'warn');
@@ -835,6 +837,7 @@
     }
     P.dirty(g);
     if (P.marketPostSeason) P.marketPostSeason(g, r, used);
+    if (P.youthSeason) P.youthSeason(g, r);
     g.fin.prev = { s: g.season - 1, cat: g.fin.cat };
     g.fin.s = g.season; g.fin.cat = {};
     P.ensureEconomy(g);
