@@ -162,24 +162,39 @@
     const SPEED = { att: 10, def: 9, press: 11, gk: 7 }; // unidades do campo por segundo
     const seed = new Map(dots.map((o) => [o, Math.random() * 6.28])); // cada um com seu "balanço" próprio
     const nextPass = () => { for (let j = i; j < sc.steps.length; j++) { const st2 = sc.steps[j]; if (st2.k === 'pass') return st2; if (st2.k === 'shot') return null; } return null; };
+    // movimento com inércia: acelera e desacelera suave, e chega sem frear de uma vez
+    const ACCEL = 22; // unidades/s²
     const moveTo = (o, tx, ty, v, dt) => {
-      const dx = tx - o.x, dy = ty - o.y, d = Math.hypot(dx, dy), max = v * dt / 1000;
-      if (d <= max) { o.x = tx; o.y = ty; } else { o.x += dx / d * max; o.y += dy / d * max; }
+      const s2 = dt / 1000, dx = tx - o.x, dy = ty - o.y, d = Math.hypot(dx, dy);
+      const want = d < 0.05 ? 0 : v * Math.min(1, d / 6); // freia aos poucos nos últimos metros
+      const wx = d ? dx / d * want : 0, wy = d ? dy / d * want : 0;
+      o.vx = o.vx || 0; o.vy = o.vy || 0;
+      let ax = wx - o.vx, ay = wy - o.vy;
+      const a = Math.hypot(ax, ay), maxA = ACCEL * s2;
+      if (a > maxA) { ax = ax / a * maxA; ay = ay / a * maxA; }
+      o.vx += ax; o.vy += ay;
+      o.x += o.vx * s2; o.y += o.vy * s2;
     };
+    // quando um movimento é guiado pela jogada (conduzir, receber), guarda a velocidade para a transição ser suave
+    const track = (o, nx, ny, dt) => { if (dt > 0) { o.vx = (nx - o.x) / dt * 1000; o.vy = (ny - o.y) / dt * 1000; } o.x = nx; o.y = ny; };
     const drift = (dt, bx, by, now) => {
       const t = now / 1000;
       const sway = (o, amp) => Math.sin(t * 1.7 + seed.get(o)) * amp;
+      // trote: ninguém fica parado esperando; todos ajustam a posição em volta do alvo, sem parar
+      const jogX = (o) => Math.sin(t * 0.8 + seed.get(o)) * 1.8, jogY = (o) => Math.cos(t * 0.65 + seed.get(o) * 1.3) * 2.2;
       const outA = A.filter((o) => o.pos !== 'GOL'), outD = D.filter((o) => o.pos !== 'GOL');
       if (sc.mode === 'pen' || sc.mode === 'fk') {
         // bola parada: todos quase parados, só ajeitando a posição
         for (const o of dots) if (o !== carrier && o.pos !== 'GOL' && !o.run) { o.x = o.bx + sway(o, 0.25); o.y = o.by + sway(o, 0.35); }
         return;
       }
+      const cur = sc.steps[i];
+      const held = cur && (cur.k === 'carry' || cur.k === 'hold') ? cur.who : null; // só quem está com a bola no pé fica preso à jogada
       const np = nextPass();
       const late = P.clamp((bx - 45) / 45, 0, 1); // quanto o ataque já avançou
       // ataque
       for (const o of outA) {
-        if (o === carrier || o.run || o.lock) continue;
+        if (o === held || o.run || o.lock) continue;
         let tx, ty;
         if (np && np.to === o) {
           // o próximo a receber já se desmarca rumo ao ponto do passe
@@ -203,18 +218,22 @@
             ty = o.by + sway(o, 0.6);
           }
         }
-        moveTo(o, tx, P.clamp(ty, 2, H - 2), SPEED.att, dt);
+        const isNext = np && np.to === o;
+        moveTo(o, tx + (isNext ? 0 : jogX(o)), P.clamp(ty + (isNext ? 0 : jogY(o)), 2, H - 2), SPEED.att, dt);
       }
       // defesa: um pressiona a bola, os outros marcam quem está mais perto do gol
       const presser = outD.filter((o) => !o.lock).sort((p1, p2) => Math.hypot(p1.x - bx, p1.y - by) - Math.hypot(p2.x - bx, p2.y - by))[0];
-      const free = outA.filter((o) => o !== carrier).sort((p1, p2) => p2.x - p1.x);
+      const free = outA.filter((o) => o !== held).sort((p1, p2) => p2.x - p1.x);
       const taken = new Set();
       for (const o of outD) {
         if (o.lock) continue;
         if (o === presser && sc.mode !== 'corner') { moveTo(o, bx + 2.2, by + (H / 2 - by) * 0.08, SPEED.press, dt); continue; }
         // marca o atacante livre mais próximo, ficando entre ele e o gol
+        // marcação fiel: continua no mesmo atacante enquanto ele estiver por perto
         let mark = null, best = 1e9;
-        for (const a of free) { if (taken.has(a)) continue; const d = Math.hypot(a.x - o.x, a.y - o.y); if (d < best) { best = d; mark = a; } }
+        if (o.mark && free.includes(o.mark) && !taken.has(o.mark)) { const d = Math.hypot(o.mark.x - o.x, o.mark.y - o.y); if (d < 26) { mark = o.mark; best = d; } }
+        if (!mark) for (const a of free) { if (taken.has(a)) continue; const d = Math.hypot(a.x - o.x, a.y - o.y); if (d < best) { best = d; mark = a; } }
+        o.mark = mark && best < 22 ? mark : null;
         let tx, ty;
         if (mark && best < 22) {
           taken.add(mark);
@@ -223,7 +242,7 @@
           // sem ninguém por perto: recua e fecha o meio
           tx = Math.max(o.bx + (bx - 60) * 0.25, W - 45); ty = o.by + (by - o.by) * 0.3;
         }
-        moveTo(o, Math.min(tx + sway(o, 0.4), W - 3), P.clamp(ty, 2, H - 2), SPEED.def, dt);
+        moveTo(o, Math.min(tx + jogX(o) * 0.8, W - 3), P.clamp(ty + jogY(o) * 0.8, 2, H - 2), SPEED.def, dt);
       }
       // goleiro acompanha a bola na linha
       if (sc.gk && !sc.gk.run) moveTo(sc.gk, W - 2.5 - late * 1.2, H / 2 + (by - H / 2) * 0.22, SPEED.gk, dt);
@@ -252,19 +271,19 @@
         if (stp.k === 'pass') { stp.r0 = [stp.to.x, stp.to.y]; stp.to.run = true; label(stp.to, true); }
         if (stp.k === 'shot' && stp.save && sc.gk) { sc.gk.run = true; stp.g0 = [sc.gk.x, sc.gk.y]; }
       }
-      const k = Math.min(1, (now - t0) / stp.dur), q = ease(k);
+      const k = Math.min(1, (now - t0) / stp.dur), q = ease(k), lin = k;
       if (stp.k === 'hold') {
         ballPos = stp.ball;
         setBall(ballPos[0], ballPos[1]);
       } else if (stp.k === 'carry') {
         // o jogador corre com a bola colada no pé
-        stp.who.x = lerp(stp.w0[0], stp.to[0], q); stp.who.y = lerp(stp.w0[1], stp.to[1], q);
+        track(stp.who, lerp(stp.w0[0], stp.to[0], lin), lerp(stp.w0[1], stp.to[1], lin), dt);
         ballPos = atFeet(stp.who); setBall(ballPos[0], ballPos[1]);
       } else if (stp.k === 'pass') {
         // a bola vai ao ponto de encontro; o companheiro chega lá junto com ela
-        const rx = lerp(stp.r0[0], stp.meet[0] - 1.25, q), ry = lerp(stp.r0[1], stp.meet[1], q);
-        stp.to.x = rx; stp.to.y = ry;
-        ballPos = [lerp(stp.from[0], stp.meet[0], q), lerp(stp.from[1], stp.meet[1], q)];
+        track(stp.to, lerp(stp.r0[0], stp.meet[0] - 1.25, lin), lerp(stp.r0[1], stp.meet[1], lin), dt);
+        const qb = 1 - Math.pow(1 - k, 1.6); // a bola sai forte e perde velocidade
+        ballPos = [lerp(stp.from[0], stp.meet[0], qb), lerp(stp.from[1], stp.meet[1], qb)];
         setBall(ballPos[0], ballPos[1], stp.arc ? Math.sin(Math.PI * k) * stp.arc : 0);
       } else if (stp.k === 'shot' || stp.k === 'loose') {
         ballPos = [lerp(stp.from[0], stp.to[0], q), lerp(stp.from[1], stp.to[1], q)];
