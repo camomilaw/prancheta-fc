@@ -154,7 +154,7 @@
           <svg class="chem" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
           ${slots.map((sl, i) => {
             const p = pl(t.xi[i]);
-            const cc = p ? (p.cond >= 80 ? '#4cc27f' : p.cond >= 60 ? '#e5b23a' : '#f0695e') : '#999';
+            const cc = p ? (p.cond >= 80 ? '#f3ead2' : p.cond >= 60 ? '#e2b04a' : '#e0645a') : '#999';
             const name = p ? (p.name.length <= 11 ? p.name : p.name.split(' ')[0].slice(0, 10)) : 'vazio';
             const f = p ? P.fitP(p, sl.pos) : 1;
             const rk = p ? P.ROLES[sl.pos][P.roleKey(t, i, sl.pos)].n : '';
@@ -164,7 +164,7 @@
               <span class="nm">${esc(name)}</span><span class="ps">${sl.pos}</span></button>`;
           }).join('')}
         </div>
-        <p class="muted" style="margin:10px 0 0;font-size:.85rem">Arraste para mudar a posição. Toque para escolher função, postura ou trocar o jogador. Linha verde = jogadores entrosados. ▲▼ = postura ofensiva ou defensiva.</p>
+        <p class="muted" style="margin:10px 0 0;font-size:.85rem">Arraste para mudar a posição. Toque para escolher função, postura ou trocar o jogador. Linha clara = jogadores entrosados. ▲▼ = postura ofensiva ou defensiva.</p>
         ${t.xy ? '<div style="margin-top:8px"><button class="btn sm" data-a="tReset">Voltar à formação ' + esc(t.f) + '</button></div>' : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -227,7 +227,7 @@
       ${i ? `<div><div class="label" style="margin-bottom:6px">Postura</div><div class="seg">${Object.entries(P.POSTURE).map(([k, o]) => `<button class="${k === post ? 'on' : ''}" data-a="tPost" data-i="${i}" data-k="${k}">${o.n}</button>`).join('')}</div></div>` : ''}
       <div><div class="label" style="margin-bottom:6px">Entrosamento com quem está perto</div>
         ${nb.length ? nb.map((x) => `<div class="chem-row"><span>${esc(x.p.name)}</span><span class="tr"><i style="width:${x.v}%;background:${x.v >= 70 ? 'var(--good)' : x.v >= 40 ? 'var(--warn)' : 'var(--bad)'}"></i></span><b class="num">${Math.round(x.v)}</b></div>`).join('') : '<p class="muted" style="margin:0">Ninguém perto dele no campo.</p>'}
-        <p class="muted" style="font-size:.82rem;margin:6px 0 0">Sobe quando jogam juntos (mais ainda com notas altas e vitórias) e cai quando não jogam. A partir de 70 aparece a linha verde: mais rendimento e moral.</p></div>
+        <p class="muted" style="font-size:.82rem;margin:6px 0 0">Sobe quando jogam juntos (mais ainda com notas altas e vitórias) e cai quando não jogam. A partir de 70 aparece a linha clara: mais rendimento e moral.</p></div>
       <div class="row"><button class="btn" data-a="player" data-id="${p.id}">Ver ficha</button><span class="spacer"></span><button class="btn primary" data-a="tSwap" data-i="${i}">Trocar jogador</button></div>`);
   };
 

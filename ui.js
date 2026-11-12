@@ -468,7 +468,7 @@
             const p = pl(t.xi[i]);
             if (!p) return `<button class="slot" style="left:${sl.x}%;top:${100 - sl.y}%" data-a="slot" data-i="${i}"><span class="dot off">?</span><span class="nm">vazio</span><span class="ps">${sl.pos}</span></button>`;
             const f = P.fitP(p, sl.pos);
-            const cc = p.cond >= 80 ? '#4cc27f' : p.cond >= 60 ? '#e5b23a' : '#f0695e';
+            const cc = p.cond >= 80 ? '#f3ead2' : p.cond >= 60 ? '#e2b04a' : '#e0645a';
             const first = p.name.split(' ')[0];
             const short = p.name.length <= 11 ? p.name : first.slice(0, 10);
             return `<button class="slot ${sel === i ? 'sel' : ''}" style="left:${sl.x}%;top:${100 - sl.y}%" data-a="slot" data-i="${i}" aria-label="${esc(p.name)}, ${sl.pos}">

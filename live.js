@@ -108,7 +108,7 @@
     return by;
   }
   const short = (n) => { const w = n.split(' '); return n.length <= 10 ? n : (w[w.length - 1].length <= 10 ? w[w.length - 1] : w[0].slice(0, 9)); };
-  const condC = (c) => (c >= 80 ? '#4cc27f' : c >= 60 ? '#e5b23a' : '#f0695e');
+  const condC = (c) => (c >= 80 ? '#f3ead2' : c >= 60 ? '#e2b04a' : '#e0645a');
 
   function pausePanel(L) {
     const g = A.g, lu = L.st.L[L.side];

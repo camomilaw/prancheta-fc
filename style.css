@@ -887,3 +887,40 @@ body { margin: 0; }
 .field input.jr-sign::placeholder { font-family: var(--f-body); font-style: italic; font-size: 1.1rem; }
 .jr-sigline { min-width: 210px; max-width: 90%; text-align: center; border-bottom: 1px solid var(--ink); padding: 0 12px; margin-bottom: 6px; font-family: var(--f-sign); font-size: 2.4rem; line-height: 1.15; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: rotate(-2deg); }
 .jr-sigline.empty { display: none; }
+
+/* ---------- Acabamento 2: tinta em vez de neon ---------- */
+:root { --nav-bg: #1d1a16; --nav-ink: #f1e9d8; --pitch: #5f7c53; --pitch-2: #59754d; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --nav-bg: #0b0907; --nav-ink: #ece3cf; --pitch: #34483a; --pitch-2: #304334; } }
+:root[data-theme="dark"] { --nav-bg: #0b0907; --nav-ink: #ece3cf; --pitch: #34483a; --pitch-2: #304334; }
+.nav { background: var(--nav-bg); }
+.nav button { color: color-mix(in srgb, var(--nav-ink) 58%, transparent); }
+.nav button.on, .nav button.on svg { color: var(--nav-ink); }
+@media (min-width: 900px) {
+  .nav { border-right: 1px solid var(--line); }
+  .nav button.on { background: color-mix(in srgb, var(--nav-ink) 9%, transparent); }
+}
+
+/* Campinho: gramado de foto antiga, entrosamento em giz */
+.chem-line { stroke: #f3ead2; stroke-width: 3; opacity: .85; filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, .5)); }
+
+/* Condição: traço fino de tinta; só ganha cor quando o jogador cansa */
+.cond { height: 3px; border-radius: 0; background: var(--line-2); }
+.cond > i { background: color-mix(in srgb, var(--ink) 55%, transparent); }
+.cond.mid > i { background: var(--warn); } .cond.low > i { background: var(--bad); }
+.chem-row .tr { border-radius: 0; height: 4px; }
+
+/* Posições: texto colorido com fio, sem fundo */
+.pos-tag { background: transparent !important; border: 1px solid currentColor; color: var(--ink-2); line-height: 1.1; }
+.pos-tag.GOL { color: var(--warn); } .pos-tag.DEF { color: var(--info); } .pos-tag.MEI { color: var(--good); } .pos-tag.ATA { color: var(--bad); }
+
+/* Etiquetas como carimbos; só a lesão continua cheia */
+.chip { background: transparent !important; border: 1px solid currentColor; padding: 0 5px; line-height: 1.45; }
+.chip.xi { color: var(--good); } .chip.sus { color: var(--warn); } .chip.loan { color: var(--info); }
+.chip.tr-ind { color: var(--good); } .chip.tr-grp { color: var(--muted); } .chip.tr-pos { color: var(--info); }
+.chip.gem { color: #b8860b; }
+.chip.inj { background: var(--bad) !important; border-color: var(--bad); color: var(--bg); }
+.window { border-radius: 0; background: transparent; border: 1px solid currentColor; font-family: var(--f-label); font-weight: 500; letter-spacing: .05em; text-transform: uppercase; font-size: .74rem; }
+.window.open { background: transparent; }
+.slot .dot { font-family: var(--f-num); font-weight: 600; background: #f6f0e1; color: #1d1a16; }
+.slot .dot.off { background: #e9c4bd; } .slot .dot.fit { background: #ecd9a0; }
+.slot .dot::after { border-radius: 0; }
