@@ -9,8 +9,9 @@
     chanceBase: 0.40,       // chance de um ataque virar finalização (times iguais)
     goalBase: 0.78,         // conversão base
     homeBonus: 1.10,        // vantagem de jogar em casa
-    yellowPerMin: 0.02,     // por time
-    redPerMin: 0.0003,
+    yellowPerMin: 0.0175,   // por time (era 0.02)
+    redPerMin: 0.0003,      // vermelho direto
+    bookedCare: 1,          // abaixo de 1, quem já tem amarelo leva menos o segundo
     injuryPerMin: 0.0012,
     condDrain: 30,          // desgaste de uma partida (reduzido pela resistência)
     condRecover: 10,        // recuperação por semana (aumentada pela resistência)
@@ -416,7 +417,8 @@
         const act = active(side);
         if (!act.length) continue;
         if (rnd() < T.yellowPerMin * (L[side].t.pre === 'alt' ? 1.2 : 1)) {
-          const s = P.weighted(rnd, act, (x) => DEF_W[x.pos] + 0.2);
+          // quem já tem amarelo joga com mais cuidado (menos segundos amarelos)
+          const s = P.weighted(rnd, act, (x) => (DEF_W[x.pos] + 0.2) * (L[side].yel[x.p.id] ? T.bookedCare : 1));
           const id = s.p.id;
           L[side].yel[id] = (L[side].yel[id] || 0) + 1;
           if (L[side].yel[id] >= 2) { s.off = true; ev.push(Object.assign(mm(min), { t: 'vermelho', s: side, p: id, two: true })); recalc(); }
