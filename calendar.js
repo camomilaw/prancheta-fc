@@ -183,7 +183,7 @@
     A.openSheet(`<div class="bar-top"><h2>Simular até ${P.fmtDate(dates[i])}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       <p class="muted" style="margin:0">O adjunto comanda o clube até a véspera. Treinos sem plano ficam com ele. Você só poderá cancelar.</p>
       ${radio('renew', { t: 'Contratos acabando', o: [['yes', 'Renovar automaticamente', 'Renova por 2 anos quem aceitar.'], ['no', 'Deixar como estão']] })}
-      ${radio('offers', { t: 'Propostas por jogadores', o: [['reject', 'Recusar todas'], ['accept', 'Aceitar todas'], ['value', 'Aceitar só acima do valor de mercado']] })}
+      ${radio('offers', { t: 'Propostas por jogadores', o: [['reject', 'Recusar todas'], ['accept', 'Aceitar todas'], ['listed', 'Aceitar só pelos jogadores à venda', 'Vende quem está na lista de transferências e recusa o resto.'], ['value', 'Aceitar só acima do valor de mercado']] })}
       ${radio('lineup', { t: 'Escalação', o: [['keep', 'Manter a atual sempre que possível', 'Troca só quem estiver lesionado ou suspenso.'], ['best', 'Sempre o melhor time', 'Considera a condição física de cada jogador.']] })}
       <div class="row"><span class="spacer"></span><button class="btn primary" data-a="simStart" data-i="${i}">Começar simulação</button></div>`);
   };
@@ -231,7 +231,7 @@
     for (const o of (g.offers || []).slice()) {
       const p = g.db.players[o.pid];
       if (!p || p.clubId !== g.user) continue;
-      const ok = s.opts.offers === 'accept' || (s.opts.offers === 'value' && o.fee >= P.value(p));
+      const ok = s.opts.offers === 'accept' || (s.opts.offers === 'listed' && p.listed) || (s.opts.offers === 'value' && o.fee >= P.value(p));
       if (ok && !P.acceptOffer(g, o.id)) s.sold++;
       else g.offers = g.offers.filter((x) => x.id !== o.id);
     }
