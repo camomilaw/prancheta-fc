@@ -38,7 +38,30 @@
     '5-3-2': [['GOL', 50, 6], ['LD', 88, 30], ['ZAG', 70, 22], ['ZAG', 50, 20], ['ZAG', 30, 22], ['LE', 12, 30],
       ['MC', 70, 50], ['VOL', 50, 44], ['MC', 30, 50], ['ATA', 62, 80], ['ATA', 38, 80]]
   };
-  P.slots = (f) => (P.FORMATIONS[f] || P.FORMATIONS['4-4-2']).map(([pos, x, y]) => ({ pos, x, y }));
+  // Posição pela localização no campo (posicionamento livre). O slot 0 é sempre o goleiro.
+  P.posFromXY = function (x, y, i) {
+    if (i === 0) return 'GOL';
+    const wide = x < 25 || x > 75, right = x > 50;
+    if (y < 36) return wide ? (right ? 'LD' : 'LE') : 'ZAG';
+    if (y < 47) return wide ? (right ? 'LD' : 'LE') : 'VOL';
+    if (y < 58) return wide ? (right ? 'PD' : 'PE') : 'MC';
+    if (y < 70) return wide ? (right ? 'PD' : 'PE') : 'MEI';
+    return wide ? (right ? 'PD' : 'PE') : 'ATA';
+  };
+  // Aceita o nome de uma formação ou a tática do clube (com posições livres em t.xy)
+  P.slots = (f) => {
+    if (f && typeof f === 'object') {
+      if (f.xy && f.xy.length === 11) return f.xy.map((c, i) => ({ pos: P.posFromXY(c.x, c.y, i), x: c.x, y: c.y }));
+      f = f.f;
+    }
+    return (P.FORMATIONS[f] || P.FORMATIONS['4-4-2']).map(([pos, x, y]) => ({ pos, x, y }));
+  };
+  // Instruções de equipe (clubes antigos/IA usam o "estilo" antigo convertido)
+  P.insOf = (t) => t.ins || {
+    build: t.est === 'pos' ? 'pos' : t.est === 'con' ? 'con' : 'equ',
+    pass: t.est === 'dir' ? 'dir' : t.est === 'pos' ? 'cur' : 'equ',
+    line: 'med', trap: false, wing: 'cru'
+  };
 
   P.MENTALITY = { def: 'Defensiva', equ: 'Equilibrada', ofe: 'Ofensiva' };
   P.PRESSING = { bai: 'Baixa', med: 'Média', alt: 'Alta' };
@@ -177,7 +200,8 @@
 
   // ---------- Escalação ----------
   P.autoXI = function (g, cid, formation) {
-    const slots = P.slots(formation);
+    const tt = g.tac[cid];
+    const slots = tt && tt.xy ? P.slots(tt) : P.slots(formation);
     const avail = P.squad(g, cid).filter(P.available);
     const pairs = [];
     slots.forEach((s, i) => avail.forEach((p) => pairs.push({ i, p, sc: P.ovrAt(p, s.pos) * P.condF(p) })));
@@ -193,7 +217,7 @@
   P.fixXI = function (g, cid) {
     const t = g.tac[cid];
     if (!t) return [];
-    const slots = P.slots(t.f);
+    const slots = P.slots(t);
     const fixed = [];
     if (!t.xi || t.xi.length !== slots.length) t.xi = new Array(slots.length).fill(null);
     const ok = (id) => { const p = g.db.players[id]; return p && p.clubId === cid && P.available(p); };
@@ -214,35 +238,67 @@
   const MID_W = { GOL: 0, ZAG: 0.3, LD: 0.5, LE: 0.5, VOL: 1, MC: 1.1, MEI: 0.9, PD: 0.5, PE: 0.5, ATA: 0.2 };
   const DEF_W = { GOL: 0, ZAG: 1.2, LD: 0.9, LE: 0.9, VOL: 0.9, MC: 0.4, MEI: 0.15, PD: 0.2, PE: 0.2, ATA: 0.05 };
 
+  P.paceOf = (on) => {
+    const a = on.filter((s) => !s.off && ['ATA', 'PD', 'PE'].includes(s.pos));
+    return a.length ? a.reduce((t, s) => t + s.p.a.vel, 0) / a.length : 10;
+  };
   P.strength = function (on, tac, opts) {
     opts = opts || {};
+    const ins = P.insOf(tac), opp = opts.opp || {};
+    const atk = [];
     let att = 0, mid = 0, def = 0, gk = 4, n = 0;
+    const cnt = { d: 0, z: 0, m: 0 };
+    let crossers = 0, aerial = 0;
     for (const s of on) {
       if (s.off) continue;
       n++;
       const p = s.p, r = P.roles(p);
-      const f = P.fit(p.pos, s.pos) * P.condF(p) * P.morF(p);
-      att += ATT_W[s.pos] * r.att * f;
-      mid += MID_W[s.pos] * (r.cre * 0.8 + r.phys * 0.2) * f;
-      def += DEF_W[s.pos] * r.def * f;
+      const f = P.fit(p.pos, s.pos) * P.condF(p) * P.morF(p) * (s.chem || 1);
+      const role = P.roleOf ? P.roleOf(tac, s.i, s.pos) : null;
+      const pc = (tac.roles && tac.roles[s.i] && tac.roles[s.i].post) || 'equ';
+      const post = (P.POSTURE && P.POSTURE[pc]) || { a: 1, m: 1, d: 1 };
+      const ra = role && role.att ? role.att(p, r) : r.att;
+      const rm = role && role.cre ? role.cre(p, r) : r.cre;
+      const ca = ATT_W[s.pos] * ra * f * (role ? role.a : 1) * post.a;
+      if (['ATA', 'PD', 'PE', 'MEI'].includes(s.pos)) atk.push(ca); else att += ca;
+      mid += MID_W[s.pos] * (rm * 0.8 + r.phys * 0.2) * f * (role ? role.m : 1) * post.m;
+      def += DEF_W[s.pos] * r.def * f * (role ? role.d : 1) * post.d;
       if (s.pos === 'GOL') gk = r.gk * f;
+      if (['ZAG', 'LD', 'LE'].includes(s.pos)) cnt.d++;
+      if (s.pos === 'ZAG') cnt.z++;
+      if (['VOL', 'MC', 'MEI'].includes(s.pos)) cnt.m++;
+      if (role && role.cross) crossers++;
+      if (role && role.aerial) aerial = Math.max(aerial, p.a.cab);
     }
+    // atacantes demais se atrapalham: do 5º em diante rendem metade
+    atk.sort((a, b) => b - a).forEach((v, i) => { att += i < 4 ? v : v * 0.5; });
     att /= 5.6; mid /= 5.6; def /= 5.6;
-    const m = tac.men, pr = tac.pre, st = tac.est;
+    // formação desequilibrada
+    if (cnt.d < 3) def *= Math.pow(0.85, 3 - cnt.d);
+    if (!cnt.z) def *= 0.75;
+    if (cnt.m === 0) mid *= 0.7; else if (cnt.m === 1) mid *= 0.88;
+    // cruzamentos rendem com um centroavante de área
+    if (crossers) att *= aerial ? 1 + 0.03 * Math.min(crossers, 3) * (aerial / 15) : 0.97;
+    const m = tac.men, pr = tac.pre;
     if (m === 'def') { att *= 0.9; def *= 1.08; }
     if (m === 'ofe') { att *= 1.08; def *= 0.92; }
     if (pr === 'alt') { mid *= 1.05; def *= 1.02; }
     if (pr === 'bai') { mid *= 0.96; def *= 1.02; }
-    if (st === 'pos') { mid *= 1.06; att *= 0.97; }
-    if (st === 'con') { mid *= 0.95; if (opts.oppMen === 'ofe') att *= 1.1; }
-    if (st === 'dir') { att *= 1.03; mid *= 0.97; }
+    if (ins.build === 'pos') { mid *= 1.06; att *= 0.97; }
+    if (ins.build === 'con') { mid *= 0.95; att *= (opp.line === 'alt' || opts.oppMen === 'ofe') ? 1.1 : 1.02; }
+    if (ins.pass === 'cur') mid *= 1.04;
+    if (ins.pass === 'dir') { att *= 1.03; mid *= 0.97; }
+    const oppPace = opts.oppPace || 11;
+    if (ins.line === 'alt') { mid *= 1.04; if (oppPace >= 14) def *= 0.92; }
+    if (ins.line === 'bai') { def *= 1.08; mid *= 0.95; att *= 0.96; }
+    if (ins.trap && ins.line !== 'bai') def *= (opp.build === 'con' || oppPace >= 14) ? 0.9 : 1.04;
     if (opts.home) { att *= P.TUNING.homeBonus; mid *= P.TUNING.homeBonus; }
-    return { att, mid, def, gk, n };
+    return { att, mid, def, gk, n, shape: cnt };
   };
 
   P.teamPreview = function (g, cid) {
-    const t = g.tac[cid], slots = P.slots(t.f);
-    const on = t.xi.map((id, i) => ({ p: g.db.players[id], pos: slots[i].pos })).filter((s) => s.p);
+    const t = g.tac[cid], slots = P.slots(t);
+    const on = t.xi.map((id, i) => ({ p: g.db.players[id], pos: slots[i].pos, i, chem: (cid === g.user && P.chemMult) ? P.chemMult(g, t, i) : 1 })).filter((s) => s.p);
     return P.strength(on, t);
   };
 
@@ -279,8 +335,8 @@
 
   // ---------- Simulação de partida ----------
   function lineup(g, cid, home) {
-    const t = g.tac[cid], slots = P.slots(t.f);
-    const on = t.xi.map((id, i) => ({ p: g.db.players[id], pos: slots[i].pos, off: false })).filter((s) => s.p);
+    const t = g.tac[cid], slots = P.slots(t);
+    const on = t.xi.map((id, i) => ({ p: g.db.players[id], pos: slots[i].pos, i, off: false, chem: (cid === g.user && P.chemMult) ? P.chemMult(g, t, i) : 1 })).filter((s) => s.p);
     const bench = P.squad(g, cid).filter((p) => P.available(p) && !t.xi.includes(p.id));
     return { cid, t, on, bench, subs: 0, home, yel: {}, played: new Set(on.map((s) => s.p.id)) };
   }
@@ -290,8 +346,8 @@
     const L = [lineup(g, fx.h, !fx.neutral), lineup(g, fx.a, false)];
     const S = [null, null];
     const recalc = () => {
-      S[0] = P.strength(L[0].on, L[0].t, { home: !fx.neutral, oppMen: L[1].t.men });
-      S[1] = P.strength(L[1].on, L[1].t, { home: false, oppMen: L[0].t.men });
+      S[0] = P.strength(L[0].on, L[0].t, { home: !fx.neutral, oppMen: L[1].t.men, opp: P.insOf(L[1].t), oppPace: P.paceOf(L[1].on) });
+      S[1] = P.strength(L[1].on, L[1].t, { home: false, oppMen: L[0].t.men, opp: P.insOf(L[0].t), oppPace: P.paceOf(L[0].on) });
       [0, 1].forEach((i) => { const miss = 11 - S[i].n; if (miss > 0) { const f = Math.pow(0.88, miss); S[i].att *= f; S[i].mid *= f; S[i].def *= f; } });
     };
     recalc();
@@ -310,18 +366,21 @@
         const side = rnd() < pH ? 0 : 1, o = 1 - side;
         const ratio = S[side].att / Math.max(0.1, S[o].def);
         let cp = T.chanceBase * Math.pow(ratio, 1.1);
-        if (L[side].t.est === 'dir') cp *= 1.08;
+        const insS = P.insOf(L[side].t);
+        if (insS.pass === 'dir') cp *= 1.08;
+        if (insS.pass === 'cur') cp *= 0.95;
         cp = P.clamp(cp, 0.12, 0.8);
         if (rnd() < cp) {
           shots[side]++;
           const pool = active(side).filter((s) => s.pos !== 'GOL');
           if (pool.length) {
-            const sh = P.weighted(rnd, pool, (s) => ATT_W[s.pos] * (s.p.a.fin + s.p.a.cab * 0.4));
+            const sh = P.weighted(rnd, pool, (s) => { const ro = P.roleOf ? P.roleOf(L[side].t, s.i, s.pos) : null; return ATT_W[s.pos] * (s.p.a.fin + s.p.a.cab * (ro && ro.aerial ? 0.8 : 0.4)) * (ro ? ro.a : 1); });
             const a = sh.p.a;
             const q = ((a.fin * 2 + a.com + a.cab * 0.5) / 3.5) * P.fit(sh.p.pos, sh.pos) * P.condF(sh.p) * P.morF(sh.p);
             let pg = T.goalBase * q / (q + S[o].gk * 1.05);
-            if (L[side].t.est === 'dir') pg *= 0.94;
-            if (L[side].t.est === 'pos') pg *= 1.05;
+            if (insS.pass === 'dir') pg *= 0.94;
+            if (insS.pass === 'cur') pg *= 1.05;
+            if (insS.build === 'pos') pg *= 1.05;
             if (rnd() < pg) {
               goals[side]++;
               gls[sh.p.id] = (gls[sh.p.id] || 0) + 1;
@@ -362,7 +421,7 @@
           if (lu.subs < 5 && lu.bench.length) {
             lu.bench.sort((a, b) => P.ovrAt(b, s.pos) * P.condF(b) - P.ovrAt(a, s.pos) * P.condF(a));
             const sub = lu.bench.shift();
-            lu.on.push({ p: sub, pos: s.pos, off: false });
+            lu.on.push({ p: sub, pos: s.pos, i: s.i, off: false, chem: 1 });
             lu.played.add(sub.id); lu.subs++;
             e.sub = sub.id;
           }
@@ -661,6 +720,7 @@
         if (e.t === 'lesao') P.news(g, `${p.name} se lesionou e fica fora por ${e.w} ${e.w === 1 ? 'semana' : 'semanas'}.`, 'bad');
         if (e.t === 'vermelho') P.news(g, `${p.name} foi expulso e está suspenso.`, 'bad');
       }
+      if (P.chemAfterMatch) P.chemAfterMatch(g, m, mine.r, home);
     }
     if (step.t === 'cup' && step.r === P.CUP_NAMES.length - 1) {
       const fin = g.cup.rounds[step.r].ties[0];

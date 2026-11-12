@@ -106,7 +106,7 @@
       return;
     }
     const g = A.g, me = club(g.user);
-    const views = { inicio: vInicio, elenco: vElenco, tatica: vTatica, tabela: vTabela, mercado: () => P.marketView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
+    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
     const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
     const active = (A.view === 'editor' || A.view === 'financas') ? 'mais' : A.view === 'base' ? 'elenco' : A.view;
     const step = g.cal[g.week];
@@ -466,13 +466,13 @@
     return h.join(' ') || 'Ajuste equilibrado: sem bônus nem penalidades.';
   }
   A.slotSheet = function (i) {
-    const g = A.g, t = g.tac[g.user], sl = P.slots(t.f)[i];
+    const g = A.g, t = g.tac[g.user], sl = P.slots(t)[i];
     const list = P.squad(g, g.user).sort((a, b) => P.ovrAt(b, sl.pos) * P.condF(b) - P.ovrAt(a, sl.pos) * P.condF(a));
     A.openSheet(`<div class="bar-top"><h2>Escolher ${esc(P.POS_NAME[sl.pos].toLowerCase())}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       <p class="muted" style="margin:0">Força mostrada já considera jogar como ${sl.pos}.</p>
       <div class="plist">${list.map((p) => {
         const j = t.xi.indexOf(p.id);
-        const where = j === i ? '<span class="chip xi">Aqui</span>' : j >= 0 ? `<span class="chip xi">${P.slots(t.f)[j].pos}</span>` : '';
+        const where = j === i ? '<span class="chip xi">Aqui</span>' : j >= 0 ? `<span class="chip xi">${P.slots(t)[j].pos}</span>` : '';
         return `<button class="prow" data-a="assign" data-i="${i}" data-id="${p.id}" ${P.available(p) ? '' : 'disabled style="opacity:.5"'}>
           <span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
           <span class="nm"><b>${esc(p.name)}${where}${status(p)}</b><small>${p.age} anos · força natural ${P.ovr(p)}</small></span>
