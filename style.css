@@ -1013,3 +1013,10 @@ table { font-family: var(--f-body); }
 .ad-box .bar .tr i { background: var(--warn); }
 .ad-hint { font-size: .8rem; font-style: italic; color: var(--good); margin-top: 2px; }
 .ad-box .bar { grid-template-columns: minmax(0, 1.2fr) 1fr 34px; }
+
+/* Força do time: escala até 130, com marca no 100 (nível de elite sem bônus) */
+.bar .tr { border-radius: 0; }
+.bar .tr i { border-radius: 0; background: var(--ink-2); }
+.bar .tr.str { position: relative; overflow: visible; }
+.bar .tr.str::after { content: ""; position: absolute; left: 76.9%; top: -3px; bottom: -3px; width: 1px; background: var(--accent); }
+.str-note { margin: 10px 0 0; font-size: .8rem; font-style: italic; color: var(--muted); }

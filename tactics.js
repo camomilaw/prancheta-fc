@@ -169,7 +169,8 @@
       </div>
       <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
         <div class="card"><div class="head"><span class="label">Força do time</span></div>
-          <div class="bars">${[['Ataque', s.att], ['Meio', s.mid], ['Defesa', s.def], ['Goleiro', s.gk]].map(([n, v]) => `<div class="bar"><span>${n}</span><span class="tr"><i style="width:${P.clamp(sc(v), 0, 100)}%"></i></span><b class="num">${sc(v)}</b></div>`).join('')}</div>
+          <div class="bars">${[['Ataque', s.att], ['Meio', s.mid], ['Defesa', s.def], ['Goleiro', s.gk]].map(([n, v]) => `<div class="bar"><span>${n}</span><span class="tr str"><i style="width:${P.clamp(sc(v) / 1.3, 0, 100)}%"></i></span><b class="num">${sc(v)}</b></div>`).join('')}</div>
+          <p class="str-note">A marca vermelha é o 100: o nível de um setor de elite. Entrosamento, moral, funções e instruções táticas podem levar um setor além disso.</p>
           ${warn.length ? `<div class="msg" style="margin-top:12px">${warn.map(esc).join('<br>')}</div>` : ''}</div>
         <div class="card" style="display:flex;flex-direction:column;gap:14px">
           <div class="label">Geral</div>

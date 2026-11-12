@@ -489,7 +489,8 @@
       </div>
       <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
         <div class="card"><div class="head"><span class="label">Força do time</span></div>
-          <div class="bars">${bars.map(([n, v]) => `<div class="bar"><span>${n}</span><span class="tr"><i style="width:${P.clamp(toScore(v), 0, 100)}%"></i></span><b class="num">${toScore(v)}</b></div>`).join('')}</div></div>
+          <div class="bars">${bars.map(([n, v]) => `<div class="bar"><span>${n}</span><span class="tr str"><i style="width:${P.clamp(toScore(v) / 1.3, 0, 100)}%"></i></span><b class="num">${toScore(v)}</b></div>`).join('')}</div>
+          <p class="str-note">A marca vermelha é o 100: o nível de um setor de elite. Entrosamento, moral, funções e instruções táticas podem levar um setor além disso.</p></div>
         <div class="card" style="display:flex;flex-direction:column;gap:14px">
           <div class="opt"><span class="label">Mentalidade</span>${opt('men', P.MENTALITY, t.men)}</div>
           <div class="opt"><span class="label">Pressão</span>${opt('pre', P.PRESSING, t.pre)}</div>
