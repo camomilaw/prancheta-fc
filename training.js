@@ -36,7 +36,8 @@
       }
     } else add(f.k, 2.4); // um atributo só: evolui mais rápido que os 3 do foco da semana
     if (p.tr && p.tr.pos) P.posAttrs(p.tr.pos).forEach((k) => add(k, 0.5));
-    return Object.entries(w);
+    const prof = P.hasT && P.hasT(p, 'prof') ? 1.3 : 1; // Profissional evolui mais
+    return Object.entries(w).map(([k, v]) => [k, v * prof]);
   };
 
   // ---------- Maestria de posição ----------

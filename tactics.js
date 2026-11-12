@@ -142,6 +142,10 @@
     }).join('');
     const warn = warnings(s);
     const ins = t.ins;
+    const xiP = t.xi.map(pl).filter(Boolean);
+    const spAuto = (kind) => xiP.filter((p) => kind === 'cap' || p.pos !== 'GOL').sort((a, b) => P.SP_SKILL[kind](b) - P.SP_SKILL[kind](a))[0];
+    const spPick = (kind) => { const want = t.sp && t.sp[kind]; return (want && xiP.find((p) => p.id === want)) || spAuto(kind); };
+    const capP = spPick('cap'), capId = capP && capP.id;
     return `<div class="tac">
       <div class="card">
         <div class="head"><h2>Escalação</h2>
@@ -156,7 +160,7 @@
             const rk = p ? P.ROLES[sl.pos][P.roleKey(t, i, sl.pos)].n : '';
             const post = (t.roles && t.roles[i] && t.roles[i].post) || 'equ';
             return `<button class="slot" style="left:${sl.x}%;top:${100 - sl.y}%" data-a="tSlot" data-i="${i}" ${i ? 'data-drag="1"' : ''} aria-label="${p ? esc(p.name) + ', ' + sl.pos + ', ' + esc(rk) : 'vazio'}">
-              <span class="dot ${!p || !P.available(p) ? 'off' : f < 1 ? 'fit' : ''}" style="--c:${cc}">${p ? P.ovrAt(p, sl.pos) : '?'}${post !== 'equ' ? `<i class="post ${post}">${post === 'ofe' ? '▲' : '▼'}</i>` : ''}</span>
+              <span class="dot ${!p || !P.available(p) ? 'off' : f < 1 ? 'fit' : ''}" style="--c:${cc}">${p ? P.ovrAt(p, sl.pos) : '?'}${post !== 'equ' ? `<i class="post ${post}">${post === 'ofe' ? '▲' : '▼'}</i>` : ''}${p && p.id === capId ? '<i class="cap-mark" title="Capitão">C</i>' : ''}</span>
               <span class="nm">${esc(name)}</span><span class="ps">${sl.pos}</span></button>`;
           }).join('')}
         </div>
@@ -182,6 +186,16 @@
           <label class="switch"><input type="checkbox" data-c="auto" ${t.auto ? 'checked' : ''}> Escalar os melhores automaticamente antes de cada jogo</label>
           <div class="row"><button class="btn" data-a="bestXI">Escalar os melhores agora</button></div>
         </div>
+        <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="label">Capitão e bola parada</div>
+          ${[['cap', 'Capitão', 'lider'], ['pen', 'Pênaltis', 'penal'], ['fk', 'Faltas', 'faltas'], ['co', 'Escanteios', 'garcom']].map(([k, n, tr]) => {
+            const want = t.sp && t.sp[k], auto = spAuto(k), cur = spPick(k);
+            const opts = xiP.filter((p) => k === 'cap' || p.pos !== 'GOL').sort((a, b) => P.SP_SKILL[k](b) - P.SP_SKILL[k](a));
+            const lbl = (p) => `${esc(p.name)} · ${Math.round(P.SP_SKILL[k](p))}${P.hasT && P.hasT(p, tr) ? ' ★' : ''}`;
+            return `<div class="opt sp-opt"><span class="muted">${n}</span><select class="sel" data-c="tSp" data-k="${k}" aria-label="${n}">
+              <option value="" ${!want || !xiP.some((p) => p.id === want) ? 'selected' : ''}>Automático${auto ? ' (' + esc(auto.name) + ')' : ''}</option>
+              ${opts.map((p) => `<option value="${p.id}" ${want === p.id ? 'selected' : ''}>${lbl(p)}</option>`).join('')}</select></div>`;
+          }).join('')}
+          <p class="muted" style="margin:0;font-size:.82rem">O número é a habilidade na função; ★ = característica ideal. Se o escolhido sair do jogo, o melhor em campo assume. O capitão melhora um pouco o time, e um <b>Líder</b> melhora mais.${capP ? ` Capitão agora: <b>${esc(capP.name)}</b>.` : ''}</p></div>
         <div class="card"><div class="head"><span class="label">Reservas (${bench.length})</span></div>
           <div class="plist">${bench.map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
             <span class="nm"><b>${esc(p.name)}</b><small>${p.age} anos</small></span><span></span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div></div>
@@ -262,6 +276,11 @@
     tReset() { const g = A.g, t = g.tac[g.user]; delete t.xy; t.xi = P.autoXI(g, g.user, t.f); A.save(); A.render(); A.toast('Formação ' + t.f + ' restaurada'); }
   });
   Object.assign(A.CHG, {
+    tSp(el) {
+      const g = A.g, t = g.tac[g.user];
+      t.sp = Object.assign({}, t.sp, { [el.dataset.k]: el.value || null });
+      A.save(); A.render();
+    },
     tForm(el) {
       const g = A.g, t = g.tac[g.user];
       if (!P.FORMATIONS[el.value]) return;

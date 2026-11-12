@@ -412,6 +412,7 @@
         <div><span class="label">Nota</span><b>${avgNote(p)}</b></div>
       </div>
       <div class="attrs">${Object.entries(groups).map(([gname, list]) => `<div class="grp"><h4 class="label">${gname}</h4>${list.map((at) => `<div class="attr"><span>${at.n}</span><b class="${vcls(p.a[at.k])}">${p.a[at.k]}</b></div>`).join('')}</div>`).join('')}</div>
+      ${P.traitsBlock ? P.traitsBlock(p) : ''}
       <div><div class="label" style="margin-bottom:6px">Rende em</div><div class="row">${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}" style="padding:4px 10px">${b.pos} ${b.v}</span>`).join('')}</div></div>
       ${action}
       <div class="row">${mine && !mode && P.talkButton ? P.talkButton(p) : ''}${!mode && g ? P.marketButtons(p) : ''}${mine && !mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);
@@ -560,10 +561,11 @@
     const min = e.t === 'int' ? '45\'' : (e.x ? `90+${e.x}'` : `${e.m}'`);
     const c = e.s != null ? club(e.s === 0 ? m.h : m.a) : null;
     let ico = '', txt = '';
-    if (e.t === 'gol') { ico = I.ball; txt = `<b>GOL do ${esc(c.short)}!</b> ${name}${e.as && pl(e.as) ? ` <span class="muted">(assist. ${esc(pl(e.as).name)})</span>` : ''}`; }
+    if (e.t === 'gol') { const how = { pen: 'de pênalti', fal: 'de falta', esc: 'de cabeça, no escanteio' }[e.sp]; ico = I.ball; txt = `<b>GOL do ${esc(c.short)}!</b> ${name}${how ? ` <span class="sp-tag">${how}</span>` : ''}${e.as && pl(e.as) ? ` <span class="muted">(${e.sp === 'esc' ? 'cobrança de' : 'assist.'} ${esc(pl(e.as).name)})</span>` : ''}`; }
     else if (e.t === 'amarelo') { ico = '<span class="yc"></span>'; txt = `${name} <span class="muted">(${esc(c.short)})</span> recebe amarelo`; }
     else if (e.t === 'vermelho') { ico = '<span class="rc"></span>'; txt = `${name} <span class="muted">(${esc(c.short)})</span> expulso${e.two ? ' (2º amarelo)' : ''}`; }
     else if (e.t === 'lesao') { ico = I.cross; txt = `${name} <span class="muted">(${esc(c.short)})</span> se machuca${e.sub && pl(e.sub) ? `, entra ${esc(pl(e.sub).name)}` : ''}`; }
+    else if (e.t === 'penmiss') { ico = I.save; txt = `<b>Pênalti perdido!</b> ${name} <span class="muted">(${esc(c.short)})</span> não converte`; }
     else if (e.t === 'chance') { ico = I.save; txt = `<span class="muted">Defesa do goleiro em chute de</span> ${name}`; }
     else if (e.t === 'int') { txt = '<span class="muted">Fim do primeiro tempo</span>'; }
     else if (e.t === 'sub') { ico = '<span class="sub-ico">⇄</span>'; const o = pl(e.o); txt = `<span class="muted">(${esc(c.short)})</span> Entra ${name}${o ? `, sai ${esc(o.name)}` : ''}`; }

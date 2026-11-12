@@ -21,6 +21,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `util.js` | Sorteio com semente, helpers, salvamento no navegador |
 | `data.js` | Posições, atributos, países, geração de clubes e jogadores, aplicação de patch |
 | `engine.js` | Força, formações, táticas, simulação, calendário semanal, Copa Ultra, playoffs, acesso/rebaixamento, criação de clube |
+| `traits.js` | Características dos jogadores (Líder, Lida bem sob pressão, Especialista em faltas…), todas com efeito no motor |
 | `ui.js` | Todas as telas (início, elenco, tática, tabela, dia de jogo, mais) e as ações dos botões |
 | `slots.js` | 3 espaços de carreira no mesmo aparelho (IndexedDB), migração do save antigo |
 | `staff.js` | Equipe técnica: olheiros, fisioterapeuta, preparador físico, treinador do Sub-20, auxiliar técnico |
@@ -44,7 +45,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 
 ## Mexendo no equilíbrio do jogo
 
-No começo do `engine.js` ficam `TUNING` (equilíbrio das partidas) e `RULES` (quantos sobem, playoff e quantos descem). Logo abaixo, `ECON` controla a economia: cotas de TV por divisão, preço do ingresso, premiações e a curva de salários. `TUNING` tem: chance de ataque por minuto, conversão de gols (chances claras em `goalBase`, chutes de longe em `longShot` e `longShotQ`), vantagem de jogar em casa, frequência de cartões e lesões, desgaste e recuperação física. Com os valores atuais, a média é de cerca de 2,5 gols por jogo, com 45% de vitórias do mandante.
+No começo do `engine.js` ficam `TUNING` (equilíbrio das partidas) e `RULES` (quantos sobem, playoff e quantos descem). Logo abaixo, `ECON` controla a economia: cotas de TV por divisão, preço do ingresso, premiações e a curva de salários. `TUNING` tem: bola parada (`cornerShot`, `cornerXG`, `dangerFoul`, `penaltyShare`, `fkShot`, `fkXG`), chance de ataque por minuto, conversão de gols (chances claras em `goalBase`, chutes de longe em `longShot` e `longShotQ`), vantagem de jogar em casa, frequência de cartões e lesões, desgaste e recuperação física. Com os valores atuais, a média é de cerca de 2,5 gols por jogo, com 45% de vitórias do mandante.
 
 Para testar mudanças rápido, simule temporadas inteiras no terminal com Node (veja o exemplo no fim deste arquivo).
 

@@ -597,3 +597,14 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .ms-bar i { display: block; height: 100%; border-radius: 3px; background: var(--line); transition: width .3s; }
 .ms-bar i:first-child { background: var(--accent); }
 .ms-bar i:last-child { background: color-mix(in srgb, var(--ink) 45%, transparent); }
+
+/* Características, capitão e bola parada */
+.trait { display: inline-block; font-size: .76rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--good) 18%, var(--surface)); border: 1px solid color-mix(in srgb, var(--good) 40%, var(--line)); }
+.trait.bad { background: color-mix(in srgb, var(--bad) 14%, var(--surface)); border-color: color-mix(in srgb, var(--bad) 40%, var(--line)); }
+.trait.sm { font-size: .66rem; padding: 1px 6px; }
+.traits { display: flex; flex-direction: column; gap: 6px; }
+.trait-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.trait-row small { font-size: .8rem; }
+.cap-mark { position: absolute; top: -5px; left: -6px; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-style: normal; font-size: .64rem; font-weight: 800; line-height: 17px; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
+.sp-opt .sel { width: 100%; }
+.sp-tag { font-size: .74rem; font-weight: 700; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--accent) 25%, transparent); }
