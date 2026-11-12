@@ -106,16 +106,16 @@
       return;
     }
     const g = A.g, me = club(g.user);
-    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), calendario: () => P.calendarView(), clube: () => P.clubView(), stats: () => P.statsView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
+    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), calendario: () => P.calendarView(), clube: () => P.clubView(), stats: () => P.statsView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false), tecnico: () => P.managerView() };
     const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
-    const active = (A.view === 'editor' || A.view === 'financas' || A.view === 'clube' || A.view === 'stats') ? 'mais' : A.view === 'base' ? 'elenco' : A.view === 'calendario' ? 'inicio' : A.view;
+    const active = (A.view === 'editor' || A.view === 'financas' || A.view === 'clube' || A.view === 'stats' || A.view === 'tecnico') ? 'mais' : A.view === 'base' ? 'elenco' : A.view === 'calendario' ? 'inicio' : A.view;
     const step = g.cal[g.week];
     const meta = g.over ? `Temporada ${g.season} encerrada` : `${divName(me.div)} · ${P.stepLabel(step)} · ${g.season}`;
     const hasGame = !g.over && P.userMatch(g);
     root.innerHTML = `<div class="app">
       <header class="top">
         ${P.badge(me, 34)}
-        <div class="who"><h1>${esc(me.name)}</h1><div class="meta">${esc(g.manager)} · ${esc(meta)}</div></div>
+        <div class="who"><h1>${esc(me.name)}</h1><div class="meta"><button class="mgr-link" data-a="go" data-v="tecnico">${esc(g.manager)}</button> · ${esc(meta)}</div></div>
         ${P.calendarView ? `<button class="btn icon-btn" data-a="go" data-v="calendario" aria-label="Calendário" title="Calendário"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>` : ''}
         ${g.over ? '<button class="btn primary" data-a="newSeason">Nova temporada</button>' : `<button class="btn primary" data-a="play">${hasGame ? 'Jogar' : 'Avançar'}</button>`}
       </header>

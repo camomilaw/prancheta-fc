@@ -26,6 +26,7 @@
     return rec;
   }
 
+  P.teamRecord = teamRecord;
   // Fim de temporada: guarda o resumo e acumula a carreira (antes de zerar as estatísticas)
   P.seasonStats = function (g) {
     const sq = P.squad(g, g.user);

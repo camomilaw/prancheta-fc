@@ -142,6 +142,7 @@
     if (P.ensureYouth) P.ensureYouth(g);
     if (P.ensureSuper) P.ensureSuper(g);
     if (P.ensureCompStats) P.ensureCompStats(g);
+    if (P.ensureMgr) P.ensureMgr(g);
   };
   P.pay = function (g, cid, v, cat) {
     const c = P.club(g, cid); if (!c) return;
@@ -703,6 +704,7 @@
         for (const [id, w, n] of r.inj[side]) { g.db.players[id].inj = w; g.db.players[id].injN = n || 'Lesão'; }
       });
       if (P.compStats) P.compStats(g, it, r);
+      if (P.mgrMatch) P.mgrMatch(g, it, r);
       for (const e of r.ev) {
         if (e.t === 'gol') {
           const p = g.db.players[e.p];
@@ -901,6 +903,7 @@
       bal: me.bal
     });
     if (P.scSeasonEnd) P.scSeasonEnd(g);
+    if (P.mgrSeasonEnd) P.mgrSeasonEnd(g);
     P.news(g, `Fim de temporada! ${P.club(g, sum.divs[0].champ).name} é o campeão da Ultraliga. Seu time terminou em ${pos}º na ${me.div}ª divisão: ${result.toLowerCase()}.`, result === 'Rebaixado' ? 'bad' : 'good');
   };
 
