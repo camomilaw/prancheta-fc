@@ -37,6 +37,7 @@
     squad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l-5 3 2 4 2-1v12h10V9l2 1 2-4-5-3c-1 2-2.5 3-4 3S9 5 8 3z"/></svg>',
     tactic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 12h16"/><circle cx="12" cy="12" r="2.5"/><path d="M8 7l2 2m0-2l-2 2M14 16l2 2m0-2l-2 2"/></svg>',
     table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 6H4a3 3 0 003 4M17 6h3a3 3 0 01-3 4"/><path d="M12 13v4M8 21h8M9 17h6"/></svg>',
+    market: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>',
     more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>',
     ball: '<svg class="ev-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 4.5h-5L8 10z" fill="currentColor"/></svg>',
     cross: '<svg class="ev-ico" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
@@ -105,8 +106,8 @@
       return;
     }
     const g = A.g, me = club(g.user);
-    const views = { inicio: vInicio, elenco: vElenco, tatica: vTatica, tabela: vTabela, mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
-    const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mais', 'Mais', I.more]];
+    const views = { inicio: vInicio, elenco: vElenco, tatica: vTatica, tabela: vTabela, mercado: () => P.marketView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
+    const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
     const active = (A.view === 'editor' || A.view === 'financas') ? 'mais' : A.view;
     const step = g.cal[g.week];
     const meta = g.over ? `Temporada ${g.season} encerrada` : `${divName(me.div)} · ${P.stepLabel(step)} · ${g.season}`;
@@ -373,6 +374,7 @@
             <div class="row"><button class="btn" data-a="player" data-id="${p.id}">Cancelar</button><span class="spacer"></span><button class="btn primary" data-a="renewDo" data-id="${p.id}" data-y="${years}">Renovar</button></div></div>`
         : `<div class="confirm"><b>${esc(p.name)} não quer renovar agora.</b><div class="muted">A moral dele está baixa. Coloque-o para jogar e vencer que ele muda de ideia.</div><div><button class="btn" data-a="player" data-id="${p.id}">Ok</button></div></div>`;
     }
+    if (!mine && g && (mode === 'offer' || mode === 'loan')) action = P.marketPanel(p, mode);
     if (mine && mode === 'release') {
       const cost = P.releaseCost(g, p);
       action = `<div class="confirm"><b>Dispensar ${esc(p.name)}?</b><div>A rescisão custa <b>${P.money(cost)}</b> (metade dos salários restantes). Ele vira jogador livre.</div>
@@ -401,7 +403,7 @@
       <div class="attrs">${Object.entries(groups).map(([gname, list]) => `<div class="grp"><h4 class="label">${gname}</h4>${list.map((at) => `<div class="attr"><span>${at.n}</span><b class="${vcls(p.a[at.k])}">${p.a[at.k]}</b></div>`).join('')}</div>`).join('')}</div>
       <div><div class="label" style="margin-bottom:6px">Rende em</div><div class="row">${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}" style="padding:4px 10px">${b.pos} ${b.v}</span>`).join('')}</div></div>
       ${action}
-      <div class="row">${mine && !mode ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);
+      <div class="row">${!mode && g ? P.marketButtons(p) : ''}${mine && !mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);
     if (mode) { const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sh.scrollHeight; }
   };
   function moraleWord(m) { return m >= 85 ? 'Ótima' : m >= 68 ? 'Boa' : m >= 50 ? 'Normal' : m >= 35 ? 'Baixa' : 'Péssima'; }
