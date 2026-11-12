@@ -341,21 +341,28 @@
     const champ = club(s.divs[0].champ);
     const cup = s.cup && club(s.cup);
     const mv = (ids, icon) => ids.map((cid) => `<span class="mv">${icon}${esc(club(cid).short)}</span>`).join(' ');
-    return `<div class="card"><div class="label">Fim da temporada ${g.season}</div>
-      <div class="row" style="margin:10px 0">${P.badge(me, 48)}<div style="flex:1;min-width:0"><h2>${esc(h.result)}</h2><div class="muted">${ord(h.pos)} lugar na ${h.div}ª divisão${h.cupMine ? ' · campeão da Copa Ultra!' : ''}${h.scMine ? ' · campeão da Supercopa!' : ''}${h.tzMine && P.tierByKey ? ` · campeão da ${esc(P.tierByKey(h.tzMine).n)}!` : ''}</div></div></div>
-      <div class="kv" style="margin-bottom:12px">
-        <div><span class="label">Campeão da Ultraliga</span><b>${esc(champ.name)}</b></div>
-        <div><span class="label">Copa Ultra</span><b>${cup ? esc(cup.name) : '-'}</b></div>
-        ${h.tz && P.TIERS ? P.TIERS.filter((t) => h.tz[t.k]).map((t) => `<div><span class="label">${esc(t.n)}</span><b>${esc(h.tz[t.k])}</b></div>`).join('') : ''}
-        ${s.sc ? `<div><span class="label">Supercopa Ultra</span><b>${esc(club(s.sc).name)}</b></div>` : ''}
-        <div><span class="label">Artilheiro</span><b style="font-size:1rem">${esc(h.top)}</b></div>
+    const note = (lbl, c, txt) => `<div class="rt-note">${c ? P.badge(c, 30) : ''}<div><span class="rt-lbl">${esc(lbl)}</span><b>${esc(txt || (c ? c.name : '-'))}</b></div></div>`;
+    const mine = [h.cupMine ? 'campeão da Copa Ultra' : '', h.scMine ? 'campeão da Supercopa' : '', h.tzMine && P.tierByKey ? 'campeão da ' + P.tierByKey(h.tzMine).n : ''].filter(Boolean);
+    const sq = P.squad(g, g.user).filter((p) => p.s && p.s.g > 0).sort((a, b) => b.s.g - a.s.g);
+    const myTop = sq[0];
+    return `<section class="rt">
+      <div class="rt-band"><span>Retrospectiva</span><b>${g.season}</b></div>
+      <div class="rt-me">${P.badge(me, 48)}<div><span class="rt-lbl">O ano do ${esc(me.short || me.name)}</span><b>${esc(h.result)}</b><small>${h.pos}º lugar na ${h.div}ª divisão${mine.length ? ' · ' + esc(mine.join(' · ')) : ''}${myTop ? ` · artilheiro do time: ${esc(myTop.name)} (${myTop.s.g})` : ''}</small></div></div>
+      <h3 class="rt-h">Os campeões</h3>
+      <div class="rt-notes">
+        ${note('Ultraliga', champ)}
+        ${note('Copa Ultra', cup)}
+        ${s.sc ? note('Supercopa Ultra', club(s.sc)) : ''}
+        ${h.tz && P.TIERS ? P.TIERS.filter((t) => h.tz[t.k]).map((t) => note(t.n, null, h.tz[t.k])).join('') : ''}
       </div>
+      <div class="rt-star"><span class="rt-lbl">Craque do ano · artilheiro da Ultraliga</span><b>${esc(h.top)}</b></div>
+      <h3 class="rt-h">Sobe e desce</h3>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Div</th><th>Campeão</th><th>Sobem</th><th>Descem</th></tr></thead><tbody>
         ${s.divs.map((d) => `<tr class="${club(g.user) && d.d === me.div ? 'me' : ''}"><td>${d.d}ª</td><td>${esc(club(d.champ).short)}</td><td>${mv(d.up, I.up) || '–'}</td><td>${mv(d.down, I.down) || '–'}</td></tr>`).join('')}
       </tbody></table></div>
       ${P.seasonExtra ? P.seasonExtra(g) : ''}
-      <p class="muted" style="margin:12px 0">Na virada os jogadores envelhecem, jovens evoluem, veteranos caem de rendimento e alguns se aposentam.</p>
-      <button class="btn primary" data-a="newSeason">Começar temporada ${g.season + 1}</button></div>`;
+      <p class="rt-foot">Na virada os jogadores envelhecem, jovens evoluem, veteranos caem de rendimento e alguns se aposentam.</p>
+      <button class="btn primary" data-a="newSeason">Começar temporada ${g.season + 1}</button></section>`;
   }
 
   // ---------- Elenco ----------
@@ -598,7 +605,7 @@
     else if (e.t === 'chance') { ico = I.save; txt = `<span class="muted">Defesa do goleiro em chute de</span> ${name}`; }
     else if (e.t === 'int') { txt = '<span class="muted">Fim do primeiro tempo</span>'; }
     else if (e.t === 'sub') { ico = '<span class="sub-ico">⇄</span>'; const o = pl(e.o); txt = `<span class="muted">(${esc(c.short)})</span> Entra ${name}${o ? `, sai ${esc(o.name)}` : ''}`; }
-    return `<li><span class="m">${min}</span><span>${ico}</span><span>${txt}</span></li>`;
+    return `<li class="ev-${e.t}"><span class="m">${min}</span><span>${ico}</span><span>${txt}</span></li>`;
   }
   A.reportSheet = function (ri) {
     const it = A.reg[ri]; if (!it) return;

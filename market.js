@@ -90,6 +90,10 @@
     if (wage < demand) return { ok: false, counter: { wage: demand }, msg: `${free ? '' : 'O clube aceitou, mas '}${p.name} quer ganhar ${P.money(demand)}/mês.` };
     P.transfer(g, p, g.user, fee, wage, years);
     P.news(g, `${p.name} é o novo reforço do ${me.name}${fee ? ` por ${P.money(fee)}` : ' (jogador livre)'}.`, 'good');
+    if (P.flash && fee >= 200000) {
+      const rec = g.rec || (g.rec = {}), prev = rec[g.user] || 0;
+      if (fee > prev) { rec[g.user] = fee; P.flash(g, { pri: 2, ttl: 2, kicker: 'Mercado · recorde', head: `${me.name} paga ${P.money(fee)} por ${p.name}`, dek: prev ? `É a contratação mais cara da história do clube. O recorde anterior era de ${P.money(prev)}.` : `É a contratação mais cara da história do clube. ${p.name} chega para ser titular.` }); }
+    }
     return { ok: true, msg: `Negócio fechado! ${p.name} assinou até ${p.ctr}.` };
   };
 

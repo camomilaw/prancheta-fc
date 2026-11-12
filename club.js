@@ -99,6 +99,7 @@
   }
   function fire(g) {
     g.fired = { from: g.user, offers: jobOffers(g, false) };
+    if (P.flash) P.flash(g, { pri: 5, ttl: 2, kicker: 'Bastidores', head: `${g.manager} é demitido do ${P.club(g, g.user).name}`, dek: 'A diretoria perdeu a confiança no trabalho e encerrou o ciclo do técnico.' });
     P.news(g, `A diretoria do ${P.club(g, g.user).name} perdeu a confiança e demitiu ${g.manager}.`, 'bad');
   }
   P.boardSeasonEnd = function (g) {
@@ -120,7 +121,7 @@
 
   // Trocar de clube (demissão ou proposta aceita)
   P.switchClub = function (g, cid) {
-    const old = P.club(g, g.user), nc = P.club(g, cid);
+    const old = P.club(g, g.user), nc = P.club(g, cid), wasFired = !!g.fired;
     g.user = cid;
     const t = g.tac[cid]; t.auto = true; delete t.xy; t.roles = [];
     t.xi = P.autoXI(g, cid, t.f);
@@ -129,6 +130,9 @@
     g.board = { conf: 60 }; P.boardReset(g);
     P.dirty(g);
     P.news(g, `${g.manager} deixa o ${old.name} e assume o ${nc.name} (${nc.div}ª divisão).`, 'good');
+    if (P.flash) P.flash(g, wasFired
+      ? { pri: 5, ttl: 3, kicker: 'Troca de comando', head: `Demitido no ${old.name}, ${g.manager} recomeça no ${nc.name}`, dek: `Depois da queda, o técnico aceita o desafio na ${nc.div}ª divisão. A diretoria quer: ${P.expectation(g, cid).toLowerCase()}.` }
+      : { pri: 5, ttl: 3, kicker: 'Troca de comando', head: `${g.manager} troca o ${old.name} pelo ${nc.name}`, dek: `O técnico aceita a proposta e assume na ${nc.div}ª divisão. A diretoria quer: ${P.expectation(g, cid).toLowerCase()}.` });
   };
 
   // ---------- Telas ----------

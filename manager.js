@@ -7,6 +7,14 @@
   const blankRec = () => ({ j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0 });
   const pct = (r) => (r.j ? Math.round((r.v * 3 + r.e) / (r.j * 3) * 100) : 0);
   const ord = (n) => n + 'º';
+  // Monograma com cara de gravura: anel duplo, ramos de louro e as iniciais
+  const leaf = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="2.2" ry="5" transform="rotate(${r} ${x} ${y})"/>`;
+  const branch = (side) => [[-38, 18, 35], [-41, 8, 20], [-41, -3, 5], [-38, -14, -12], [-32, -24, -30]].map(([x, y, r]) => leaf(side * x, y, side * r)).join('');
+  const monogram = (ini) => `<svg viewBox="-50 -50 100 100" width="64" height="64" aria-hidden="true">
+    <circle r="47" fill="none" stroke="currentColor" stroke-width="1.2"/><circle r="43" fill="none" stroke="currentColor" stroke-width=".6"/>
+    <g fill="currentColor" opacity=".85">${branch(1)}${branch(-1)}</g>
+    <text y="10" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-style="italic" font-weight="900" font-size="${ini.length > 1 ? 30 : 38}" fill="currentColor">${esc(ini)}</text>
+    <path d="M-12 22h24" stroke="currentColor" stroke-width=".8"/></svg>`;
   const clubOf = (g, cid) => cid && P.club(g, cid);
   // Critérios do Hall da Fama (números sob o seu comando)
   P.HOF = { j: 150, g: 60, as: 50 };
@@ -200,7 +208,7 @@
     const tabs = `<div class="seg tabs-x">${[['res', 'Resumo'], ['clu', 'Clubes'], ['tit', 'Títulos'], ['hof', 'Hall da Fama']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="mgTab" data-k="${k}">${n}</button>`).join('')}</div>`;
     const body = st.tab === 'clu' ? clubes(g, M) : st.tab === 'tit' ? titulos(g, M) : st.tab === 'hof' ? hall(g, M) : resumo(g, M, tot);
     const note = M.stints[0].seeded ? '<p class="muted" style="font-size:.78rem;margin:12px 0 0">Carreira iniciada antes deste registro: números anteriores vêm do resumo de cada temporada, e o clube dos anos antigos pode não aparecer.</p>' : '';
-    return `<div class="card"><div class="mg-head"><div class="mg-avatar">${esc((g.manager || 'T').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase())}</div>
+    return `<div class="card"><div class="mg-head"><div class="mg-avatar">${monogram((g.manager || 'T').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase())}</div>
         <div style="flex:1;min-width:0"><h2 style="margin:0">${esc(g.manager)}</h2><div class="muted" style="font-size:.88rem">Técnico do ${esc(me.name)} · ${me.div}ª divisão</div></div></div>
         <div class="head" style="margin:14px 0 12px">${tabs}</div>${body}${note}</div>`;
   };

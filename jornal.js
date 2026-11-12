@@ -17,6 +17,22 @@
   }
   P.lastUserMatch = lastMatch;
 
+  // Manchetes de grandes acontecimentos: ficam na capa por algumas semanas.
+  // Uma notícia mais importante (pri maior) substitui a atual.
+  const key = (g) => g.season * 100 + (g.over ? 99 : g.week);
+  P.flash = function (g, f) {
+    const cur = activeFlash(g);
+    if (cur && cur.pri > f.pri) return;
+    const until = g.over ? (g.season + 1) * 100 + (f.ttl || 2) : key(g) + (f.ttl || 2);
+    g.flash = { kicker: f.kicker, head: f.head, dek: f.dek, pri: f.pri || 1, until, uid: g.user };
+  };
+  function activeFlash(g) {
+    const f = g.flash;
+    if (!f) return null;
+    if (key(g) >= f.until || f.uid !== g.user) { delete g.flash; return null; }
+    return f;
+  }
+
   const WIN_BIG = ['{me} atropela o {op}', 'Goleada! {me} faz {gf} a {ga} no {op}', '{me} passeia contra o {op}'];
   const WIN = ['{me} vence o {op}', '{me} bate o {op} por {gf} a {ga}', 'Vitória do {me} sobre o {op}'];
   const WIN_TOP = ['{me} vence e segura a ponta', '{me} bate o {op} e segue líder'];
@@ -43,9 +59,15 @@
     const kicker = `${me.div}ª divisão · ${g.over ? 'Fim da temporada ' + g.season : P.stepLabel(g.cal[Math.min(g.week, g.cal.length - 1)])}`;
     let head;
 
+    const fl = activeFlash(g);
+    if (fl) return { kicker: fl.kicker, head: fl.head, dek: fl.dek, pos, pts: row.pts, sg: row.gp - row.gc, j: row.j, flash: true };
     if (g.over && g.hist && g.hist.length) {
       const h = g.hist[g.hist.length - 1];
-      head = `${v.me}: ${h.result}`;
+      head = h.result === 'Campeão da Ultraliga' ? `${v.me} é campeão da Ultraliga!`
+        : h.result === 'Campeão e acesso' ? `Campeão! ${v.me} sobe para a ${h.div - 1}ª divisão`
+        : h.result === 'Acesso' ? `Acesso! ${v.me} sobe para a ${h.div - 1}ª divisão`
+        : h.result === 'Rebaixado' ? `Rebaixado: ${v.me} cai para a ${h.div + 1}ª divisão`
+        : `${v.me} fecha o ano em ${h.pos}º na ${h.div}ª divisão`;
     } else {
       const lm = lastMatch(g);
       if (!lm) head = fill(pick(OPEN, seed), v);

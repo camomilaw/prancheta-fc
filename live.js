@@ -183,8 +183,19 @@
     const controls = done ? '' : L.pause ? '<span class="chip sus" style="font-size:.75rem">Pausado</span>'
       : `<div class="seg"><button class="${L.speed === 1 ? 'on' : ''}" data-a="lvSpeed" data-s="1">Normal</button><button class="${L.speed === 3 ? 'on' : ''}" data-a="lvSpeed" data-s="3">Rápido</button></div><button class="btn sm" data-a="lvPause">Pausar</button><button class="btn sm" data-a="lvSkip">Pular</button>`;
     const label = L.step.t === 'lg' ? `Outros jogos da ${club(A.g.user).div}ª divisão` : L.step.t === 'cup' || L.step.t === 'sc' ? 'Outros jogos da fase' : L.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g)}` : 'Playoffs';
+    // Manchete do gol: aparece por alguns minutos depois de cada gol
+    let goalHead = '';
+    const lastGoal = evs.find((e) => e.t === 'gol');
+    if (lastGoal && !done && L.T - key(lastGoal) <= 4) {
+      const gc = club(lastGoal.s === 0 ? m.h : m.a), gp = A.g.db.players[lastGoal.p];
+      const mineG = (lastGoal.s === 0 ? m.h : m.a) === A.g.user;
+      const how = { pen: ', de pênalti', fal: ', de falta', esc: ', de cabeça' }[lastGoal.sp] || '';
+      const fresh = L._gh !== lastGoal; L._gh = lastGoal;
+      goalHead = `<div class="lv-goal ${mineG ? 'mine' : 'theirs'} ${fresh ? 'pop' : ''}" role="status"><span class="lv-goal-k">${lastGoal.x ? '90+' + lastGoal.x : lastGoal.m}' · ${mineG ? 'é do seu time' : 'do adversário'}</span><b>Gol do ${esc(gc.name)}!</b><small>${gp ? esc(gp.name) : ''}${how}</small></div>`;
+    }
     el.innerHTML = `<div class="md-in">
       <div class="row md-top"><h2>${esc(P.stepLabel(L.step))}</h2>${controls}</div>
+      ${goalHead}
       ${A.boardHTML(m, st.goals[0] - L.hide[0], st.goals[1] - L.hide[1], clock, { pos: poss })}
       ${L.hl ? `<div class="hl-wrap"><div class="row" style="gap:8px"><span class="label" style="flex:1">Melhores momentos · ${L.hl.x ? '90+' + L.hl.x : L.hl.m}'</span><button class="btn sm" data-a="lvHlSkip">Pular lance</button></div><div id="hl-slot"></div></div>` : ''}
       ${verdict}

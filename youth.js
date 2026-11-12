@@ -196,7 +196,7 @@
     g.y.reports.unshift({ id: P.uid('r'), sid: s.id, scout: s.name, stars: s.stars, region: m.region, focus: m.focus, lbl: P.missionLabel(m), s: g.season, w: g.week + 1, players });
     if (g.y.reports.length > 8) g.y.reports.length = 8;
     P.news(g, `Relatório do olheiro ${s.name}: ${n} ${n === 1 ? 'jovem' : 'jovens'} (${foc.n.toLowerCase()}, ${reg.n}). Veja em Sub-20 › Relatórios.`, 'good');
-    if (gems.length) P.news(g, `${s.name} está empolgado: "${gems.join(' e ')} pode ser uma joia rara, daquelas que aparecem uma vez na vida." Veja em Sub-20 › Relatórios.`, 'good');
+    if (gems.length) { P.news(g, `${s.name} está empolgado: "${gems.join(' e ')} pode ser uma joia rara, daquelas que aparecem uma vez na vida." Veja em Sub-20 › Relatórios.`, 'good'); if (P.flash) P.flash(g, { pri: 3, ttl: 2, kicker: 'Olheiros · ' + reg.n, head: `Olheiro descobre joia: ${gems[0]}`, dek: `${s.name} voltou empolgado da missão: "pode ser uma joia rara, daquelas que aparecem uma vez na vida". O relatório está no Sub-20.` }); }
   }
 
   // ---------- Hooks do motor ----------
@@ -270,7 +270,7 @@
     for (let i = 0; i < Math.max(4, 16 - n) && n + i < P.YOUTH.maxSquad; i++) {
       const gem = r() < P.YOUTH.gemChance;
       const y = youthPlayer(r, { pos: randomPos(r), potO: gem ? gemPot(r) : P.levelFromRep(me.rep) * 5 + 4 + P.gauss(r) * 8 + (r() < 0.05 ? 10 : 0) + (P.facLvl ? (P.facLvl(g, 'base') - 3) * 3 : 0), age: 15 + Math.floor(r() * 2), nat: P.pickNat(r, me.country) });
-      if (gem) { y.gem = true; P.news(g, `Os treinadores da base não param de falar de ${y.name} (${y.age} anos): pode ser uma joia rara, daquelas que aparecem uma vez na vida.`, 'good'); }
+      if (gem) { y.gem = true; P.news(g, `Os treinadores da base não param de falar de ${y.name} (${y.age} anos): pode ser uma joia rara, daquelas que aparecem uma vez na vida.`, 'good'); if (P.flash) P.flash(g, { pri: 3, ttl: 2, kicker: 'Categorias de base', head: `Nasce uma joia: ${y.name}, ${y.age} anos`, dek: `Os treinadores da base do ${me.name} não falam de outra coisa. Pode ser daqueles que aparecem uma vez na vida.` }); }
       g.y.squad[y.id] = y; fresh.push(y.name);
     }
     if (fresh.length) P.news(g, `Nova geração na base: ${fresh.join(', ')} chegaram ao Sub-20.`, '');

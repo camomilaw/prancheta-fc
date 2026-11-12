@@ -46,20 +46,29 @@
     const c = g.celebrate[0], club = P.club(g, c.cid);
     let el = document.getElementById('cele');
     if (!el) { el = document.createElement('div'); el.id = 'cele'; document.body.appendChild(el); }
-    const conf = Array.from({ length: 36 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:${(i % 9) * 0.25}s;background:${[club.colors[0], club.colors[1], '#ffd95a', '#ffffff'][i % 4]}"></i>`).join('');
-    el.innerHTML = `<div class="cele ${c.big ? 'big' : ''}" role="dialog" aria-modal="true" aria-label="Título conquistado" style="--c1:${esc(club.colors[0])}">
+    const conf = Array.from({ length: 36 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:${(i % 9) * 0.25}s;background:${[club.colors[0], club.colors[1], '#f1e9d8', '#a3261c'][i % 4]}"></i>`).join('');
+    const big = c.comp === 'lg' && club.div === 1 ? 'É campeão da Ultraliga!' : 'É campeão!';
+    const words = ['Festa', 'Noite histórica', 'Glória', 'Taça erguida'];
+    const kick = words[(c.s + c.n.length) % words.length];
+    const city = club.city ? esc(club.city) : 'casa';
+    el.innerHTML = `<div class="cele ${c.big ? 'big' : ''}" role="dialog" aria-modal="true" aria-label="Título conquistado" style="--c1:${esc(club.colors[0])};--c2:${esc(club.colors[1])}">
       <div class="cele-conf" aria-hidden="true">${conf}</div>
-      <div class="cele-in">
-        <div class="cele-kicker">Campeão ${c.s}</div>
-        ${cup}
-        <h2 class="cele-comp">${esc(c.n)}</h2>
-        <div class="cele-club">${P.badge(club, 72)}<b>${esc(club.name)}</b></div>
-        <div class="cele-facts">
-          <div><span class="label">Técnico</span><b>${esc(c.mgr)}</b></div>
-          <div><span class="label">Artilheiro</span><b>${c.top ? `${esc(c.top.name)} <small>${c.top.g} ${c.top.g === 1 ? 'gol' : 'gols'}</small>` : '—'}</b></div>
+      <article class="cele-in cele-paper">
+        <div class="cx-mast"><span>Gazeta da Ultraliga</span><span>${c.s}</span></div>
+        <div class="cx-extra">Edição extra</div>
+        <div class="cx-kick">${esc(kick)} · ${esc(c.n)} ${c.s}</div>
+        <h2 class="cx-head">${esc(big)}</h2>
+        <p class="cx-dek">O ${esc(club.name)} conquista a ${esc(c.n)} e a taça vai para ${city}.</p>
+        <figure class="cx-photo">
+          <div class="cx-frame">${cup}<span class="cx-crest">${P.badge(club, 84)}</span></div>
+          <figcaption>A taça da ${esc(c.n)} nas mãos do ${esc(club.short || club.name)}.</figcaption>
+        </figure>
+        <div class="cx-cols">
+          <div><span class="cx-lbl">O comandante</span><b>${esc(c.mgr)}</b><small>técnico campeão</small></div>
+          <div><span class="cx-lbl">O artilheiro</span><b>${c.top ? esc(c.top.name) : '—'}</b><small>${c.top ? `${c.top.g} ${c.top.g === 1 ? 'gol' : 'gols'} na campanha` : 'gols divididos'}</small></div>
         </div>
-        <button class="btn primary cele-btn" data-a="celeClose">${g.celebrate.length > 1 ? 'Próximo título' : 'Comemorar!'}</button>
-      </div></div>`;
+        <button class="btn primary cele-btn" data-a="celeClose">${g.celebrate.length > 1 ? 'Virar a página →' : 'Guardar o jornal'}</button>
+      </article></div>`;
     el.hidden = false;
   };
 

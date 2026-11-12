@@ -888,6 +888,7 @@
         const p = g.db.players[e.p];
         if (e.t === 'lesao') {
           P.news(g, `${p.name} sofreu ${e.n ? e.n.toLowerCase() : 'uma lesão'} e fica fora por ${e.w} ${e.w === 1 ? 'semana' : 'semanas'}.`, 'bad');
+          if (P.flash && e.w >= 6) P.flash(g, { pri: 2, ttl: 1, kicker: 'Departamento médico', head: `Baque: ${p.name} fica ${e.w} semanas fora`, dek: `${e.n ? e.n : 'A lesão'} tira ${p.name} de boa parte da temporada. O técnico ${g.manager} terá de mexer no time.` });
           if (P.mail) P.mail(g, { k: 'inj', pid: p.id, subj: `${p.name} lesionado: ${e.w} ${e.w === 1 ? 'semana' : 'semanas'} fora`, body: `Chefe, o departamento médico confirmou: o ${p.name} sofreu ${e.n ? e.n.toLowerCase() : 'uma lesão'} no jogo contra o ${opp.name} e fica fora por ${e.w} ${e.w === 1 ? 'semana' : 'semanas'}. Precisamos rever a escalação.` });
         }
         if (e.t === 'vermelho') {
