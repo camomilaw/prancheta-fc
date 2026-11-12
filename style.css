@@ -684,7 +684,7 @@ body { font-size: 15.5px; background-image: radial-gradient(color-mix(in srgb, v
 h1, h2, h3, h4 { font-variant-numeric: lining-nums; font-weight: 900; letter-spacing: -.005em; }
 h2 { font-size: 1.6rem; line-height: 1.05; }
 .label { font-family: var(--f-label); font-weight: 500; font-size: .74rem; letter-spacing: .09em; }
-.num, table, .ovr, .kv b, .attr b, .zone, .board .score, .board .clock, .slot-row .slot-n, .form i { font-family: var(--f-num); font-variant-numeric: tabular-nums lining-nums; }
+.num, .tbl td.n, .ovr, .kv b, .attr b, .zone, .board .score, .board .clock, .slot-row .slot-n, .form i { font-family: var(--f-num); font-variant-numeric: tabular-nums lining-nums; }
 :focus-visible { outline-color: var(--accent); }
 ::selection { background: var(--hi); }
 
@@ -924,3 +924,10 @@ body { margin: 0; }
 .slot .dot { font-family: var(--f-num); font-weight: 600; background: #f6f0e1; color: #1d1a16; }
 .slot .dot.off { background: #e9c4bd; } .slot .dot.fit { background: #ecd9a0; }
 .slot .dot::after { border-radius: 0; }
+
+/* Ajustes: tabelas com nomes em serifa, rótulos que não quebram, topo da partida */
+table { font-family: var(--f-body); }
+.kv .label { font-size: .66rem; letter-spacing: .06em; line-height: 1.25; display: block; }
+.md-top { flex-wrap: wrap; row-gap: 6px; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+.md-top h2 { flex: 1 1 100%; min-width: 0; font-size: 1.45rem; }
+.md-top .seg { border-bottom: 0; margin-right: auto; }

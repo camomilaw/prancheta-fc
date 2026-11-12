@@ -184,7 +184,7 @@
       : `<div class="seg"><button class="${L.speed === 1 ? 'on' : ''}" data-a="lvSpeed" data-s="1">Normal</button><button class="${L.speed === 3 ? 'on' : ''}" data-a="lvSpeed" data-s="3">Rápido</button></div><button class="btn sm" data-a="lvPause">Pausar</button><button class="btn sm" data-a="lvSkip">Pular</button>`;
     const label = L.step.t === 'lg' ? `Outros jogos da ${club(A.g.user).div}ª divisão` : L.step.t === 'cup' || L.step.t === 'sc' ? 'Outros jogos da fase' : L.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g)}` : 'Playoffs';
     el.innerHTML = `<div class="md-in">
-      <div class="row"><h2 style="flex:1;min-width:0">${esc(P.stepLabel(L.step))}</h2>${controls}</div>
+      <div class="row md-top"><h2>${esc(P.stepLabel(L.step))}</h2>${controls}</div>
       ${A.boardHTML(m, st.goals[0] - L.hide[0], st.goals[1] - L.hide[1], clock, { pos: poss })}
       ${L.hl ? `<div class="hl-wrap"><div class="row" style="gap:8px"><span class="label" style="flex:1">Melhores momentos · ${L.hl.x ? '90+' + L.hl.x : L.hl.m}'</span><button class="btn sm" data-a="lvHlSkip">Pular lance</button></div><div id="hl-slot"></div></div>` : ''}
       ${verdict}
