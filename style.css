@@ -426,6 +426,44 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .sub-item .nm b { display: block; font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sub-item .nm small { font-size: .7rem; color: var(--muted); }
 .sub-item .pos-tag { font-size: .72rem; }
+/* Campinho da partida ao vivo: campo à esquerda, banco rolando na altura do campo */
+.lv-board { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 8px; }
+.pitch.lv { max-width: 380px; margin: 0; aspect-ratio: 60 / 100; }
+.pitch.lv .slot { width: 26%; transform: translate(-50%, -15px); }
+.pitch.lv .slot .dot { width: 30px; height: 30px; font-size: .85rem; }
+.pitch.lv .slot .dot::after { bottom: -5px; }
+.pitch.lv .slot .nm { font-size: .6rem; margin-top: 5px; }
+.pitch.lv .slot .ps { font-size: .52rem; }
+.pitch.lv .slot:disabled { opacity: 1; }
+.pitch.lv .slot.swap .dot { outline: 3px dashed var(--accent); outline-offset: 1px; }
+.pitch.lv .slot.gone { opacity: .75; }
+.pitch.lv .dot.red { background: var(--bad); color: #fff; }
+.pitch.lv .mk { position: absolute; top: -4px; right: -5px; font-style: normal; }
+.pitch.lv .mk.inj { width: 14px; height: 14px; border-radius: 50%; background: var(--bad); color: #fff; font-size: .7rem; line-height: 14px; text-align: center; }
+.pitch.lv .mk.yc { width: 8px; height: 11px; border-radius: 2px; background: #f2c230; box-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+.lv-bench { display: flex; flex-direction: column; gap: 4px; min-width: 0; height: 0; min-height: 100%; overflow-y: auto; }
+.lv-bench .label { position: sticky; top: 0; background: var(--surface); padding-bottom: 2px; z-index: 1; }
+.bn-item { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 6px; align-items: center; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 5px 6px; color: inherit; flex: none; }
+.bn-item .nm { min-width: 0; }
+.bn-item .nm b { display: block; font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bn-item .nm small { font-size: .68rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.bn-item .cb { display: inline-block; width: 12px; height: 4px; border-radius: 2px; background: var(--c); }
+.bn-item .ovr { font-family: var(--f-display); font-weight: 700; font-size: .95rem; }
+.bn-item .ovr.fit { color: var(--warn); }
+.bn-item .pos-tag { font-size: .66rem; }
+.bn-item.on { border-color: var(--pitch); background: color-mix(in srgb, var(--pitch) 14%, var(--surface)); box-shadow: inset 0 0 0 1px var(--pitch); }
+.lv-hint { margin: 0; font-size: .88rem; }
+@media (min-width: 600px) {
+  .pitch.lv .slot { transform: translate(-50%, -19px); }
+  .pitch.lv .slot .dot { width: 38px; height: 38px; font-size: 1rem; }
+  .pitch.lv .slot .nm { font-size: .72rem; }
+  .pitch.lv .slot .ps { font-size: .6rem; }
+}
+@media (max-width: 480px) {
+  .bn-item { grid-template-columns: minmax(0, 1fr) auto; padding: 5px; }
+  .bn-item .pos-tag { display: none; }
+  .bn-item .nm small::before { content: attr(data-pos); font-weight: 700; color: var(--ink); }
+}
 .sub-item.on { border-color: var(--pitch); background: color-mix(in srgb, var(--pitch) 12%, var(--surface)); }
 .sub-ico { font-weight: 700; color: var(--info); }
 
