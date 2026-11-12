@@ -258,6 +258,7 @@
             <div class="side">${P.badge(a, 52)}<b>${esc(a.name)}</b><span class="sub">${a.div}ª div · ${ord(posOf(a.id))} · ${form(a.id)}</span></div>
           </div>
           ${um.ko ? '<p class="muted" style="text-align:center;margin:10px 0 0;font-size:.85rem">Jogo único. Empate vai para os pênaltis.</p>' : ''}
+          ${P.scoutLine ? P.scoutLine(g, um) : ''}
           <div class="row" style="margin-top:14px"><button class="btn" data-a="go" data-v="tatica">Ajustar tática</button><button class="btn" data-a="go" data-v="calendario">Calendário</button><span class="spacer"></span><button class="btn primary" data-a="play">Jogar</button></div></div>`;
       } else {
         top = `<div class="card"><div class="head"><span class="label">${esc(P.stepLabel(step))}</span></div>

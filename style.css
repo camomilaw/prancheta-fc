@@ -432,3 +432,14 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 /* ---------- Potencial dinâmico ---------- */
 .pot-t { font-size: .75rem; margin-left: 4px; font-family: var(--f-body); font-weight: 700; }
 .pot-t.up { color: var(--good); } .pot-t.dn { color: var(--bad); }
+
+/* ---------- Relatório do adjunto ---------- */
+.scout-line { margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--surface-2); }
+.prob { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--line); }
+.prob i { display: block; height: 100%; }
+.prob .w { background: var(--good); } .prob .d { background: var(--muted); } .prob .l { background: var(--bad); }
+.prob-lbl { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.kp { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.pitch.mini { max-width: 300px; }
+.pitch.mini .slot { pointer-events: none; }
+.pitch.mini .dot { width: 32px; height: 32px; font-size: .9rem; }

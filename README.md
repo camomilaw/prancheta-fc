@@ -30,6 +30,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `club.js` | Dificuldade (diretoria e negociações), confiança, demissão, propostas de emprego, estádio e estrutura |
 | `people.js` | Discurso pós-jogo, insatisfação, conversas individuais e tipos de lesão |
 | `stats.js` | Estatísticas da temporada e da carreira e resumo de fim de temporada |
+| `scout.js` | Relatório do adjunto sobre o próximo adversário e chance de vitória |
 | `editor.js` | Editor de clubes, jogadores e banco de dados |
 | `main.js` | Inicialização |
 | `style.css` | Visual (cores no topo do arquivo, tema claro e escuro) |
