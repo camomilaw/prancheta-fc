@@ -164,6 +164,7 @@
         <p class="jr-note">Força média do elenco à direita. Toque num clube para escolher.</p>
       </section>
       <div class="jr-sign-bar">
+        <div class="jr-sigline ${s.manager.trim() ? '' : 'empty'}"><span id="jr-sig">${esc(s.manager.trim())}</span></div>
         <button class="jr-stamp" data-a="start" ${s.club ? '' : 'disabled'}>Assinar o contrato</button>
         <span class="jr-note">${picked ? `com o <b>${esc(picked.name)}</b> · ${divName(picked.div)}` : 'escolha um clube para começar'}</span>
       </div>
@@ -1023,7 +1024,7 @@
   });
 
   Object.assign(INP, {
-    mgr(el) { A.setup.manager = el.value; },
+    mgr(el) { A.setup.manager = el.value; const sig = document.getElementById('jr-sig'); if (sig) { sig.textContent = el.value.trim(); sig.parentNode.classList.toggle('empty', !el.value.trim()); } },
     clubQ(el) {
       A.setup.q = el.value;
       const db = A.setup.db, ovrs = P.clubOvrs(db), q = el.value.trim().toLowerCase();
