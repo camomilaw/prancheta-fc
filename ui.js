@@ -654,7 +654,7 @@
     clearTimeout(A._mdt);
     const md = A.md; if (!md) return;
     if (md.T >= 96) { A.drawMatchday(); return; }
-    A._mdt = setTimeout(() => { md.T++; A.drawMatchday(); A.tickMatchday(); }, md.speed === 1 ? 140 : 35);
+    A._mdt = setTimeout(() => { md.T++; A.drawMatchday(); A.tickMatchday(); }, md.speed === 1 ? 175 : 35);
   };
   A.drawMatchday = function () {
     const md = A.md, el = document.getElementById('md');

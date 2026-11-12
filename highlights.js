@@ -288,7 +288,12 @@
         stp.from = ballPos.slice();
         if (stp.cap) { cap.textContent = stp.cap; cap.className = 'hl-cap'; }
         if (stp.who) { stp.w0 = [stp.who.x, stp.who.y]; }
-        if (stp.k === 'carry') stp.path = curve(stp.w0, stp.to, (Math.random() - 0.5) * 0.7, sc.mode === 'open' ? 0.85 : 0, 1.5 + Math.random());
+        if (stp.k === 'carry') {
+          // quase sempre reto (só uma curva leve); de vez em quando, drible em zigue-zague (mais em quem dribla bem)
+          const zig = sc.mode === 'open' && Math.random() < P.clamp(0.12 + (stp.who.p.a.dri - 10) * 0.03, 0.08, 0.4);
+          stp.path = curve(stp.w0, stp.to, zig ? (Math.random() - 0.5) * 0.6 : (Math.random() - 0.5) * 0.15, zig ? 0.85 : 0, 1.5 + Math.random());
+          if (zig && stp.cap && !/dribla/.test(stp.cap)) { stp.cap = stp.cap.replace(/avança|conduz…/, 'dribla…'); cap.textContent = stp.cap; }
+        }
         if (stp.k === 'pass') {
           stp.r0 = [stp.to.x, stp.to.y]; stp.to.run = true; label(stp.to, true);
           // o companheiro chega ao ponto do passe virado para a bola, que encosta na frente dele

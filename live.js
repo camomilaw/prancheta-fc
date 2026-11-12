@@ -33,7 +33,7 @@
     clearTimeout(A._lvt);
     const L = A.live;
     if (!L || L.pause || L.done || L.hl) return;
-    A._lvt = setTimeout(stepMinute, L.speed === 1 ? 140 : 35);
+    A._lvt = setTimeout(stepMinute, L.speed === 1 ? 175 : 35);
   }
   function stepMinute() {
     const L = A.live; if (!L || L.pause || L.done) return;
