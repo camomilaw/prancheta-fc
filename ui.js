@@ -115,6 +115,17 @@
     const step = g.cal[g.week];
     const meta = g.over ? `Temporada ${g.season} encerrada` : `${divName(me.div)} · ${P.stepLabel(step)} · ${g.season}`;
     const hasGame = !g.over && P.userMatch(g);
+    // Se uma tela quebrar, mostra o erro no lugar dela (o menu continua funcionando)
+    let viewHTML;
+    try { viewHTML = (views[A.view] || vInicio)(); }
+    catch (e) {
+      console.error(e);
+      A.lastError = `${A.view}: ${e && e.message}\n${(e && e.stack || '').split('\n').slice(1, 4).join('\n')}`;
+      viewHTML = `<div class="card"><div class="head"><span class="label">Esta página não abriu</span></div>
+        <p style="margin:0 0 10px">Algo deu errado ao montar esta tela. O resto do jogo continua funcionando. Se puder, mande um print desta mensagem para corrigirmos:</p>
+        <pre class="err-box">${esc(A.lastError)}</pre>
+        <div class="row"><button class="btn" data-a="go" data-v="inicio">Voltar ao início</button></div></div>`;
+    }
     root.innerHTML = `<div class="app">
       <header class="top">
         ${P.badge(me, 34)}
@@ -123,7 +134,7 @@
         ${g.over ? '<button class="btn primary" data-a="newSeason">Nova temporada</button>' : `<button class="btn primary" data-a="play">${hasGame ? 'Jogar' : 'Avançar'}</button>`}
       </header>
       <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span>${k === 'inicio' && P.unread && P.unread(g) ? `<i class="nav-dot" aria-label="${P.unread(g)} e-mails não lidos">${P.unread(g)}</i>` : ''}</button>`).join('')}</nav>
-      <main class="main" id="view">${(views[A.view] || vInicio)()}</main>
+      <main class="main" id="view">${viewHTML}</main>
     </div>`;
     // faixas de abas com rolagem: mostra a aba ativa
     root.querySelectorAll('.tabs-x').forEach((bar) => { const on = bar.querySelector('.on'); if (on) bar.scrollLeft = on.offsetLeft - bar.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2; });
@@ -1055,7 +1066,7 @@
   // reconhecido pelo botão equivalente (mesma ação e mesmos dados) que estiver sob o ponteiro.
   const keyOf = (el) => el.dataset.a + '|' + JSON.stringify(Object.assign({}, el.dataset));
   let press = null, rescued = null;
-  const run = (el, e) => { const fn = ACT[el.dataset.a]; if (fn) fn(el.dataset, el, e); };
+  const run = (el, e) => { const fn = ACT[el.dataset.a]; if (!fn) return; try { fn(el.dataset, el, e); } catch (err) { console.error(err); A.lastError = `${el.dataset.a}: ${err && err.message}`; A.toast('Erro: ' + A.lastError); } };
   document.addEventListener('pointerdown', (e) => {
     rescued = null; // cada novo toque começa do zero
     const el = e.button === 0 && e.target.closest ? e.target.closest('[data-a]') : null;

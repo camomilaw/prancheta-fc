@@ -1020,3 +1020,4 @@ table { font-family: var(--f-body); }
 .bar .tr.str { position: relative; overflow: visible; }
 .bar .tr.str::after { content: ""; position: absolute; left: 76.9%; top: -3px; bottom: -3px; width: 1px; background: var(--accent); }
 .str-note { margin: 10px 0 0; font-size: .8rem; font-style: italic; color: var(--muted); }
+.err-box { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-num); font-size: .74rem; background: var(--surface-2); border: 1px dashed var(--bad); padding: 8px; margin: 0 0 10px; }
