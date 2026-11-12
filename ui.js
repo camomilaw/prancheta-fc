@@ -119,7 +119,7 @@
         ${P.calendarView ? `<button class="btn icon-btn" data-a="go" data-v="calendario" aria-label="Calendário" title="Calendário"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>` : ''}
         ${g.over ? '<button class="btn primary" data-a="newSeason">Nova temporada</button>' : `<button class="btn primary" data-a="play">${hasGame ? 'Jogar' : 'Avançar'}</button>`}
       </header>
-      <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span></button>`).join('')}</nav>
+      <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span>${k === 'inicio' && P.unread && P.unread(g) ? `<i class="nav-dot" aria-label="${P.unread(g)} e-mails não lidos">${P.unread(g)}</i>` : ''}</button>`).join('')}</nav>
       <main class="main" id="view">${(views[A.view] || vInicio)()}</main>
     </div>`;
     if (P.firedModal) P.firedModal(g);
@@ -277,6 +277,7 @@
     const hist = userHistory(g).slice(-5).reverse();
 
     return `${top}
+      ${P.inboxCard ? P.inboxCard(g) : ''}
       ${P.boardCard ? P.boardCard(g) : ''}
       <div class="grid2">
         <div class="card"><div class="head"><span class="label">Situação</span><span class="label">Meta: ${esc(P.expectation(g, g.user))}</span></div>

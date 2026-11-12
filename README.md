@@ -36,6 +36,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `stats.js` | Estatísticas da temporada e da carreira e resumo de fim de temporada |
 | `scout.js` | Relatório do adjunto sobre o próximo adversário e chance de vitória |
 | `manager.js` | Perfil do treinador: campanha partida a partida, clubes comandados, títulos e Hall da Fama (critérios em `P.HOF`) |
+| `inbox.js` | Caixa de entrada: e-mails do adjunto sobre propostas, lesões e suspensões na tela inicial, levando à tela certa (`P.mail`) |
 | `backup.js` | Backup da carreira em arquivo (automático a cada temporada) e aviso do último backup |
 | `editor.js` | Editor de clubes, jogadores e banco de dados |
 | `main.js` | Inicialização |

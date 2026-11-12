@@ -63,7 +63,10 @@
       if (I.inj && r() < I.inj) { p.inj = 1 + Math.floor(r() * 2); hurt.push(p.name); }
     }
     if (F.chem && I.dev && g.chem) for (const k of Object.keys(g.chem)) g.chem[k] = Math.min(100, g.chem[k] + F.chem);
-    if (hurt.length) P.news(g, `Lesão no treino intenso: ${hurt.join(', ')}.`, 'bad');
+    if (hurt.length) {
+      P.news(g, `Lesão no treino intenso: ${hurt.join(', ')}.`, 'bad');
+      if (P.mail) P.mail(g, { k: 'inj', subj: `Lesão no treino: ${hurt.join(', ')}`, body: `Chefe, no treino intenso desta semana ${hurt.length === 1 ? `o ${hurt[0]} se machucou e fica` : `${hurt.join(' e ')} se machucaram e ficam`} fora por 1 ou 2 semanas. Vale rever a escalação e talvez aliviar a carga.` });
+    }
   };
 
   // ---------- Datas ----------

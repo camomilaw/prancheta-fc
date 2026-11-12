@@ -702,7 +702,10 @@
             p.s.ca++; p.ylw++;
             if (p.ylw >= 3) {
               p.ylw = 0; p.susp = Math.max(p.susp, 1);
-              if (cid === g.user) P.news(g, `${p.name} levou o 3º amarelo e cumpre suspensão no próximo jogo.`, 'warn');
+              if (cid === g.user) {
+                P.news(g, `${p.name} levou o 3º amarelo e cumpre suspensão no próximo jogo.`, 'warn');
+                if (P.mail) P.mail(g, { k: 'sus', pid: p.id, subj: `${p.name} suspenso por cartões`, body: `Chefe, o ${p.name} recebeu o 3º amarelo e está fora do próximo jogo. Vale definir quem entra no lugar dele.` });
+              }
             }
           }
         }
@@ -777,8 +780,14 @@
       for (const e of m.ev) {
         if (e.s !== (home ? 0 : 1)) continue;
         const p = g.db.players[e.p];
-        if (e.t === 'lesao') P.news(g, `${p.name} sofreu ${e.n ? e.n.toLowerCase() : 'uma lesão'} e fica fora por ${e.w} ${e.w === 1 ? 'semana' : 'semanas'}.`, 'bad');
-        if (e.t === 'vermelho') P.news(g, `${p.name} foi expulso e está suspenso.`, 'bad');
+        if (e.t === 'lesao') {
+          P.news(g, `${p.name} sofreu ${e.n ? e.n.toLowerCase() : 'uma lesão'} e fica fora por ${e.w} ${e.w === 1 ? 'semana' : 'semanas'}.`, 'bad');
+          if (P.mail) P.mail(g, { k: 'inj', pid: p.id, subj: `${p.name} lesionado: ${e.w} ${e.w === 1 ? 'semana' : 'semanas'} fora`, body: `Chefe, o departamento médico confirmou: o ${p.name} sofreu ${e.n ? e.n.toLowerCase() : 'uma lesão'} no jogo contra o ${opp.name} e fica fora por ${e.w} ${e.w === 1 ? 'semana' : 'semanas'}. Precisamos rever a escalação.` });
+        }
+        if (e.t === 'vermelho') {
+          P.news(g, `${p.name} foi expulso e está suspenso.`, 'bad');
+          if (P.mail) P.mail(g, { k: 'sus', pid: p.id, subj: `${p.name} suspenso após expulsão`, body: `Chefe, o ${p.name} foi expulso contra o ${opp.name}${e.two ? ' (dois amarelos)' : ''} e cumpre suspensão de ${e.two ? '1 jogo' : '2 jogos'}. Precisamos de alguém na posição dele.` });
+        }
       }
       if (P.chemAfterMatch) P.chemAfterMatch(g, m, mine.r, home);
       if (P.afterUserMatch) P.afterUserMatch(g, mine.it, mine.r, home);

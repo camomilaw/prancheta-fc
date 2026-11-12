@@ -562,3 +562,26 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .tr-pos-btn small { font-size: .62rem; color: var(--muted); text-align: center; line-height: 1.15; }
 .tr-pos-btn.on { border-color: var(--pitch); box-shadow: inset 0 0 0 1px var(--pitch); background: color-mix(in srgb, var(--pitch) 12%, var(--surface)); }
 @media (max-width: 420px) { .tr-pos-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* Caixa de entrada do adjunto */
+.nav button { position: relative; }
+.nav-dot { position: absolute; top: 4px; left: calc(50% + 6px); min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--bad); color: #fff; font-style: normal; font-size: .66rem; font-weight: 700; line-height: 17px; text-align: center; }
+.mail-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--bad); color: #fff; font-size: .68rem; line-height: 18px; text-align: center; letter-spacing: 0; }
+.mail-addr { font-size: .74rem; margin: -6px 0 8px; overflow-wrap: anywhere; }
+.mail { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; width: 100%; text-align: left; padding: 10px 4px; border: 0; border-top: 1px solid var(--line); background: transparent; color: inherit; font: inherit; }
+.mail:hover { background: var(--surface-2); }
+.mail-av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font-weight: 700; font-size: .8rem; color: var(--muted); }
+.mail.unread .mail-av { background: var(--pitch); color: #fff; }
+.mail-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mail-top { display: flex; justify-content: space-between; gap: 8px; }
+.mail-from { font-size: .86rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mail.unread .mail-from { font-weight: 700; }
+.mail-when { font-size: .72rem; color: var(--muted); white-space: nowrap; }
+.mail-subj { font-size: .88rem; display: flex; gap: 6px; align-items: baseline; min-width: 0; }
+.mail.unread .mail-subj { font-weight: 700; }
+.mail-tag { flex: none; font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 1px 6px; border-radius: 5px; }
+.mail-tag.prop { background: color-mix(in srgb, var(--info) 22%, transparent); }
+.mail-tag.inj { background: color-mix(in srgb, var(--bad) 22%, transparent); }
+.mail-tag.sus { background: color-mix(in srgb, var(--warn) 28%, transparent); }
+.mail-prev { font-size: .8rem; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mail-go { font-size: .76rem; font-weight: 700; color: var(--good); margin-top: 2px; }
