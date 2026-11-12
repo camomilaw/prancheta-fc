@@ -106,9 +106,9 @@
       return;
     }
     const g = A.g, me = club(g.user);
-    const views = { inicio: vInicio, elenco: vElenco, tatica: vTatica, tabela: vTabela, mercado: () => P.marketView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
+    const views = { inicio: vInicio, elenco: vElenco, tatica: vTatica, tabela: vTabela, mercado: () => P.marketView(), base: () => P.baseView(), mais: vMais,, financas: vFinancas, editor: () => P.editor.page(false) };
     const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
-    const active = (A.view === 'editor' || A.view === 'financas') ? 'mais' : A.view;
+    const active = (A.view === 'editor' || A.view === 'financas') ? 'mais' : A.view === 'base' ? 'elenco' : A.view;
     const step = g.cal[g.week];
     const meta = g.over ? `Temporada ${g.season} encerrada` : `${divName(me.div)} · ${P.stepLabel(step)} · ${g.season}`;
     const hasGame = !g.over && P.userMatch(g);
@@ -344,7 +344,7 @@
     sortPlayers(list, st.sort);
     const avgAge = (total.reduce((s, p) => s + p.age, 0) / total.length).toFixed(1).replace('.', ',');
     const val = total.reduce((s, p) => s + P.value(p), 0);
-    return `<div class="card"><div class="head"><h2>Elenco</h2><span class="muted">${total.length} jogadores · média ${avgAge} anos · ${P.money(val)}</span></div>
+    return `<div class="card"><div class="head"><h2>Elenco</h2><button class="btn sm" data-a="go" data-v="base">Sub-20 e olheiros</button><span class="muted">${total.length} jogadores · média ${avgAge} anos · ${P.money(val)}</span></div>
       <div class="filters" style="margin-bottom:8px">
         <div class="seg">${[['ALL', 'Todos'], ['GOL', 'GOL'], ['DEF', 'DEF'], ['MEI', 'MEI'], ['ATA', 'ATA']].map(([k, n]) => `<button class="${st.filter === k ? 'on' : ''}" data-a="filter" data-k="${k}">${n}</button>`).join('')}</div>
         <span class="spacer"></span>
