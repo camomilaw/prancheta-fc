@@ -287,6 +287,7 @@
             <div><span class="label">Pontos</span><b>${row.pts}</b></div>
             <div><span class="label">Campanha</span><b>${row.v}-${row.e}-${row.d}</b></div>
             <div><span class="label">Copa Ultra</span><b style="font-size:1rem">${esc(P.cupStatus(g))}</b></div>
+            ${P.scSeason && P.scSeason(g) ? `<div><span class="label">Supercopa</span><b style="font-size:1rem">${esc(P.scStatus(g))}</b></div>` : ''}
             <div><span class="label">Lesionados</span><b class="${injured ? 'v1' : ''}">${injured}</b></div>
             <div><span class="label">Suspensos</span><b class="${susp ? 'v2' : ''}">${susp}</b></div>
             <div><span class="label">Cansados</span><b class="${tired ? 'v2' : ''}">${tired}</b></div>
@@ -313,10 +314,11 @@
     const cup = s.cup && club(s.cup);
     const mv = (ids, icon) => ids.map((cid) => `<span class="mv">${icon}${esc(club(cid).short)}</span>`).join(' ');
     return `<div class="card"><div class="label">Fim da temporada ${g.season}</div>
-      <div class="row" style="margin:10px 0">${P.badge(me, 48)}<div style="flex:1;min-width:0"><h2>${esc(h.result)}</h2><div class="muted">${ord(h.pos)} lugar na ${h.div}ª divisão${h.cupMine ? ' · campeão da Copa Ultra!' : ''}</div></div></div>
+      <div class="row" style="margin:10px 0">${P.badge(me, 48)}<div style="flex:1;min-width:0"><h2>${esc(h.result)}</h2><div class="muted">${ord(h.pos)} lugar na ${h.div}ª divisão${h.cupMine ? ' · campeão da Copa Ultra!' : ''}${h.scMine ? ' · campeão da Supercopa!' : ''}</div></div></div>
       <div class="kv" style="margin-bottom:12px">
         <div><span class="label">Campeão da Ultraliga</span><b>${esc(champ.name)}</b></div>
         <div><span class="label">Copa Ultra</span><b>${cup ? esc(cup.name) : '-'}</b></div>
+        ${s.sc ? `<div><span class="label">Supercopa Ultra</span><b>${esc(club(s.sc).name)}</b></div>` : ''}
         <div><span class="label">Artilheiro</span><b style="font-size:1rem">${esc(h.top)}</b></div>
       </div>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Div</th><th>Campeão</th><th>Sobem</th><th>Descem</th></tr></thead><tbody>
@@ -493,9 +495,10 @@
     const g = A.g, st = A.st, me = club(g.user);
     if (st.div == null) st.div = me.div;
     const d = st.div;
-    const tabs = `<div class="seg">${[['class', 'Classificação'], ['art', 'Artilharia'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
+    const tabs = `<div class="seg tabs-x">${[['class', 'Classificação'], ['art', 'Artilharia'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra'], ['sc', 'Supercopa']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
     let body = '';
     if (st.tab === 'cup') return `<div class="card"><div class="head"><h2>Copa Ultra ${g.season}</h2>${tabs}</div>${cupView(g)}</div>`;
+    if (st.tab === 'sc') return `<div class="card"><div class="head"><h2>Supercopa Ultra</h2>${tabs}</div>${P.superView(g)}</div>`;
     if (st.tab === 'class') {
       const tb = P.table(g, d), n = tb.length;
       body = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">P</th><th class="n">J</th><th class="n">V</th><th class="n">E</th><th class="n">D</th><th class="n hide-sm">GP</th><th class="n hide-sm">GC</th><th class="n">SG</th><th class="hide-sm">Últimos</th></tr></thead><tbody>
@@ -649,7 +652,7 @@
       const flash = o.goals.some((e) => key(e) <= T && key(e) > T - 3);
       return ogRow({ h: o.h, a: o.a }, h, a, { flash: flash && !done, pen: done ? o.pen : null });
     }).join('');
-    const othersLabel = md.step.t === 'lg' ? `Outros jogos da ${(x ? x.div : club(A.g.user).div)}ª divisão` : md.step.t === 'cup' ? 'Outros jogos da fase' : 'Playoffs';
+    const othersLabel = md.step.t === 'lg' ? `Outros jogos da ${(x ? x.div : club(A.g.user).div)}ª divisão` : md.step.t === 'cup' || md.step.t === 'sc' ? 'Outros jogos da fase' : 'Playoffs';
     el.innerHTML = `<div class="md-in">
       <div class="row"><h2 style="flex:1;min-width:0">${esc(P.stepLabel(md.step))}</h2>
         ${done ? '' : `<div class="seg"><button class="${md.speed === 1 ? 'on' : ''}" data-a="mdSpeed" data-s="1">Normal</button><button class="${md.speed === 3 ? 'on' : ''}" data-a="mdSpeed" data-s="3">Rápido</button></div><button class="btn sm" data-a="mdSkip">Pular</button>`}

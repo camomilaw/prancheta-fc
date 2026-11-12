@@ -125,6 +125,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* ---------- Cartões e grids ---------- */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
 .card > .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.card > .head:has(.tabs-x) { flex-wrap: wrap; }
+.seg.tabs-x { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+.seg.tabs-x::-webkit-scrollbar { display: none; }
+.seg.tabs-x button { white-space: nowrap; flex: none; }
 .grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
 @media (min-width: 760px) { .grid2 { grid-template-columns: 1fr 1fr; } }
 .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -403,6 +407,16 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .cal-cell.lg { box-shadow: inset 0 3px 0 var(--pitch); }
 .cal-cell.cup { box-shadow: inset 0 3px 0 var(--accent); }
 .cal-cell.po { box-shadow: inset 0 3px 0 var(--info); }
+.cal-cell.sc { box-shadow: inset 0 3px 0 var(--bad); }
+
+/* Supercopa */
+.sc-qs { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+.sc-q { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.sc-q.me { border-color: var(--pitch); background: color-mix(in srgb, var(--pitch) 10%, var(--surface)); }
+.sc-q .nm { min-width: 0; display: flex; flex-direction: column; }
+.sc-q .nm b { font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-q .nm small { font-size: .74rem; color: var(--muted); }
+.sc-tbd { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--muted); font-weight: 700; font-size: .8rem; flex: none; }
 .cal-cell.planned::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--info); margin-top: auto; }
 .cal-cell.today { border-color: var(--ink); border-width: 2px; }
 .cal-cell.sel { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }

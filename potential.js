@@ -29,6 +29,7 @@
     for (const d of Object.keys(g.lg)) g.lg[d].forEach((rd) => rd.forEach(add));
     (g.cup.rounds || []).forEach((r) => r.ties.forEach(add));
     if (g.po) for (const d of Object.keys(g.po)) { g.po[d].semi.forEach(add); add(g.po[d].final); }
+    if (P.scTies) P.scTies(g).forEach(add);
     return n;
   }
   const youthGames = (g) => (g.lg[1] || []).filter((rd) => rd[0] && rd[0].done).length;

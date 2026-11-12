@@ -74,7 +74,7 @@
     g.cal.forEach((st, i) => {
       if (i === 0) { out.push(d); return; }
       const prev = out[i - 1];
-      if (st.t === 'lg' || st.t === 'po') { let x = prev + DAY; while (new Date(x).getUTCDay() !== 0) x += DAY; out.push(x); }
+      if (st.t === 'lg' || st.t === 'po' || st.t === 'sc') { let x = prev + DAY; while (new Date(x).getUTCDay() !== 0) x += DAY; out.push(x); }
       else out.push(prev + 3 * DAY); // quarta-feira
     });
     Object.defineProperty(g, '_dates', { value: { s: g.season, n: g.cal.length, d: out }, writable: true, configurable: true, enumerable: false });
@@ -89,6 +89,7 @@
     if (!st) return { pending: false, m: null };
     if (st.t === 'cup' && !g.cup.rounds[st.r]) return { pending: true };
     if (st.t === 'po' && (!g.po || (st.r === 1 && !g.po[2].final))) return { pending: true };
+    if (st.t === 'sc' && !(g.scup && g.scup.cur && g.scup.cur.season === g.season && g.scup.cur.rounds[st.r])) return { pending: true };
     const um = P.userMatch(g, st);
     return { pending: false, m: um ? um.m : null, ko: um && um.ko };
   }
@@ -117,7 +118,7 @@
       if (i != null) {
         const st = g.cal[i];
         const info = matchAt(g, i);
-        cls += st.t === 'lg' ? ' lg' : st.t === 'cup' ? ' cup' : ' po';
+        cls += ' ' + st.t;
         if (info.m) {
           const home = info.m.h === g.user, opp = club(home ? info.m.a : info.m.h);
           let res = '';
@@ -128,7 +129,7 @@
             void won; res = `<b class="res ${r}">${gf}-${ga}</b>`;
           }
           inner = `<span class="opp">${home ? 'C' : 'F'} ${esc(opp.short)}</span>${res}`;
-        } else inner = `<span class="opp muted">${info.pending ? '?' : st.t === 'cup' ? 'Copa' : st.t === 'po' ? 'PO' : '—'}</span>`;
+        } else inner = `<span class="opp muted">${info.pending ? '?' : st.t === 'cup' ? 'Copa' : st.t === 'po' ? 'PO' : st.t === 'sc' ? 'Super' : '—'}</span>`;
         if (tr(g).plan[i]) cls += ' planned';
       }
       if (i === cur && !g.over) cls += ' today';

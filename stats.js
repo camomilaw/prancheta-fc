@@ -22,6 +22,7 @@
     for (const d of Object.keys(g2.lg)) g2.lg[d].forEach((rd) => rd.forEach(add));
     (g2.cup.rounds || []).forEach((r) => r.ties.forEach(add));
     if (g2.po) for (const d of Object.keys(g2.po)) { g2.po[d].semi.forEach(add); add(g2.po[d].final); }
+    if (P.scTies) P.scTies(g2).forEach(add);
     return rec;
   }
 
@@ -96,7 +97,7 @@
       const arr = Object.entries(pl).map(([id, x]) => Object.assign({ id }, x));
       const rec = teamRecord(g, g.user), mg = c.mgr;
       const tot = { j: mg.j + rec.j, v: mg.v + rec.v, e: mg.e + rec.e, d: mg.d + rec.d, gp: mg.gp + rec.gp, gc: mg.gc + rec.gc };
-      const titles = (g.hist || []).filter((h) => h.pos === 1).length, cups = (g.hist || []).filter((h) => h.cupMine).length, ups = (g.hist || []).filter((h) => /Acesso|acesso/.test(h.result)).length;
+      const titles = (g.hist || []).filter((h) => h.pos === 1).length, cups = (g.hist || []).filter((h) => h.cupMine).length, supers = (g.hist || []).filter((h) => h.scMine).length, ups = (g.hist || []).filter((h) => /Acesso|acesso/.test(h.result)).length;
       const list = (title, f, show) => {
         const top = arr.filter((x) => f(x) > 0).sort((a, b) => f(b) - f(a)).slice(0, 10);
         return `<div class="card"><div class="head"><span class="label">${title}</span></div>${top.length ? `<table class="tbl"><tbody>${top.map((x, i) => `<tr ${g.db.players[x.id] ? `class="click" data-a="player" data-id="${x.id}"` : ''}><td class="n">${i + 1}</td><td>${esc(x.name)} <span class="muted">${x.pos}</span></td><td class="n"><b>${show(x)}</b></td></tr>`).join('')}</tbody></table>` : '<p class="empty">Sem dados ainda.</p>'}</div>`;
@@ -104,7 +105,7 @@
       body = `<div class="card" style="margin-bottom:16px"><div class="head"><span class="label">Técnico ${esc(g.manager)}</span></div>
           <div class="kv"><div><span class="label">Jogos</span><b>${tot.j}</b></div><div><span class="label">Vitórias</span><b>${tot.v}</b></div><div><span class="label">Empates</span><b>${tot.e}</b></div><div><span class="label">Derrotas</span><b>${tot.d}</b></div>
             <div><span class="label">Aproveitamento</span><b>${tot.j ? Math.round((tot.v * 3 + tot.e) / (tot.j * 3) * 100) : 0}%</b></div><div><span class="label">Gols</span><b>${tot.gp} × ${tot.gc}</b></div>
-            <div><span class="label">Títulos da liga</span><b>${titles}</b></div><div><span class="label">Copas Ultra</span><b>${cups}</b></div><div><span class="label">Acessos</span><b>${ups}</b></div></div></div>
+            <div><span class="label">Títulos da liga</span><b>${titles}</b></div><div><span class="label">Copas Ultra</span><b>${cups}</b></div><div><span class="label">Supercopas</span><b>${supers}</b></div><div><span class="label">Acessos</span><b>${ups}</b></div></div></div>
         <div class="grid2">
           ${list('Artilheiros pelo clube', (x) => x.g, (x) => x.g)}
           ${list('Garçons pelo clube', (x) => x.as, (x) => x.as)}

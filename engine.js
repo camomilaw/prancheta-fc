@@ -140,6 +140,7 @@
     }
     if (!g.fin) g.fin = { s: g.season, cat: {}, prev: null, log: [] };
     if (P.ensureYouth) P.ensureYouth(g);
+    if (P.ensureSuper) P.ensureSuper(g);
   };
   P.pay = function (g, cid, v, cat) {
     const c = P.club(g, cid); if (!c) return;
@@ -526,6 +527,7 @@
       if (ci >= 0) g.cal.push({ t: 'cup', r: ci });
     }
     g.cal.push({ t: 'po', r: 0 }, { t: 'po', r: 1 });
+    if (P.scSeason && P.scSeason(g)) P.SC_NAMES.forEach((_, r) => g.cal.push({ t: 'sc', r })); // Supercopa no fim da 4ª temporada
     g.cup = { rounds: [], byes: [], winner: null };
     g.po = null;
     g.week = 0; g.over = false; g.summary = null;
@@ -535,6 +537,7 @@
     if (!step) return '';
     if (step.t === 'lg') return 'Rodada ' + (step.r + 1);
     if (step.t === 'cup') return 'Copa Ultra · ' + P.CUP_NAMES[step.r];
+    if (step.t === 'sc') return 'Supercopa Ultra · ' + P.SC_NAMES[step.r];
     return 'Playoffs de acesso · ' + (step.r ? 'Final' : 'Semifinal');
   };
 
@@ -598,6 +601,8 @@
     } else if (step.t === 'cup') {
       P.cupDraw(g, step.r);
       g.cup.rounds[step.r].ties.forEach((m) => out.push({ m, comp: 'cup', ko: true }));
+    } else if (step.t === 'sc') {
+      P.scMatches(g, step.r).forEach((m) => out.push({ m, comp: 'sc', ko: true }));
     } else {
       P.poDraw(g, step.r);
       for (let d = 2; d <= P.DIVS; d++) {
@@ -699,7 +704,7 @@
       for (const e of r.ev) {
         if (e.t === 'gol') {
           const p = g.db.players[e.p];
-          if (it.comp === 'lg') p.s.g++; else p.s.cg++;
+          if (it.comp === 'lg') p.s.g++; else if (it.comp !== 'sc') p.s.cg++;
           if (e.as) g.db.players[e.as].s.as++;
         }
         if (e.t === 'vermelho' && !e.two) { const p = g.db.players[e.p]; p.s.cv++; p.susp = Math.max(p.susp, 2); }
@@ -717,8 +722,12 @@
     const before = P.club(g, g.user).bal;
     for (const { it } of results) {
       const m = it.m, hc = P.club(g, m.h);
-      const occ = P.clamp(0.4 + 0.4 * (1 - (posIn(m.h) - 1) / 19) + (it.ko ? 0.15 : 0), 0.25, 1);
-      const gate = P.gateFor ? P.gateFor(g, hc, occ) : Math.round(hc.cap * occ * P.ECON.ticket(hc.div));
+      let gate;
+      if (it.comp === 'sc') { gate = Math.round(hc.cap * P.ECON.ticket(hc.div) * P.ECON.scTicket); hc.lastOcc = 100; } // Supercopa: sempre lotado
+      else {
+        const occ = P.clamp(0.4 + 0.4 * (1 - (posIn(m.h) - 1) / 19) + (it.ko ? 0.15 : 0), 0.25, 1);
+        gate = P.gateFor ? P.gateFor(g, hc, occ) : Math.round(hc.cap * occ * P.ECON.ticket(hc.div));
+      }
       if (m.neutral) { P.pay(g, m.h, gate / 2, 'Bilheteria'); P.pay(g, m.a, gate / 2, 'Bilheteria'); }
       else P.pay(g, m.h, gate, 'Bilheteria');
       if (it.comp === 'cup') P.pay(g, m.w, P.ECON.cupPrize[step.r], 'Premiação');
@@ -770,6 +779,7 @@
       g.cup.winner = fin.w;
       P.news(g, `${P.club(g, fin.w).name} é o campeão da Copa Ultra!`, fin.w === g.user ? 'good' : '');
     }
+    if (P.scWeek) P.scWeek(g, step, results);
 
     // 7. dados da animação (antes de enxugar o que não precisa ficar salvo)
     const anim = results.map(({ it }) => ({
@@ -888,6 +898,7 @@
       top: top ? `${top.name} (${top.s.g})` : '-',
       bal: me.bal
     });
+    if (P.scSeasonEnd) P.scSeasonEnd(g);
     P.news(g, `Fim de temporada! ${P.club(g, sum.divs[0].champ).name} é o campeão da Ultraliga. Seu time terminou em ${pos}º na ${me.div}ª divisão: ${result.toLowerCase()}.`, result === 'Rebaixado' ? 'bad' : 'good');
   };
 
