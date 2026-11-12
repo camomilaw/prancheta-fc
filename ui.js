@@ -495,7 +495,7 @@
     const g = A.g, st = A.st, me = club(g.user);
     if (st.div == null) st.div = me.div;
     const d = st.div;
-    const tabs = `<div class="seg tabs-x">${[['class', 'Classificação'], ['art', 'Artilharia'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra'], ['sc', 'Supercopa']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
+    const tabs = `<div class="seg tabs-x">${[['class', 'Classificação'], ['art', 'Estatísticas'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra'], ['sc', 'Supercopa']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
     let body = '';
     if (st.tab === 'cup') return `<div class="card"><div class="head"><h2>Copa Ultra ${g.season}</h2>${tabs}</div>${cupView(g)}</div>`;
     if (st.tab === 'sc') return `<div class="card"><div class="head"><h2>Supercopa Ultra</h2>${tabs}</div>${P.superView(g)}</div>`;
@@ -511,8 +511,9 @@
             <td class="hide-sm"><span class="form">${r.form.slice(-5).map((f) => `<i class="${f}">${f}</i>`).join('')}</span></td></tr>`;
         }).join('')}</tbody></table></div>${zoneLegend(d)}${playoffView(g, d)}`;
     } else if (st.tab === 'art') {
-      const sc = P.scorers(g, d, 25);
-      body = sc.length ? scorerTable(g, sc, 'g') : '<p class="empty">Ninguém marcou ainda nesta divisão.</p>';
+      const po = d > 1 && g.po && st.cstPo;
+      body = (d > 1 && g.po ? `<div class="seg" style="margin-bottom:10px">${[[0, 'Liga'], [1, 'Playoffs']].map(([k, n]) => `<button class="${!!po === !!k ? 'on' : ''}" data-a="cstPo" data-k="${k}">${n}</button>`).join('')}</div>` : '')
+        + P.compStatsView(g, po ? 'po' : 'lg', (p) => { const c = club(p.clubId); return c && c.div === d; }, { minNote: po ? 1 : 5, empty: 'Ninguém jogou ainda nesta divisão.' });
     } else {
       const fx = g.lg[d], total = fx.length;
       if (st.rd == null) { const played = fx.filter((rd) => rd[0] && rd[0].done).length; st.rd = Math.max(0, Math.min(total - 1, played - 1)); }
@@ -525,11 +526,6 @@
     }
     return `<div class="card"><div class="head"><h2>Ultraliga ${g.season}</h2>${tabs}</div>
       <div class="filters" style="margin-bottom:12px">${divSel(d, 'tblDiv')}${d !== me.div ? `<button class="btn sm ghost" data-a="myDiv">Minha divisão</button>` : ''}</div>${body}</div>`;
-  }
-  function scorerTable(g, sc, key) {
-    return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Jogador</th><th>Clube</th><th class="n">G</th><th class="n">A</th><th class="n">J</th></tr></thead><tbody>
-      ${sc.map((p, i) => { const c = club(p.clubId); return `<tr class="click ${p.clubId === g.user ? 'me' : ''}" data-a="player" data-id="${p.id}"><td class="n">${i + 1}</td><td>${esc(p.name)}</td><td><span class="club">${P.badge(c, 18)}${c ? esc(c.short) : '-'}</span></td><td class="n"><b>${p.s[key]}</b></td><td class="n">${p.s.as}</td><td class="n">${p.s.j}</td></tr>`; }).join('')}
-      </tbody></table></div>`;
   }
   function playoffView(g, d) {
     if (d === 1) return '';
@@ -550,12 +546,11 @@
     if (st.cupR == null || st.cupR >= rounds.length) st.cupR = rounds.length - 1;
     const r = rounds[st.cupR];
     const mineFirst = r.ties.slice().sort((a, b) => ((b.h === g.user || b.a === g.user) ? 1 : 0) - ((a.h === g.user || a.a === g.user) ? 1 : 0));
-    const sc = P.scorers(g, 0, 10, true);
     return `${g.cup.winner ? `<div class="winner">${P.badge(club(g.cup.winner), 40)}<div><span class="label">Campeão</span><h3>${esc(club(g.cup.winner).name)}</h3></div></div>` : ''}
       <div class="filters" style="margin-bottom:12px"><select class="sel" data-c="cupR" aria-label="Fase da copa">${rounds.map((x, i) => `<option value="${i}" ${i === st.cupR ? 'selected' : ''}>${x.name} (${x.ties.length} ${x.ties.length === 1 ? 'jogo' : 'jogos'})</option>`).join('')}</select>
         <span class="muted">Status do seu time: <b>${esc(P.cupStatus(g))}</b></span></div>
       <div class="others">${mineFirst.map((m) => m.done ? ogRow(m, m.hg, m.ag, { click: true, pen: m.pen, label: 'Copa Ultra · ' + r.name }) : ogRow(m, '', '')).join('')}</div>
-      ${sc.length ? `<div class="label" style="margin:16px 0 6px">Artilharia da copa</div>${scorerTable(g, sc, 'cg')}` : ''}`;
+      ${P.compStatsView(g, 'cup', null, { title: 'Estatísticas da copa', minNote: 2 })}`;
   }
 
   // ---------- Relatório de partida ----------
@@ -858,6 +853,7 @@
     bgClose(d, el, e) { if (e.target === el) A.closeSheet(); },
     filter(d) { A.st.filter = d.k; A.render(); },
     tab(d) { A.st.tab = d.k; A.render(); },
+    cstPo(d) { A.st.cstPo = d.k === '1'; A.render(); },
     myDiv() { A.st.div = club(A.g.user).div; A.st.rd = null; A.render(); },
     rd(d) { A.st.rd = P.clamp(A.st.rd + Number(d.d), 0, A.g.lg[A.st.div].length - 1); A.render(); },
     report(d) { A.reportSheet(Number(d.ri)); },

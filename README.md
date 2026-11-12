@@ -29,6 +29,7 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `live.js` | Partida ao vivo: pausa em expulsão, lesão e intervalo; substituições pelo campinho (titulares nas posições, banco ao lado) e mentalidade durante o jogo |
 | `potential.js` | Potencial dinâmico: sobe com tempo de jogo e boas notas, cai para quem não joga (até 24 anos e Sub-20) |
 | `supercup.js` | Supercopa Ultra: a cada 4 temporadas, campeões da liga e da copa (ou o próximo colocado, se repetidos) em quartas, semi e final; premiação e estádio cheio |
+| `compstats.js` | Estatísticas por competição (liga, copa, playoffs, Supercopa): gols, assistências, nota, jogos e cartões, dentro da aba de cada competição |
 | `club.js` | Dificuldade (diretoria e negociações), confiança, demissão, propostas de emprego, estádio e estrutura |
 | `people.js` | Discurso pós-jogo, insatisfação, conversas individuais e tipos de lesão |
 | `stats.js` | Estatísticas da temporada e da carreira e resumo de fim de temporada |

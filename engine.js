@@ -141,6 +141,7 @@
     if (!g.fin) g.fin = { s: g.season, cat: {}, prev: null, log: [] };
     if (P.ensureYouth) P.ensureYouth(g);
     if (P.ensureSuper) P.ensureSuper(g);
+    if (P.ensureCompStats) P.ensureCompStats(g);
   };
   P.pay = function (g, cid, v, cat) {
     const c = P.club(g, cid); if (!c) return;
@@ -701,6 +702,7 @@
         }
         for (const [id, w, n] of r.inj[side]) { g.db.players[id].inj = w; g.db.players[id].injN = n || 'Lesão'; }
       });
+      if (P.compStats) P.compStats(g, it, r);
       for (const e of r.ev) {
         if (e.t === 'gol') {
           const p = g.db.players[e.p];
@@ -939,7 +941,7 @@
         if (p.age >= 30 && P.PHYS_ATTRS.includes(at.k)) d -= 0.4;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, d), 1, 20);
       }
-      p.s = P.blankStats(); p.cond = 100; p.mor = 70; p.inj = 0; p.susp = 0; p.ylw = 0;
+      p.s = P.blankStats(); p.cs = {}; p.cond = 100; p.mor = 70; p.inj = 0; p.susp = 0; p.ylw = 0;
     }
     P.dirty(g);
     g.season++;

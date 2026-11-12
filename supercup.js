@@ -209,8 +209,8 @@
     if (ed) {
       body += ed.w ? `<div class="winner">${P.badge(club(g, ed.w), 40)}<div><span class="label">Campeão da Supercopa ${ed.season}</span><h3>${esc(club(g, ed.w).name)}</h3></div></div>` : '';
       body += ed.rounds.map((r) => `<div class="label" style="margin:10px 0 6px">${r.name}</div><div class="others">${r.ties.map((m) => m.done ? A.ogRow(m, m.hg, m.ag, { click: !!m.ev, pen: m.pen, label: 'Supercopa · ' + r.name }) : A.ogRow(m, '', '')).join('')}</div>`).join('');
-      const sc = Object.entries(cur ? cur.gls : {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      if (sc.length) body += `<div class="label" style="margin:14px 0 6px">Artilharia</div><div class="tbl-wrap"><table class="tbl"><tbody>${sc.map(([id, n], i) => { const p = g.db.players[id]; const c = p && club(g, p.clubId); return p ? `<tr class="click" data-a="player" data-id="${id}"><td class="n">${i + 1}</td><td>${esc(p.name)}</td><td><span class="club">${P.badge(c, 18)}${c ? esc(c.short) : '-'}</span></td><td class="n"><b>${n}</b></td></tr>` : ''; }).join('')}</tbody></table></div>`;
+      if (cur && cur.rounds[0].ties.some((t) => t.done)) body += P.compStatsView(g, 'sc', null, { title: 'Estatísticas da Supercopa', n: 10 });
+      else if (!cur && ed.top) body += `<p class="muted" style="margin:12px 0 0">Artilheiro: <b>${esc(ed.top)}</b></p>`;
       body += `<div class="label" style="margin:14px 0 6px">Classificados</div><div class="sc-qs">${ed.q.map(qRow).join('')}</div>`;
     } else {
       const q = P.scQualifiers(g, next);
