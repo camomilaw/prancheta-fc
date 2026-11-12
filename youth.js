@@ -180,8 +180,10 @@
     if (yw) P.pay(g, g.user, -yw * 12 / g.cal.length, 'Base');
     if (sw) P.pay(g, g.user, -sw * 12 / g.cal.length, 'Equipe técnica');
     // meio da temporada: jovens evoluem um pouco
-    if (g.week === 24) grow(g, 0.5);
-    if (g.week === 24 && P.potentialUpdate) P.potentialUpdate(g, 'mid');
+    if (step.t === 'lg' && step.r === 20) { // meio do ano (rodada 21)
+      grow(g, 0.5);
+      if (P.potentialUpdate) P.potentialUpdate(g, 'mid');
+    }
   };
   function grow(g, f) {
     const r = Math.random;

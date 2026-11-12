@@ -610,3 +610,12 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .sp-opt .sel { width: 100%; }
 .sp-tag { font-size: .74rem; font-weight: 700; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--accent) 25%, transparent); }
 .chip.loan { background: color-mix(in srgb, var(--info) 24%, var(--surface)); color: var(--ink); }
+
+/* Taça Raízes */
+.cal-cell.rz { box-shadow: inset 0 3px 0 #b5763a; }
+.lg-dot.rz { background: #b5763a; } .lg-dot.sc { background: var(--bad); }
+.mg-trophy.t-rz { background: color-mix(in srgb, #b5763a 22%, var(--surface)); }
+.mg-t.t-rz { border-left-color: #b5763a; }
+.rz-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.rz-grp { border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
+.rz-grp.mine { border-color: var(--pitch); grid-column: 1 / -1; }

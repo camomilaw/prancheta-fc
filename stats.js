@@ -23,6 +23,7 @@
     (g2.cup.rounds || []).forEach((r) => r.ties.forEach(add));
     if (g2.po) for (const d of Object.keys(g2.po)) { g2.po[d].semi.forEach(add); add(g2.po[d].final); }
     if (P.scTies) P.scTies(g2).forEach(add);
+    if (P.rzTies) P.rzTies(g2).forEach(add);
     return rec;
   }
 

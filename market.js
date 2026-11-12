@@ -6,18 +6,19 @@
   const A = P.app, esc = P.esc;
 
   P.MARKET = {
-    windows: [[0, 8], [22, 28]],   // semanas do calendário com janela aberta [início, fim)
+    windows: [[0, 7], [18, 23]],   // rodadas da liga já jogadas com janela aberta [início, fim)
     maxSquad: 32, minSquad: 16,
     loanFee: 0.1                   // taxa de empréstimo = 10% do valor
   };
 
   // ---------- Regras ----------
-  P.windowOpen = (g) => !g.over && P.MARKET.windows.some(([a, b]) => g.week >= a && g.week < b);
+  P.windowOpen = (g) => { if (g.over) return false; const n = P.lgDone(g); return P.MARKET.windows.some(([a, b]) => n >= a && n < b); };
   P.windowText = function (g) {
     if (g.over) return 'Janela fechada até a nova temporada';
     for (const [a, b] of P.MARKET.windows) {
-      if (g.week >= a && g.week < b) return `Janela aberta até a semana ${b}`;
-      if (g.week < a) return `Janela fechada. Abre na semana ${a + 1}`;
+      const n = P.lgDone(g);
+      if (n >= a && n < b) return `Janela aberta até a rodada ${b} da liga`;
+      if (n < a) return `Janela fechada. Abre depois da rodada ${a} da liga`;
     }
     return 'Janela fechada até a nova temporada';
   };
@@ -112,7 +113,7 @@
 
   // Lista de empréstimo dos clubes da IA: jovens e reservas sobrando (renovada a cada janela)
   function refreshAiLoanList(g) {
-    const key = g.season + ':' + (g.week < P.MARKET.windows[1][0] ? 0 : 1);
+    const key = g.season + ':' + (P.lgDone(g) < P.MARKET.windows[1][0] ? 0 : 1);
     if (g.loanKey === key) return;
     g.loanKey = key;
     for (const c of g.db.clubs) {

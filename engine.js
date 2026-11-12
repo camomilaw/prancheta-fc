@@ -626,6 +626,8 @@
       g.cal.push({ t: 'lg', r: lr });
       const ci = P.CUP_AFTER.indexOf(lr + 1);
       if (ci >= 0) g.cal.push({ t: 'cup', r: ci });
+      const ri = P.RZ_AFTER ? P.RZ_AFTER.indexOf(lr + 1) : -1;
+      if (ri >= 0) g.cal.push({ t: 'rz', r: ri }); // Taça Raízes (7ª e 8ª divisão)
     }
     g.cal.push({ t: 'po', r: 0 }, { t: 'po', r: 1 });
     if (P.scSeason && P.scSeason(g)) P.SC_NAMES.forEach((_, r) => g.cal.push({ t: 'sc', r })); // Supercopa no fim da 4ª temporada
@@ -639,6 +641,7 @@
     if (step.t === 'lg') return 'Rodada ' + (step.r + 1);
     if (step.t === 'cup') return 'Copa Ultra · ' + P.CUP_NAMES[step.r];
     if (step.t === 'sc') return 'Supercopa Ultra · ' + P.SC_NAMES[step.r];
+    if (step.t === 'rz') return 'Taça Raízes · ' + P.RZ_NAMES[step.r];
     return 'Playoffs de acesso · ' + (step.r ? 'Final' : 'Semifinal');
   };
 
@@ -653,6 +656,10 @@
       const ranked = g.db.clubs.slice().sort((a, b) => a.div - b.div || ovrs[b.id] - ovrs[a.id]).map((c) => c.id);
       g.cup.byes = ranked.slice(0, 96);
       pool = ranked.slice(96);
+      // campeão da Taça Raízes entra direto na 1ª fase
+      const rb = g.rzBye;
+      if (rb && P.club(g, rb) && !g.cup.byes.includes(rb)) { const last = g.cup.byes.pop(); g.cup.byes.push(rb); pool = pool.filter((x) => x !== rb).concat([last]); }
+      g.rzBye = null;
     } else {
       const prev = g.cup.rounds[r - 1].ties.map(koWinner);
       pool = r === 1 ? g.cup.byes.concat(prev) : prev;
@@ -704,6 +711,8 @@
       g.cup.rounds[step.r].ties.forEach((m) => out.push({ m, comp: 'cup', ko: true }));
     } else if (step.t === 'sc') {
       P.scMatches(g, step.r).forEach((m) => out.push({ m, comp: 'sc', ko: true }));
+    } else if (step.t === 'rz') {
+      P.rzMatches(g, step.r).forEach((x) => out.push({ m: x.m, comp: 'rz', ko: x.ko }));
     } else {
       P.poDraw(g, step.r);
       for (let d = 2; d <= P.DIVS; d++) {
@@ -810,7 +819,7 @@
       for (const e of r.ev) {
         if (e.t === 'gol') {
           const p = g.db.players[e.p];
-          if (it.comp === 'lg') p.s.g++; else if (it.comp !== 'sc') p.s.cg++;
+          if (it.comp === 'lg') p.s.g++; else if (it.comp !== 'sc' && it.comp !== 'rz') p.s.cg++;
           if (e.as) g.db.players[e.as].s.as++;
         }
         if (e.t === 'vermelho' && !e.two) { const p = g.db.players[e.p]; p.s.cv++; p.susp = Math.max(p.susp, 2); }
@@ -849,7 +858,7 @@
     if (P.marketWeek) P.marketWeek(g, step);
     if (P.youthWeek) P.youthWeek(g, step);
     if (P.clubWeek) P.clubWeek(g, step, ctx);
-    if (g.week === 30) {
+    if (step.t === 'lg' && step.r === 25) { // aviso de contratos (rodada 26)
       const exp = P.squad(g, g.user).filter((p) => p.ctr <= g.season);
       if (exp.length) P.news(g, `${exp.length} ${exp.length === 1 ? 'contrato termina' : 'contratos terminam'} nesta temporada: ${exp.map((p) => p.name).join(', ')}. Renove pela ficha do jogador ou eles saem de graça.`, 'warn');
     }
@@ -892,6 +901,7 @@
       P.news(g, `${P.club(g, fin.w).name} é o campeão da Copa Ultra!`, fin.w === g.user ? 'good' : '');
     }
     if (P.scWeek) P.scWeek(g, step, results);
+    if (P.rzWeek) P.rzWeek(g, step, results);
 
     // 7. dados da animação (antes de enxugar o que não precisa ficar salvo)
     const anim = results.map(({ it }) => ({
@@ -907,6 +917,8 @@
     g.week++;
     if (g.week >= g.cal.length) P.endSeason(g);
     else if (g.cal[g.week].t !== 'lg') P.stepMatches(g); // sorteia copa/playoff da próxima semana
+    // rodadas da Taça Raízes sem jogo seu passam direto (não viram uma semana vazia para você)
+    while (!g.over && g.week < g.cal.length && g.cal[g.week].t === 'rz' && !P.userMatch(g)) P.endWeek(g, P.beginWeek(g, false));
     return { step, anim };
   };
 
@@ -1011,9 +1023,13 @@
       bal: me.bal
     });
     if (P.scSeasonEnd) P.scSeasonEnd(g);
+    if (P.rzSeasonEnd) P.rzSeasonEnd(g);
     if (P.mgrSeasonEnd) P.mgrSeasonEnd(g);
     P.news(g, `Fim de temporada! ${P.club(g, sum.divs[0].champ).name} é o campeão da Ultraliga. Seu time terminou em ${pos}º na ${me.div}ª divisão: ${result.toLowerCase()}.`, result === 'Rebaixado' ? 'bad' : 'good');
   };
+
+  // Rodadas da liga já disputadas antes da semana w (regras do ano ancoradas na liga)
+  P.lgDone = (g, w) => { const end = w == null ? g.week : w; let n = 0; for (let i = 0; i < end && i < g.cal.length; i++) if (g.cal[i].t === 'lg') n++; return n; };
 
   P.newSeason = function (g) {
     const r = P.rng(Date.now() & 0xffffffff);
