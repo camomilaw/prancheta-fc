@@ -139,34 +139,43 @@
     let list = q ? db.clubs.filter((c) => (c.name + ' ' + c.city + ' ' + P.countryName(c.country)).toLowerCase().includes(q)) : P.divClubs(db, s.divF);
     list = list.slice().sort((a, b) => a.div - b.div || ovrs[b.id] - ovrs[a.id]);
     const picked = s.club && db.clubs.find((c) => c.id === s.club);
-    return `<div class="setup">
-      <div class="brand">
-        <svg width="64" height="88" viewBox="0 0 64 88" aria-hidden="true"><rect x="2" y="2" width="60" height="84" rx="6" fill="var(--pitch)"/><rect x="2" y="2" width="60" height="84" rx="6" fill="none" stroke="var(--pitch-line)" stroke-width="2"/><path d="M2 44h60" stroke="var(--pitch-line)" stroke-width="2"/><circle cx="32" cy="44" r="9" fill="none" stroke="var(--pitch-line)" stroke-width="2"/><circle cx="20" cy="66" r="4" fill="#fff"/><circle cx="44" cy="66" r="4" fill="#fff"/><circle cx="32" cy="26" r="4" fill="var(--accent)"/><path d="M22 62 L30 30" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 3"/></svg>
-        <div><h1>Prancheta <span>FC</span></h1><p>Ultraliga: 160 clubes de 17 países em 8 divisões. Suba da 8ª até o topo, dispute a Copa Ultra e edite tudo como quiser.</p></div>
-      </div>
+    const now = new Date(), edition = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 864e5);
+    return `<div class="setup jr">
+      <header class="jr-mast">
+        <div class="jr-mast-top"><span>Edição esportiva</span><span>Ano I · Nº ${edition}</span><span>R$ 0,50</span></div>
+        <h1>Prancheta FC</h1>
+        <div class="jr-tag">Monte o time. Suba a pirâmide. Escreva a sua história.</div>
+      </header>
       ${P.slotsCard ? P.slotsCard() : ''}
-      <div class="card" style="display:flex;flex-direction:column;gap:14px">
-        <div class="row"><h2 style="flex:1">Nova carreira</h2>
-          <button class="btn sm" data-a="setupEdit">Editar banco</button>
-          <button class="btn sm" data-a="setupImport">Importar</button></div>
-        ${s.importing ? importBox() : ''}
-        <div class="field" style="max-width:360px"><label class="label" for="mgr">Nome do técnico</label><input id="mgr" data-i="mgr" value="${esc(s.manager)}" placeholder="Seu nome" maxlength="30"></div>
-        ${P.slotPick ? P.slotPick() : ''}
+      <section class="jr-classif" aria-labelledby="h-new">
+        <div class="jr-classif-h"><h2 id="h-new">Procura-se técnico</h2><span>Classificados</span></div>
+        <p>Clube da Ultraliga contrata. 160 clubes, 17 países, 8 divisões. Paga-se em glória. Interessados preencher abaixo.</p>
+        <div class="field"><label class="jr-step" for="mgr">1 · Seu nome</label><input id="mgr" class="jr-sign" data-i="mgr" value="${esc(s.manager)}" placeholder="assine aqui" maxlength="30"></div>
         ${P.setupExtra ? P.setupExtra() : ''}
-        <div class="create-cta"><div style="flex:1;min-width:0"><b>Criar meu clube</b><div class="muted" style="font-size:.88rem">Nome, cores, estádio, país, divisão e elenco do seu jeito.</div></div><button class="btn" data-a="createOpen">Criar clube</button></div>
-        <div class="label">Ou escolha um dos 160 clubes</div>
-        <div class="filters">${divSel(s.divF, 'setupDiv')}<input class="sel search" id="clubq" data-i="clubQ" value="${esc(s.q)}" placeholder="Buscar clube, cidade ou país" aria-label="Buscar clube"></div>
-        <div class="clubs" id="clublist">${clubCards(list, ovrs, db)}</div>
-        <div class="start-bar"><div style="flex:1;min-width:0">${picked ? `<span class="label">Escolhido</span><div><b>${esc(picked.name)}</b> <span class="muted">· ${divName(picked.div)}</span></div>` : '<span class="muted">Escolha um clube para começar</span>'}</div>
-          <button class="btn primary" data-a="start" ${s.club ? '' : 'disabled'}>Começar carreira</button></div>
+        ${P.slotPick ? P.slotPick() : ''}
+        <button class="jr-found" data-a="createOpen"><span>…ou funde o seu próprio clube</span><b>Criar →</b></button>
+        <div class="jr-small"><button class="jr-link" data-a="setupEdit">editar o banco de dados</button> · <button class="jr-link" data-a="setupImport">importar arquivo</button></div>
+        ${s.importing ? importBox() : ''}
+      </section>
+      <section class="jr-sec" aria-labelledby="h-tab">
+        <div class="jr-h jr-h-row"><h2 id="h-tab">5 · Escolha o clube</h2>${divSel(s.divF, 'setupDiv')}</div>
+        <input class="jr-search" id="clubq" data-i="clubQ" value="${esc(s.q)}" placeholder="Buscar clube, cidade ou país…" aria-label="Buscar clube">
+        <div class="jr-clubs" id="clublist" role="list">${clubCards(list, ovrs, db)}</div>
+        <p class="jr-note">Força média do elenco à direita. Toque num clube para escolher.</p>
+      </section>
+      <div class="jr-sign-bar">
+        <button class="jr-stamp" data-a="start" ${s.club ? '' : 'disabled'}>Assinar o contrato</button>
+        <span class="jr-note">${picked ? `com o <b>${esc(picked.name)}</b> · ${divName(picked.div)}` : 'escolha um clube para começar'}</span>
       </div>
     </div>`;
   }
   function clubCards(list, ovrs, db) {
     if (!list.length) return '<p class="empty">Nenhum clube encontrado.</p>';
-    return list.map((c) => `<button class="clubpick ${A.setup.club === c.id ? 'on' : ''}" data-a="pickClub" data-id="${c.id}">
-      <div class="row" style="gap:8px">${P.badge(c, 30)}<span class="ovr" style="font-size:1.2rem">${ovrs[c.id]}</span>${c.custom ? '<span class="chip xi">Seu</span>' : ''}</div>
-      <b>${esc(c.name)}</b><small>${esc(P.countryName(c.country))} · ${c.div}ª div · ${esc(P.expectation(db, c.id, ovrs))}</small></button>`).join('');
+    return list.map((c, i) => `<button class="jr-club ${A.setup.club === c.id ? 'on' : ''}" role="listitem" data-a="pickClub" data-id="${c.id}" aria-pressed="${A.setup.club === c.id}">
+      <span class="jr-strip" style="background:${esc(c.colors[0])};border-right-color:${esc(c.colors[1])}"></span>
+      <span class="jr-rank">${String(i + 1).padStart(2, '0')}</span>
+      <span class="jr-club-n"><b>${esc(c.name)}${c.custom ? ' <span class="chip xi">Seu</span>' : ''}</b><small>${esc(P.countryName(c.country))} · ${c.div}ª div · ${esc(P.expectation(db, c.id, ovrs))}</small></span>
+      <span class="jr-ovr">${ovrs[c.id]}</span></button>`).join('');
   }
   function importBox() {
     return `<div class="card" style="background:var(--surface-2);display:flex;flex-direction:column;gap:10px">
@@ -250,26 +259,35 @@
     const posOf = (cid) => { const c = club(cid); const t = P.table(g, c.div); return t.findIndex((r) => r.cid === cid) + 1; };
     const form = (cid) => { const c = club(cid); const r = P.table(g, c.div).find((x) => x.cid === cid); return `<span class="form">${r.form.slice(-5).map((f) => `<i class="${f}">${f}</i>`).join('')}</span>`; };
 
-    let top = '';
-    if (g.over) top = seasonSummary(g);
+    const hl = P.headline(g);
+    const sg = hl.sg > 0 ? '+' + hl.sg : String(hl.sg);
+    let top = `<article class="jr-lead">
+        <span class="jr-kick">${esc(hl.kicker)}</span>
+        <h2 class="jr-head">${esc(hl.head)}</h2>
+        <p class="jr-dek">${esc(hl.dek)}</p>
+        <div class="jr-3"><div><b>${hl.j ? hl.pos + 'º' : '–'}</b><span>posição</span></div><div><b>${hl.pts}</b><span>pontos</span></div><div><b>${sg}</b><span>saldo</span></div></div>
+      </article>`;
+    if (g.over) top += seasonSummary(g);
     else {
       const step = g.cal[g.week];
       const um = P.userMatch(g, step);
       if (um) {
         const h = club(um.m.h), a = club(um.m.a);
-        top = `<div class="card"><div class="head"><span class="label">${esc(P.stepLabel(step))}</span><span class="label">${um.m.neutral ? 'Campo neutro' : esc(h.stadium)}</span></div>
+        const adj = P.adjName ? P.adjName(g) : 'Auxiliar';
+        top += `<section class="jr-next"><div class="jr-next-h"><span>Próximo jogo</span><span>${esc(P.stepLabel(step))}</span></div>
           <div class="fixture">
             <div class="side">${P.badge(h, 52)}<b>${esc(h.name)}</b><span class="sub">${h.div}ª div · ${ord(posOf(h.id))} · ${form(h.id)}</span></div>
-            <div class="vs">×</div>
+            <div class="vs">vs.</div>
             <div class="side">${P.badge(a, 52)}<b>${esc(a.name)}</b><span class="sub">${a.div}ª div · ${ord(posOf(a.id))} · ${form(a.id)}</span></div>
           </div>
-          ${um.ko ? '<p class="muted" style="text-align:center;margin:10px 0 0;font-size:.85rem">Jogo único. Empate vai para os pênaltis.</p>' : ''}
+          <p class="jr-venue">${um.m.neutral ? 'Campo neutro' : esc(h.stadium)}${um.ko ? ' · jogo único, empate vai para os pênaltis' : ''}</p>
+          ${P.adjQuote ? `<blockquote class="jr-quote">“${esc(P.adjQuote(g, um))}”<cite>— ${esc(adj)}, auxiliar técnico</cite></blockquote>` : ''}
           ${P.scoutLine ? P.scoutLine(g, um) : ''}
-          <div class="row" style="margin-top:14px"><button class="btn" data-a="go" data-v="tatica">Ajustar tática</button><button class="btn" data-a="go" data-v="calendario">Calendário</button><span class="spacer"></span><button class="btn primary" data-a="play">Jogar</button></div></div>`;
+          <div class="row jr-next-act"><button class="btn primary" data-a="play">Ir para o jogo</button><button class="btn" data-a="go" data-v="tatica">Tática</button><button class="btn ghost" data-a="go" data-v="calendario">Calendário</button></div></section>`;
       } else {
-        top = `<div class="card"><div class="head"><span class="label">${esc(P.stepLabel(step))}</span></div>
+        top += `<section class="jr-next"><div class="jr-next-h"><span>Semana sem jogo</span><span>${esc(P.stepLabel(step))}</span></div>
           <p style="margin:0 0 12px">Seu time não joga nesta semana. Os jogadores descansam e recuperam o físico.</p>
-          <div class="row"><span class="spacer"></span><button class="btn primary" data-a="play">Avançar semana</button></div></div>`;
+          <div class="row"><button class="btn primary" data-a="play">Avançar semana</button></div></section>`;
       }
     }
 
@@ -306,9 +324,9 @@
           ${zoneLegend(me.div)}</div>
       </div>
       <div class="grid2">
-        <div class="card"><div class="head"><span class="label">Últimos jogos</span></div>
+        <div class="card"><div class="head"><span class="label">Resultados</span></div>
           ${hist.length ? `<div class="others" style="grid-template-columns:1fr">${hist.map((x) => `<div class="hist-row"><span class="label">${esc(x.label)}</span>${ogRow(x.m, x.m.hg, x.m.ag, { click: true, pen: x.m.pen, label: x.label })}</div>`).join('')}</div>` : '<p class="empty">Nenhum jogo disputado ainda.</p>'}</div>
-        <div class="card"><div class="head"><span class="label">Notícias</span></div>
+        <div class="card"><div class="head"><span class="label">Giro da rodada</span></div>
           <ul class="news">${g.news.slice(0, 10).map((n) => `<li class="${n.type}"><div>${esc(n.txt)}<small>Temporada ${n.s} · semana ${n.w}</small></div></li>`).join('')}</ul></div>
       </div>`;
   }

@@ -62,7 +62,7 @@
           <span class="mail-prev">${esc(m.body)}</span>
           <span class="mail-go">${KIND[m.k].go} ›</span>
         </span></button>`).join('');
-    return `<div class="card inbox"><div class="head"><span class="label">Caixa de entrada${n ? ` <span class="mail-count">${n}</span>` : ''}</span>
+    return `<div class="card inbox"><div class="head"><span class="label">Cartas do adjunto${n ? ` <span class="mail-count">${n}</span>` : ''}</span>
         ${n ? '<button class="btn sm ghost" data-a="mailAllRead">Marcar como lidos</button>' : ''}</div>
       <div class="mail-addr muted">De <b>${esc(P.adjMail(g))}</b> para <b>${esc(P.userMail(g))}</b></div>
       ${rows || '<p class="empty" style="padding:8px 0 0">Nenhum e-mail. Propostas, lesões e suspensões chegam aqui.</p>'}

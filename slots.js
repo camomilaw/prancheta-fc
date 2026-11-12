@@ -62,7 +62,8 @@
     const g = A.g; if (!g) return;
     if (!A.slot) A.slot = A.setup.slot || firstFree() || 1;
     const c = P.club(g, g.user);
-    meta.s[A.slot] = { mgr: g.manager, club: c.name, badge: P.badge(c, 36), div: c.div, season: g.season, week: g.week, over: !!g.over, at: Date.now() };
+    let hl = null; try { hl = P.headline ? P.headline(g) : null; } catch (e) { hl = null; }
+    meta.s[A.slot] = { mgr: g.manager, club: c.name, badge: P.badge(c, 48), div: c.div, season: g.season, week: g.week, over: !!g.over, at: Date.now(), head: hl && hl.head, dek: hl && hl.dek };
     meta.active = A.slot;
     writeMeta();
     pending = { n: A.slot, text: JSON.stringify(g) }; flush();
@@ -109,20 +110,27 @@
     const rows = [];
     for (let i = 1; i <= N; i++) {
       const m = meta.s[i];
-      if (!m) { rows.push(`<div class="slot-row empty"><span class="slot-n">${i}</span><span class="muted" style="flex:1">Espaço livre</span></div>`); continue; }
-      rows.push(`<div class="slot-row"><span class="slot-n">${i}</span>${m.badge || ''}<div class="slot-info"><b>${esc(m.club)}</b><div class="muted" style="font-size:.85rem">${esc(m.mgr)} · ${m.div}ª div. · ${m.season}${m.over ? ' (fim)' : ''} · jogado ${when(m.at)}</div></div>
-        <div class="slot-btns">${conf === i ? `<button class="btn sm" data-a="slotDel" data-n="">Cancelar</button><button class="btn sm danger" data-a="slotDelYes" data-n="${i}">Apagar</button>`
-          : `<button class="btn sm" data-a="slotDel" data-n="${i}" aria-label="Apagar carreira do espaço ${i}">Apagar</button><button class="btn primary sm" data-a="slotOpen" data-n="${i}">Continuar</button>`}</div></div>`);
+      if (!m) { rows.push(`<p class="jr-free">— Espaço ${i} livre para uma nova história —</p>`); continue; }
+      rows.push(`<article class="jr-story">
+        <div class="jr-crest">${m.badge || ''}</div>
+        <div class="jr-story-b">
+          <span class="jr-kick">${m.div}ª divisão · Temporada ${m.season}${m.over ? ' · fim' : ''}</span>
+          <h3>${esc(m.head || `${m.club}, de ${m.mgr}`)}</h3>
+          ${m.dek ? `<p>${esc(m.dek)}</p>` : `<p>${esc(m.club)} sob o comando de ${esc(m.mgr)}.</p>`}
+          <span class="jr-when">Espaço ${i} · última edição ${when(m.at)}</span>
+          ${conf === i ? `<div class="jr-tear"><span>Rasgar não tem volta. Se quiser guardar, abra e baixe um backup em Mais.</span><div class="row"><button class="btn sm" data-a="slotDel" data-n="">Cancelar</button><button class="btn sm danger" data-a="slotDelYes" data-n="${i}">Sim, rasgar</button></div></div>`
+            : `<div class="jr-story-act"><button class="btn primary" data-a="slotOpen" data-n="${i}">Continuar a leitura →</button><button class="jr-link" data-a="slotDel" data-n="${i}" aria-label="Apagar carreira do espaço ${i}">rasgar a página</button></div>`}
+        </div></article>`);
     }
-    return `<div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="head" style="margin:0"><h2>Suas carreiras</h2><span class="muted">${Object.keys(meta.s).length}/${N}</span></div>${rows.join('')}
-      ${conf ? '<p class="muted" style="margin:0;font-size:.85rem">Apagar não tem volta. Se quiser guardar, abra a carreira e baixe um backup antes.</p>' : ''}</div>`;
+    if (!Object.keys(meta.s).length) return '';
+    return `<section class="jr-sec"><h2 class="jr-h">Em andamento</h2>${rows.join('')}</section>`;
   };
   // Escolha do espaço para a nova carreira
   P.slotPick = function () {
     const cur = A.setup.slot || firstFree() || 1;
     const m = meta.s[cur];
-    return `<div class="field"><span class="label">Salvar no espaço</span><div class="seg">${[1, 2, 3].map((i) => `<button class="${cur === i ? 'on' : ''}" data-a="slotPick" data-n="${i}">${i}${meta.s[i] ? ' · ocupado' : ''}</button>`).join('')}</div>
-      ${m ? `<p class="muted" style="margin:6px 0 0;font-size:.85rem;color:var(--bad)">Vai substituir a carreira ${esc(m.mgr)} · ${esc(m.club)}.</p>` : ''}</div>`;
+    return `<div class="field"><span class="jr-step">4 · Arquivar no espaço</span><div class="seg">${[1, 2, 3].map((i) => `<button class="${cur === i ? 'on' : ''}" data-a="slotPick" data-n="${i}">${i}${meta.s[i] ? ' · ocupado' : ''}</button>`).join('')}</div>
+      ${m ? `<p class="jr-warn">Vai substituir a carreira ${esc(m.mgr)} · ${esc(m.club)}.</p>` : ''}</div>`;
   };
 
   Object.assign(A.ACT, {
