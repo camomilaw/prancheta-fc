@@ -39,6 +39,29 @@
     lat: { n: 'Lateral ofensivo', pos: ['LD', 'LE'], b: { cru: 3, vel: 3 } },
     gol: { n: 'Goleiro de reflexo', pos: ['GOL'], b: { ref: 4, um1: 2 } }
   };
+  // Missão por continente/país e por posição/área do campo
+  P.CONTINENTS = {
+    sam: { n: 'América do Sul', c: ['BRA', 'ARG', 'URU', 'COL', 'CHI', 'PAR', 'PER', 'ECU', 'VEN', 'BOL', 'SUR'] },
+    nca: { n: 'América do Norte e Central', c: ['MEX', 'USA', 'CAN', 'JAM', 'PAN', 'CRC', 'DOM', 'SLV', 'GUA'] },
+    eur: { n: 'Europa', c: ['ENG', 'SCO', 'WAL', 'NIR', 'IRL', 'ESP', 'POR', 'FRA', 'BEL', 'NED', 'LUX', 'GER', 'ITA', 'SUI', 'AUT', 'DEN', 'SWE', 'NOR', 'FIN', 'ISL', 'FRO', 'POL', 'CZE', 'SVK', 'HUN', 'CRO', 'SRB', 'SVN', 'BIH', 'MNE', 'MKD', 'KOS', 'ALB', 'ROU', 'BUL', 'MDA', 'UKR', 'RUS', 'LTU', 'LVA', 'EST', 'GRE', 'TUR', 'CYP', 'ISR', 'GEO', 'ARM'] },
+    afr: { n: 'África', c: ['NGA', 'GHA', 'SEN', 'CIV', 'CMR', 'MAR', 'EGY', 'ALG', 'TUN', 'ANG', 'MOZ', 'CPV', 'MLI', 'GUI', 'BFA', 'COD', 'GAB', 'CAF', 'GAM', 'GNB', 'GNQ', 'BDI', 'ZIM', 'RSA', 'ZAM', 'BEN', 'TOG'] },
+    asi: { n: 'Ásia', c: ['JPN', 'KOR', 'CHN', 'HKG', 'KSA', 'UZB', 'IRN', 'JOR', 'IDN'] },
+    oce: { n: 'Oceania', c: ['AUS', 'NZL'] }
+  };
+  P.LINES_N = { GOL: 'Goleiros', DEF: 'Defesa (zagueiros e laterais)', MEI: 'Meio-campo (volantes e meias)', ATA: 'Ataque (pontas e atacantes)' };
+  const contCountries = (cont) => (cont && P.CONTINENTS[cont] ? P.CONTINENTS[cont].c : Object.keys(P.COUNTRIES)).filter((k) => P.COUNTRIES[k]);
+  const posPick = (r, want) => {
+    if (!want || want === 'any') return null;
+    if (want.startsWith('L:')) return P.weighted(r, P.POS.filter((x) => P.LINE[x] === want.slice(2)), (x) => P.SQUAD_TEMPLATE[x] || 1);
+    return want;
+  };
+  const posLabel = (want) => (!want || want === 'any' ? 'Qualquer posição' : want.startsWith('L:') ? P.LINES_N[want.slice(2)] : P.POS_NAME[want]);
+  P.missionLabel = function (m) {
+    if (!m) return '';
+    if (m.cont === undefined) return `${P.FOCUS[m.focus] ? P.FOCUS[m.focus].n : ''} · ${P.REGIONS[m.region] ? P.REGIONS[m.region].n : ''}`;
+    const place = m.nat ? P.countryName(m.nat) : m.cont ? P.CONTINENTS[m.cont].n : 'Mundo inteiro';
+    return `${posLabel(m.pos)} · ${place}`;
+  };
   const STAR_WAGE = [0, 8000, 20000, 45000, 90000, 160000];
   const STAR_ERR = [0, 12, 9, 6, 4, 2]; // margem do potencial no relatório
 
@@ -148,11 +171,14 @@
   // ---------- Olheiros ----------
   function makeReport(g, s) {
     const r = Math.random;
-    const m = s.mission, reg = P.REGIONS[m.region], foc = P.FOCUS[m.focus];
+    const m = s.mission;
+    const legacy = m.cont === undefined; // missões antigas (região + foco)
+    const reg = legacy ? P.REGIONS[m.region] : { n: m.nat ? P.countryName(m.nat) : m.cont ? P.CONTINENTS[m.cont].n : 'Mundo inteiro', c: m.nat ? [m.nat] : contCountries(m.cont) };
+    const foc = legacy ? P.FOCUS[m.focus] : { n: posLabel(m.pos), pos: null, b: {} };
     const n = 1 + Math.floor(s.stars / 2);
     const players = [], gems = [];
     for (let i = 0; i < n; i++) {
-      const pos = foc.pos ? P.pick(r, foc.pos) : randomPos(r);
+      const pos = legacy ? (foc.pos ? P.pick(r, foc.pos) : randomPos(r)) : (posPick(r, m.pos) || randomPos(r));
       // o talento que aceita vir acompanha o tamanho do clube (reputação); olheiro melhor acha um pouco acima
       const base = P.levelFromRep(P.club(g, g.user).rep) * 5 + 6;
       const gem = r() < P.YOUTH.gemChance;
@@ -167,9 +193,9 @@
       p.fee = Math.max(50000, Math.round(Math.pow(Math.max(mid - 45, 2), 2) * 900 / 10000) * 10000);
       players.push(p);
     }
-    g.y.reports.unshift({ id: P.uid('r'), sid: s.id, scout: s.name, stars: s.stars, region: m.region, focus: m.focus, s: g.season, w: g.week + 1, players });
+    g.y.reports.unshift({ id: P.uid('r'), sid: s.id, scout: s.name, stars: s.stars, region: m.region, focus: m.focus, lbl: P.missionLabel(m), s: g.season, w: g.week + 1, players });
     if (g.y.reports.length > 8) g.y.reports.length = 8;
-    P.news(g, `Relatório do olheiro ${s.name}: ${n} jovens (${P.FOCUS[m.focus].n.toLowerCase()}, ${reg.n}). Veja em Sub-20 › Relatórios.`, 'good');
+    P.news(g, `Relatório do olheiro ${s.name}: ${n} ${n === 1 ? 'jovem' : 'jovens'} (${foc.n.toLowerCase()}, ${reg.n}). Veja em Sub-20 › Relatórios.`, 'good');
     if (gems.length) P.news(g, `${s.name} está empolgado: "${gems.join(' e ')} pode ser uma joia rara, daquelas que aparecem uma vez na vida." Veja em Sub-20 › Relatórios.`, 'good');
   }
 
@@ -302,23 +328,38 @@
         <div class="row" style="margin-top:12px"><span class="muted" style="flex:1;font-size:.88rem">Olheiros e o resto da equipe técnica são contratados no Mercado.</span><button class="btn sm" data-a="stGoMarket" data-r="olheiro">Contratar no Mercado</button></div>`;
     } else {
       body = g.y.reports.length ? g.y.reports.map((rep) => `<div class="report"><div class="row" style="gap:8px"><b style="flex:1;min-width:0">${esc(rep.scout)} <span class="stars">${'★'.repeat(rep.stars)}</span></b><span class="muted" style="font-size:.8rem">${rep.s} · semana ${rep.w}</span></div>
-        <div class="muted" style="font-size:.85rem;margin-bottom:6px">${esc(P.FOCUS[rep.focus].n)} · ${esc(P.REGIONS[rep.region].n)}</div>
+        <div class="muted" style="font-size:.85rem;margin-bottom:6px">${esc(rep.lbl || (P.FOCUS[rep.focus].n + ' · ' + P.REGIONS[rep.region].n))}</div>
         <div class="plist">${rep.players.map((p) => `<div class="prow" style="grid-template-columns:44px 1fr auto"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
           <span class="nm"><b>${esc(p.name)}${p.gem ? '<span class="chip gem">Joia rara</span>' : ''}</b><small>${esc(P.countryName(p.nat))} · ${p.age} anos · atual ~${P.ovr(p)}</small></span>
           <span class="potbox"><span class="pot">${p.lo}-${p.hi}</span>${p.signed ? '<span class="chip xi">Contratado</span>' : `<button class="btn sm" data-a="ySign" data-r="${rep.id}" data-id="${p.id}">${P.money(p.fee)}</button>`}</span></div>`).join('')}</div></div>`).join('')
-        : '<p class="empty">Nenhum relatório ainda. Contrate um olheiro e envie-o numa missão: o primeiro relatório chega em 4 semanas.</p>';
+        : '<p class="empty">Nenhum relatório ainda. Contrate um olheiro e envie-o numa missão: o primeiro relatório chega em ${P.YOUTH.reportEvery} semanas.</p>';
     }
     return `<div class="card"><div class="head"><h2>Sub-20</h2><button class="btn sm ghost" data-a="go" data-v="elenco">‹ Elenco</button></div>
       <div style="margin-bottom:12px">${tabs}</div>${body}</div>`;
   };
+  // Formulário da missão: posição ou área, continente e país (só os do continente escolhido)
+  const natOpts = (cont, cur) => `<option value="">${cont ? 'Todo o continente (' + esc(P.CONTINENTS[cont].n) + ')' : 'Qualquer país'}</option>` +
+    contCountries(cont).map((k) => [k, P.COUNTRIES[k].n]).sort((a, b) => a[1].localeCompare(b[1])).map(([k, n]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  function missionForm(s, m) {
+    const pos = (m && m.pos) || 'any', cont = (m && m.cont) || '', nat = (m && m.nat) || '';
+    return `<div class="form-grid mission-form" style="margin:8px 0">
+      <div class="field"><label class="label" for="ym-pos-${s.id}">Posição ou área</label><select class="sel" id="ym-pos-${s.id}">
+        <option value="any" ${pos === 'any' ? 'selected' : ''}>Qualquer posição</option>
+        <optgroup label="Área do campo">${Object.entries(P.LINES_N).map(([k, n]) => `<option value="L:${k}" ${pos === 'L:' + k ? 'selected' : ''}>${esc(n)}</option>`).join('')}</optgroup>
+        <optgroup label="Posição específica">${P.POS.map((x) => `<option value="${x}" ${pos === x ? 'selected' : ''}>${x} · ${esc(P.POS_NAME[x])}</option>`).join('')}</optgroup></select></div>
+      <div class="field"><label class="label" for="ym-cont-${s.id}">Continente</label><select class="sel" id="ym-cont-${s.id}" data-c="ymCont" data-id="${s.id}">
+        <option value="">Mundo inteiro</option>${Object.entries(P.CONTINENTS).map(([k, c]) => `<option value="${k}" ${cont === k ? 'selected' : ''}>${esc(c.n)}</option>`).join('')}</select></div>
+      <div class="field"><label class="label" for="ym-nat-${s.id}">País</label><select class="sel" id="ym-nat-${s.id}">${natOpts(cont, nat)}</select></div>
+    </div>`;
+  }
   function scoutCard(g, s) {
     const m = s.mission;
     const edit = A.st.yb.edit === s.id || !m;
     const sel = (k, map, cur) => `<select class="sel" id="ym-${k}-${s.id}">${Object.entries(map).map(([v, o]) => `<option value="${v}" ${cur === v ? 'selected' : ''}>${esc(o.n)}</option>`).join('')}</select>`;
     return `<div class="report"><div class="row" style="gap:8px"><b style="flex:1;min-width:0">${esc(s.name)} <span class="stars">${'★'.repeat(s.stars)}<span class="off">${'★'.repeat(5 - s.stars)}</span></span></b><span class="muted" style="font-size:.8rem">${P.money(s.wage)}/mês</span></div>
-      ${edit ? `<div class="filters" style="margin:8px 0">${sel('region', P.REGIONS, m ? m.region : 'mundo')}${sel('focus', P.FOCUS, m ? m.focus : 'any')}</div>
+      ${edit ? missionForm(s, m && m.cont !== undefined ? m : null) + `
         <div class="row"><button class="btn sm danger" data-a="yFire" data-id="${s.id}">Demitir</button><span class="spacer"></span><button class="btn sm primary" data-a="yMission" data-id="${s.id}">Enviar em missão</button></div>`
-      : `<div class="muted" style="font-size:.88rem;margin:4px 0 8px">Em missão: <b>${esc(P.FOCUS[m.focus].n)}</b> · ${esc(P.REGIONS[m.region].n)} · próximo relatório na semana ${m.next}</div>
+      : `<div class="muted" style="font-size:.88rem;margin:4px 0 8px">Em missão: <b>${esc(P.missionLabel(m))}</b> · próximo relatório na semana ${m.next}</div>
         <div class="row"><button class="btn sm danger" data-a="yFire" data-id="${s.id}">Demitir</button><span class="spacer"></span><button class="btn sm" data-a="yEdit" data-id="${s.id}">Mudar missão</button></div>`}</div>`;
   }
   A.youthSheet = function (id) {
@@ -337,6 +378,10 @@
   };
 
   // ---------- Ações ----------
+  // ao trocar o continente, a lista de países passa a mostrar só os daquele continente
+  Object.assign(A.CHG, {
+    ymCont(el) { const box = document.getElementById(`ym-nat-${el.dataset.id}`); if (box) box.innerHTML = natOpts(el.value, ''); }
+  });
   Object.assign(A.ACT, {
     yTab(d) { A.st.yb.tab = d.k; A.st.yb.edit = null; A.render(); },
     ySheet(d) { A.st.yb.confirm = null; A.youthSheet(d.id); },
@@ -365,7 +410,8 @@
     yEdit(d) { A.st.yb.edit = d.id; A.render(); },
     yMission(d) {
       const g = A.g, s = g.y.staff.find((x) => x.id === d.id);
-      s.mission = { region: document.getElementById(`ym-region-${s.id}`).value, focus: document.getElementById(`ym-focus-${s.id}`).value, next: g.week + 1 + P.YOUTH.reportEvery };
+      const v = (k) => document.getElementById(`ym-${k}-${s.id}`).value;
+      s.mission = { pos: v('pos'), cont: v('cont'), nat: v('nat'), next: g.week + 1 + P.YOUTH.reportEvery };
       A.st.yb.edit = null; A.save(); A.render(); A.toast(`Missão definida. Relatório na semana ${s.mission.next}.`);
     },
     ySign(d) {
