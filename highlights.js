@@ -29,61 +29,77 @@
     });
   }
 
-  // Monta a jogada: lista de etapas { ball: [x,y], dur, cap, who }
+  // Monta a jogada como etapas do estilo FM mobile:
+  //  hold  (parado, com a bola no pé)  · carry (conduz a bola até um ponto)
+  //  pass  (a bola vai ao ponto de encontro e o companheiro corre até lá)
+  //  shot  (finalização; o goleiro pula quando for defesa)
   function script(e, A, D) {
     const find = (id) => A.find((o) => o.p.id === id);
+    const R = Math.random;
     const shooter = find(e.p) || A.filter((o) => o.pos !== 'GOL').sort((a, b) => b.x - a.x)[0];
     const gk = D.find((o) => o.pos === 'GOL');
-    const goal = [W, H / 2 + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * 2.2)];
-    const steps = [];
     const scored = e.t === 'gol';
+    const goalY = H / 2 + (R() < 0.5 ? -1 : 1) * (1 + R() * 2.3);
     const name = (o) => (o ? short(o.p.name) : '');
+    const steps = [];
+    const shot = (who, cap, dur, arc) => {
+      steps.push({ k: 'shot', who, to: scored ? [W + 1.2, goalY] : [W - 2.2, goalY], dur, arc, cap, save: !scored });
+      if (!scored) steps.push({ k: 'loose', to: [W - 9, goalY + (goalY > H / 2 ? 9 : -9)], dur: 650, cap: '' });
+    };
+    let holder;
     if (e.sp === 'pen' || e.t === 'penmiss') {
-      const spot = [W - 11, H / 2];
-      shooter.x = spot[0] - 2.5; shooter.y = spot[1];
-      steps.push({ ball: spot, dur: 900, cap: `Pênalti para o time de ${name(shooter)}`, move: [] });
-      steps.push({ ball: spot, dur: 700, cap: `${name(shooter)} ajeita a bola…` });
-      if (scored) steps.push({ ball: goal, dur: 450, cap: `${name(shooter)} bate…`, shot: true });
-      else steps.push({ ball: [W - 2.5, goal[1]], dur: 450, cap: `${name(shooter)} bate…`, shot: true, gkTo: [W - 2.5, goal[1]] }, { ball: [W - 9, goal[1] + (goal[1] > H / 2 ? 9 : -9)], dur: 500, cap: '' });
+      holder = shooter; holder.x = W - 13; holder.y = H / 2;
+      D.forEach((o) => { if (o.pos !== 'GOL' && o.x > W - 20) o.x = W - 21 - R() * 6; });
+      A.forEach((o) => { if (o !== holder && o.x > W - 20) o.x = W - 21 - R() * 6; });
+      steps.push({ k: 'hold', who: holder, ball: [W - 11, H / 2], dur: 1400, cap: `Pênalti! ${name(holder)} vai para a cobrança` });
+      steps.push({ k: 'carry', who: holder, to: [W - 11.8, H / 2], dur: 700, cap: `${name(holder)} corre para a bola…` });
+      shot(holder, `${name(holder)} bate…`, 650);
     } else if (e.sp === 'fal') {
-      const spot = [W - 24, H / 2 + (Math.random() - 0.5) * 16];
-      shooter.x = spot[0] - 2; shooter.y = spot[1];
-      // barreira
-      D.filter((o) => o.pos !== 'GOL').sort((a, b) => b.x - a.x).slice(0, 4).forEach((o, i) => { o.x = spot[0] + 9; o.y = spot[1] + (spot[1] > H / 2 ? -1 : 1) * 2.5 - 3.6 + i * 2.4; });
-      steps.push({ ball: spot, dur: 1000, cap: `Falta perigosa. ${name(shooter)} na cobrança` });
-      if (scored) steps.push({ ball: goal, dur: 650, cap: `${name(shooter)} cobra direto…`, shot: true, arc: 6 });
-      else steps.push({ ball: [W - 2.5, goal[1]], dur: 650, cap: `${name(shooter)} cobra direto…`, shot: true, arc: 6, gkTo: [W - 2.5, goal[1]] }, { ball: [W - 6, goal[1] + 8], dur: 400, cap: '' });
+      holder = shooter;
+      const spot = [W - 24, H / 2 + (R() - 0.5) * 16];
+      holder.x = spot[0] - 2; holder.y = spot[1];
+      D.filter((o) => o.pos !== 'GOL').sort((a, b) => b.x - a.x).slice(0, 4).forEach((o, i) => { o.x = spot[0] + 9; o.y = spot[1] + (spot[1] > H / 2 ? -1 : 1) * 2 - 3 + i * 2; o.lock = true; });
+      steps.push({ k: 'hold', who: holder, ball: spot, dur: 1500, cap: `Falta perigosa. ${name(holder)} na cobrança` });
+      steps.push({ k: 'carry', who: holder, to: [spot[0] - 0.6, spot[1]], dur: 600, cap: `${name(holder)} cobra direto…` });
+      shot(holder, `${name(holder)} cobra direto…`, 950, 5);
     } else if (e.sp === 'esc') {
-      const top = Math.random() < 0.5;
-      const flag = [W - 0.5, top ? 0.5 : H - 0.5];
-      const taker = find(e.as) || A.filter((o) => o.pos !== 'GOL' && o !== shooter)[0];
-      if (taker) { taker.x = flag[0] - 1.5; taker.y = flag[1] + (top ? 1.5 : -1.5); }
-      const head = [W - 9, H / 2 + (Math.random() - 0.5) * 8];
-      shooter.x = head[0] - 3; shooter.y = head[1];
-      D.filter((o) => o.pos !== 'GOL').sort((a, b) => b.x - a.x).slice(0, 4).forEach((o, i) => { o.x = W - 7 - (i % 2) * 4; o.y = H / 2 - 7 + i * 4.5; });
-      steps.push({ ball: flag, dur: 900, cap: `Escanteio. ${name(taker)} na bola` });
-      steps.push({ ball: head, dur: 800, cap: `${name(taker)} cruza na área…`, arc: 7, who: shooter, runTo: head });
-      if (scored) steps.push({ ball: goal, dur: 380, cap: `${name(shooter)} sobe de cabeça…`, shot: true });
-      else steps.push({ ball: [W - 2.5, goal[1]], dur: 380, cap: `${name(shooter)} sobe de cabeça…`, shot: true, gkTo: [W - 2.5, goal[1]] }, { ball: [W - 7, goal[1] + 9], dur: 400, cap: '' });
+      const top = R() < 0.5;
+      const flag = [W - 0.6, top ? 0.6 : H - 0.6];
+      holder = find(e.as) || A.filter((o) => o.pos !== 'GOL' && o !== shooter).sort((a, b) => b.x - a.x)[0];
+      holder.x = flag[0] - 1.6; holder.y = flag[1] + (top ? 1.6 : -1.6);
+      // área cheia: atacantes e defensores dentro da área
+      A.filter((o) => o.pos !== 'GOL' && o !== holder).sort((a, b) => b.x - a.x).slice(0, 5).forEach((o, i) => { o.x = W - 8 - (i % 3) * 3.5; o.y = H / 2 - 8 + i * 4; });
+      D.filter((o) => o.pos !== 'GOL').sort((a, b) => b.x - a.x).slice(0, 5).forEach((o, i) => { o.x = W - 6 - (i % 2) * 4; o.y = H / 2 - 9 + i * 4.3; });
+      const head = [W - 9, H / 2 + (R() - 0.5) * 9];
+      shooter.x = head[0] - 5; shooter.y = head[1] + (R() - 0.5) * 4;
+      steps.push({ k: 'hold', who: holder, ball: flag, dur: 1300, cap: `Escanteio. ${name(holder)} na bola` });
+      steps.push({ k: 'pass', who: holder, to: shooter, meet: head, dur: 1100, arc: 7, cap: `${name(holder)} cruza na área…` });
+      shot(shooter, `${name(shooter)} sobe de cabeça…`, 500);
     } else {
-      // jogada: sai da defesa ou do meio, passa pelo garçom (se houver) e termina no finalizador
+      // jogada trabalhada: sai da defesa ou do meio, passa pelo garçom (se houver) e chega no finalizador
       const outfield = A.filter((o) => o.pos !== 'GOL' && o !== shooter);
       const assist = find(e.as);
-      const start = outfield.filter((o) => o !== assist && ['DEF', 'MEI'].includes(P.LINE[o.pos])).sort(() => Math.random() - 0.5)[0] || outfield[0];
-      const mid = outfield.filter((o) => o !== assist && o !== start && P.LINE[o.pos] !== 'DEF').sort(() => Math.random() - 0.5)[0];
-      const chain = [start, mid, assist].filter(Boolean);
-      // o finalizador entra na área
-      const shotPos = [W - 13 - Math.random() * 10, H / 2 + (Math.random() - 0.5) * 18];
-      let first = true;
+      const pool = (lines) => outfield.filter((o) => o !== assist && lines.includes(P.LINE[o.pos]));
+      holder = pool(['DEF', 'MEI']).sort(() => R() - 0.5)[0] || outfield[0];
+      const mid = pool(['MEI', 'ATA']).filter((o) => o !== holder).sort(() => R() - 0.5)[0];
+      const chain = [mid, assist].filter((o) => o && o !== holder);
+      const fwd = (o, d) => [Math.min(o.x + d, W - 20), P.clamp(o.y + (R() - 0.5) * 8, 4, H - 4)];
+      steps.push({ k: 'hold', who: holder, ball: [holder.x + 1, holder.y], dur: 700, cap: `${name(holder)} com a bola` });
+      steps.push({ k: 'carry', who: holder, to: fwd(holder, 7 + R() * 5), dur: 1100, cap: `${name(holder)} avança` });
+      let cur = holder;
       for (const o of chain) {
-        steps.push({ ball: [o.x + 1.2, o.y], dur: first ? 700 : 650, cap: first ? `${name(o)} começa a jogada` : `${name(o)} recebe e avança`, who: o, runTo: [Math.min(o.x + 8, W - 16), o.y] });
-        first = false;
+        const meet = fwd(o, 4 + R() * 4);
+        steps.push({ k: 'pass', who: cur, to: o, meet, dur: 900, cap: `${name(cur)} toca para ${name(o)}` });
+        steps.push({ k: 'carry', who: o, to: fwd({ x: meet[0], y: meet[1] }, 7 + R() * 6), dur: 1100, cap: `${name(o)} conduz…` });
+        cur = o;
       }
-      steps.push({ ball: shotPos, dur: 650, cap: assist ? `${name(assist)} encontra ${name(shooter)}…` : `${name(shooter)} aparece livre…`, who: shooter, runTo: shotPos });
-      if (scored) steps.push({ ball: goal, dur: 420, cap: `${name(shooter)} finaliza…`, shot: true });
-      else steps.push({ ball: [W - 2.5, goal[1]], dur: 420, cap: `${name(shooter)} finaliza…`, shot: true, gkTo: [W - 2.5, goal[1]] }, { ball: [W - 8, goal[1] + (goal[1] > H / 2 ? 10 : -10)], dur: 450, cap: '' });
+      const shotPos = [W - 12 - R() * 9, H / 2 + (R() - 0.5) * 16];
+      if (cur !== shooter) steps.push({ k: 'pass', who: cur, to: shooter, meet: shotPos, dur: 950, cap: `${name(cur)} encontra ${name(shooter)}…` });
+      else steps.push({ k: 'carry', who: shooter, to: shotPos, dur: 1000, cap: `${name(shooter)} parte para cima…` });
+      steps.push({ k: 'carry', who: shooter, to: [shotPos[0] + 1.5, shotPos[1] + (H / 2 - shotPos[1]) * 0.15], dur: 450, cap: `${name(shooter)} ajeita…` });
+      shot(shooter, `${name(shooter)} finaliza…`, 650);
     }
-    return { steps, shooter, gk, scored };
+    return { steps, shooter, gk, scored, holder, goalY };
   }
 
   // Toca um lance. opts: { st (estado da simulação), e (evento), m (partida), onReveal, onEnd }
@@ -98,83 +114,110 @@
     const cA = pick(colA), cD = pick(colD, cA);
     const A = layout(st.L[side], true), D = layout(st.L[1 - side], false);
     const sc = script(e, A, D);
+    for (const o of A.concat(D)) { o.bx = o.x; o.by = o.y; }
     const X = (x) => (mirror ? W - x : x), Y = (y) => (mirror ? H - y : y);
 
     host.innerHTML = '';
     const svg = el('svg', { viewBox: `-2 -2 ${W + 4} ${H + 4}`, class: 'hl-pitch', role: 'img', 'aria-label': 'Lance da partida' }, host);
-    // gramado e linhas
     el('rect', { x: -2, y: -2, width: W + 4, height: H + 4, fill: 'var(--pitch)' }, svg);
     for (let i = 0; i < 10; i += 2) el('rect', { x: i * W / 10, y: 0, width: W / 10, height: H, fill: 'var(--pitch-2)' }, svg);
-    const ln = { fill: 'none', stroke: 'rgba(255,255,255,.6)', 'stroke-width': 0.4 };
+    const ln = { fill: 'none', stroke: 'rgba(255,255,255,.6)', 'stroke-width': 0.35 };
     el('rect', Object.assign({ x: 0, y: 0, width: W, height: H }, ln), svg);
     el('line', Object.assign({ x1: W / 2, y1: 0, x2: W / 2, y2: H }, ln), svg);
     el('circle', Object.assign({ cx: W / 2, cy: H / 2, r: 9.15 }, ln), svg);
     for (const gx of [0, W]) {
-      const d = gx ? -1 : 1;
       el('rect', Object.assign({ x: gx ? W - 16.5 : 0, y: H / 2 - 20.15, width: 16.5, height: 40.3 }, ln), svg);
       el('rect', Object.assign({ x: gx ? W - 5.5 : 0, y: H / 2 - 9.15, width: 5.5, height: 18.3 }, ln), svg);
+      el('circle', { cx: gx ? W - 11 : 11, cy: H / 2, r: 0.35, fill: 'rgba(255,255,255,.7)' }, svg);
       el('rect', { x: gx ? W : -1.6, y: H / 2 - 3.66, width: 1.6, height: 7.32, fill: 'rgba(255,255,255,.85)' }, svg);
-      void d;
     }
     const dots = [];
-    const mk = (o, fill, ring) => {
+    const ring = (c) => (dist(c, '#ffffff') < 120 ? 'rgba(0,0,0,.75)' : 'rgba(255,255,255,.9)');
+    const mk = (o, fill, rg) => {
       const g = el('g', {}, svg);
-      el('circle', { r: 2.1, fill, stroke: ring, 'stroke-width': 0.6 }, g);
-      const t = el('text', { y: -2.7, 'text-anchor': 'middle', class: 'hl-nm' }, g);
-      t.textContent = '';
-      o.node = g; o.label = t; dots.push(o);
-      return o;
+      el('circle', { r: 1.35, fill, stroke: rg, 'stroke-width': 0.35 }, g);
+      o.label = el('text', { y: -2, 'text-anchor': 'middle', class: 'hl-nm' }, g);
+      o.node = g; dots.push(o);
     };
-    const ring = (c) => (dist(c, '#ffffff') < 120 ? 'rgba(0,0,0,.7)' : 'rgba(255,255,255,.9)');
     D.forEach((o) => mk(o, o.pos === 'GOL' ? '#f2c230' : cD, ring(cD)));
     A.forEach((o) => mk(o, o.pos === 'GOL' ? '#f2c230' : cA, ring(cA)));
-    const ball = el('circle', { r: 0.95, fill: '#fff', stroke: '#111', 'stroke-width': 0.25, class: 'hl-ball' }, svg);
+    const ball = el('circle', { r: 0.7, fill: '#fff', stroke: '#111', 'stroke-width': 0.2, class: 'hl-ball' }, svg);
     const cap = document.createElement('div'); cap.className = 'hl-cap'; host.appendChild(cap);
-    const place = () => { for (const o of dots) o.node.setAttribute('transform', `translate(${X(o.x)},${Y(o.y)})`); };
-    place();
-
-    // ponto de partida da bola: primeira etapa
-    let bx = sc.steps[0].ball[0] - 3, by = sc.steps[0].ball[1];
-    const setBall = (x, y, lift) => { ball.setAttribute('cx', X(x)); ball.setAttribute('cy', Y(y) - (lift || 0)); ball.setAttribute('r', 0.95 + (lift || 0) * 0.08); };
-    setBall(bx, by);
-    let i = 0, t0 = null, raf = null, finished = false, revealed = false;
+    const place = () => { for (const o of dots) o.node.setAttribute('transform', `translate(${X(o.x).toFixed(2)},${Y(o.y).toFixed(2)})`); };
+    const setBall = (x, y, lift) => { ball.setAttribute('cx', X(x).toFixed(2)); ball.setAttribute('cy', (Y(y) - (lift || 0)).toFixed(2)); ball.setAttribute('r', (0.7 + (lift || 0) * 0.06).toFixed(2)); };
     const label = (o, on) => { if (o && o.label) o.label.textContent = on ? short(o.p.name) : ''; };
+    // a bola no pé: um pouco à frente, na direção do gol
+    const atFeet = (o) => [o.x + 1.25, o.y + (H / 2 - o.y) * 0.02];
+
+    let ballPos = sc.steps[0].ball || atFeet(sc.holder);
+    let carrier = sc.holder;
+    label(carrier, true); place(); setBall(ballPos[0], ballPos[1]);
+
+    let i = 0, t0 = null, last = null, raf = null, finished = false, revealed = false, ended = false;
     const reveal = () => { if (revealed) return; revealed = true; if (opts.onReveal) opts.onReveal(); };
-    const end = () => {
-      if (finished) return; finished = true; cancelAnimationFrame(raf);
-      reveal();
-      if (opts.onEnd) opts.onEnd();
+    const end = () => { if (finished) return; finished = true; cancelAnimationFrame(raf); reveal(); if (opts.onEnd) opts.onEnd(); };
+    // movimento coletivo: quem ataca sobe aos poucos, a defesa recua e acompanha a bola
+    const drift = (dt, bx, by) => {
+      const f = Math.min(1, dt / 600);
+      for (const o of dots) {
+        if (o === carrier || o.pos === 'GOL' || o.lock || o.run) continue;
+        const att = A.includes(o);
+        const tx = att ? Math.min(o.bx + (bx - 40) * 0.25, W - 6) : Math.max(o.bx + (bx - 60) * 0.12, W - 40 + (o.bx - (W - 40)) * 0.6);
+        const ty = o.by + (by - o.by) * (att ? 0.12 : 0.22);
+        o.x += (tx - o.x) * f * 0.35; o.y += (ty - o.y) * f * 0.35;
+      }
+      if (sc.gk && !sc.gk.run) sc.gk.y += ((H / 2 + (by - H / 2) * 0.25) - sc.gk.y) * f * 0.5;
     };
-    let lastWho = null;
     const frame = (now) => {
       if (finished) return;
+      const dt = last == null ? 16 : now - last; last = now;
       const stp = sc.steps[i];
       if (!stp) {
-        // desfecho
-        cap.className = 'hl-cap big ' + (sc.scored ? 'goal' : 'save');
-        cap.textContent = sc.scored ? 'GOOOL!' : e.t === 'penmiss' ? 'Pênalti perdido!' : `Defende ${sc.gk ? short(sc.gk.p.name) : 'o goleiro'}!`;
-        if (sc.scored) reveal();
-        setTimeout(end, sc.scored ? 1300 : 1000);
+        if (!ended) {
+          ended = true;
+          cap.className = 'hl-cap big ' + (sc.scored ? 'goal' : 'save');
+          cap.textContent = sc.scored ? 'GOOOL!' : e.t === 'penmiss' ? 'Pênalti perdido!' : `Defende ${sc.gk ? short(sc.gk.p.name) : 'o goleiro'}!`;
+          if (sc.scored) reveal();
+          setTimeout(end, sc.scored ? 1700 : 1300);
+        }
+        drift(dt, ballPos[0], ballPos[1]); place();
+        raf = requestAnimationFrame(frame);
         return;
       }
       if (t0 == null) {
-        t0 = now; stp.from = [bx, by];
-        if (stp.cap) cap.textContent = stp.cap;
-        cap.className = 'hl-cap';
-        if (lastWho) label(lastWho, false);
-        if (stp.who) { label(stp.who, true); lastWho = stp.who; stp.who0 = [stp.who.x, stp.who.y]; }
-        if (stp.shot) { label(sc.shooter, true); lastWho = sc.shooter; }
-        if (stp.gkTo && sc.gk) sc.gk0 = [sc.gk.x, sc.gk.y];
+        t0 = now;
+        stp.from = ballPos.slice();
+        if (stp.cap) { cap.textContent = stp.cap; cap.className = 'hl-cap'; }
+        if (stp.who) { stp.w0 = [stp.who.x, stp.who.y]; }
+        if (stp.k === 'pass') { stp.r0 = [stp.to.x, stp.to.y]; stp.to.run = true; label(stp.to, true); }
+        if (stp.k === 'shot' && stp.save && sc.gk) { sc.gk.run = true; stp.g0 = [sc.gk.x, sc.gk.y]; }
       }
       const k = Math.min(1, (now - t0) / stp.dur), q = ease(k);
-      const x = lerp(stp.from[0], stp.ball[0], q), y = lerp(stp.from[1], stp.ball[1], q);
-      setBall(x, y, stp.arc ? Math.sin(Math.PI * k) * stp.arc : 0);
-      if (stp.who && stp.runTo) { stp.who.x = lerp(stp.who0[0], stp.runTo[0] - 1.2, q); stp.who.y = lerp(stp.who0[1], stp.runTo[1], q); }
-      if (stp.gkTo && sc.gk) { sc.gk.x = lerp(sc.gk0[0], stp.gkTo[0], q); sc.gk.y = lerp(sc.gk0[1], stp.gkTo[1], q); }
-      // os outros acompanham levemente o lance
-      for (const o of dots) if (o !== stp.who && o !== sc.gk && o.pos !== 'GOL') o.y += ((y - o.y) * 0.0025);
+      if (stp.k === 'hold') {
+        ballPos = stp.ball;
+        setBall(ballPos[0], ballPos[1]);
+      } else if (stp.k === 'carry') {
+        // o jogador corre com a bola colada no pé
+        stp.who.x = lerp(stp.w0[0], stp.to[0], q); stp.who.y = lerp(stp.w0[1], stp.to[1], q);
+        ballPos = atFeet(stp.who); setBall(ballPos[0], ballPos[1]);
+      } else if (stp.k === 'pass') {
+        // a bola vai ao ponto de encontro; o companheiro chega lá junto com ela
+        const rx = lerp(stp.r0[0], stp.meet[0] - 1.25, q), ry = lerp(stp.r0[1], stp.meet[1], q);
+        stp.to.x = rx; stp.to.y = ry;
+        ballPos = [lerp(stp.from[0], stp.meet[0], q), lerp(stp.from[1], stp.meet[1], q)];
+        setBall(ballPos[0], ballPos[1], stp.arc ? Math.sin(Math.PI * k) * stp.arc : 0);
+      } else if (stp.k === 'shot' || stp.k === 'loose') {
+        ballPos = [lerp(stp.from[0], stp.to[0], q), lerp(stp.from[1], stp.to[1], q)];
+        setBall(ballPos[0], ballPos[1], stp.arc ? Math.sin(Math.PI * k) * stp.arc : 0);
+        if (stp.g0 && sc.gk) { sc.gk.x = lerp(stp.g0[0], W - 2.2, q); sc.gk.y = lerp(stp.g0[1], stp.to[1], q); }
+      }
+      drift(dt, ballPos[0], ballPos[1]);
       place();
-      if (k >= 1) { bx = stp.ball[0]; by = stp.ball[1]; i++; t0 = null; }
+      if (k >= 1) {
+        if (stp.k === 'pass') { label(carrier, false); carrier = stp.to; stp.to.run = false; }
+        if (stp.k === 'shot') { label(carrier, false); carrier = null; }
+        i++; t0 = null;
+      }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
