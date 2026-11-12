@@ -4,7 +4,7 @@
  * Jogou bastante e bem: sobe. Ficou encostado: cai.
  */
 (function (P) {
-  P.POT = { maxAge: 24, mid: 24 };
+  P.POT = { maxAge: 24, mid: 24, cap: 8, youthF: 0.5 }; // cap: no máximo ±8 do potencial original; Sub-20 ganha metade
 
   // Mudança de potencial numa metade de temporada
   P.potDelta = function (share, note, age, r) {
@@ -38,6 +38,10 @@
   function apply(p, d, youth) {
     if (!d) return 0;
     const before = P.potOvr(p);
+    if (p.potB == null) p.potB = before; // potencial original, base do teto
+    if (youth && d > 0) d = Math.max(1, Math.round(d * P.POT.youthF));
+    d = P.clamp(before + d, p.potB - P.POT.cap, p.potB + P.POT.cap) - before;
+    if (!d) return 0;
     if (youth) {
       p.potO = P.clamp(p.potO + d, P.ovr(p), 99);
       p.pot = p.potO / 5;

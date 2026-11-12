@@ -6,7 +6,7 @@
 (function (P) {
   const A = P.app, esc = P.esc;
 
-  P.YOUTH = { maxSquad: 24, startSquad: 18, wage: 2000, reportEvery: 4, maxScouts: 3, maxAge: 19 };
+  P.YOUTH = { maxSquad: 24, startSquad: 18, wage: 2000, reportEvery: 8, maxScouts: 3, maxAge: 19 };
 
   P.REGIONS = {
     mundo: { n: 'Mundo inteiro', c: Object.keys(P.COUNTRIES) },
@@ -147,18 +147,20 @@
   function makeReport(g, s) {
     const r = Math.random;
     const m = s.mission, reg = P.REGIONS[m.region], foc = P.FOCUS[m.focus];
-    const n = 2 + Math.floor(s.stars / 2);
+    const n = 1 + Math.floor(s.stars / 2);
     const players = [];
     for (let i = 0; i < n; i++) {
       const pos = foc.pos ? P.pick(r, foc.pos) : randomPos(r);
-      const potO = 58 + s.stars * 3 + P.gauss(r) * 8 + (r() < 0.08 ? 8 : 0);
+      // o talento que aceita vir acompanha o tamanho do clube (reputação); olheiro melhor acha um pouco acima
+      const base = P.levelFromRep(P.club(g, g.user).rep) * 5 + 6;
+      const potO = base + (s.stars - 3) * 3 + P.gauss(r) * 6 + (r() < 0.04 ? 8 : 0);
       const p = youthPlayer(r, { pos, potO, nat: P.pick(r, reg.c), boost: foc.b });
       const err = STAR_ERR[s.stars];
       const off = Math.round((r() * 2 - 1) * err * 0.7);
       p.lo = P.clamp(p.potO - err + off, 35, 99); p.hi = P.clamp(p.potO + err + off, p.lo + 2, 99);
       if (p.potO < p.lo) p.lo = p.potO; if (p.potO > p.hi) p.hi = p.potO;
       const mid = (p.lo + p.hi) / 2;
-      p.fee = Math.max(20000, Math.round(Math.pow(Math.max(mid - 50, 2), 2) * 400 / 10000) * 10000);
+      p.fee = Math.max(50000, Math.round(Math.pow(Math.max(mid - 45, 2), 2) * 900 / 10000) * 10000);
       players.push(p);
     }
     g.y.reports.unshift({ id: P.uid('r'), sid: s.id, scout: s.name, stars: s.stars, region: m.region, focus: m.focus, s: g.season, w: g.week + 1, players });
@@ -190,7 +192,7 @@
     for (const p of Object.values(g.y.squad)) {
       const gap = p.potO - P.ovr(p);
       if (gap <= 0) continue;
-      const pts = P.clamp(gap * 0.35, 0, 8) * f * (p.s.j >= 8 ? 1.2 : 1) * (P.staffStars ? 1 + 0.08 * P.staffStars(g, 'tsub') : 1) * (P.facLvl ? 1 + (P.facLvl(g, 'base') - 3) * 0.06 : 1);
+      const pts = P.clamp(gap * 0.25, 0, 6) * f * (p.s.j >= 8 ? 1.2 : 1) * (P.staffStars ? 1 + 0.08 * P.staffStars(g, 'tsub') : 1) * (P.facLvl ? 1 + (P.facLvl(g, 'base') - 3) * 0.06 : 1);
       for (const at of P.ATTRS) {
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, pts / 5 * (1 + P.gauss(r) * 0.3)), 1, 20);
