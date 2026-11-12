@@ -148,7 +148,15 @@
     const setBall = (x, y, lift) => { ball.setAttribute('cx', X(x).toFixed(2)); ball.setAttribute('cy', (Y(y) - (lift || 0)).toFixed(2)); ball.setAttribute('r', (0.7 + (lift || 0) * 0.06).toFixed(2)); };
     const label = (o, on) => { if (o && o.label) o.label.textContent = on ? short(o.p.name) : ''; };
     // a bola no pé: um pouco à frente, na direção do gol
-    const atFeet = (o) => [o.x + 1.25, o.y + (H / 2 - o.y) * 0.02];
+    // direção para onde cada jogador está virado (segue o movimento, com um pouco de atraso)
+    const setHead = (o) => {
+      const sp = Math.hypot(o.vx || 0, o.vy || 0);
+      if (o.hx == null) { o.hx = 1; o.hy = 0; }
+      if (sp > 0.5) { o.hx = lerp(o.hx, o.vx / sp, 0.22); o.hy = lerp(o.hy, o.vy / sp, 0.22); const n = Math.hypot(o.hx, o.hy) || 1; o.hx /= n; o.hy /= n; }
+    };
+    // a bola fica na frente do jogador, para onde ele está correndo
+    const atFeet = (o) => { if (o.hx == null) { o.hx = 1; o.hy = 0; } return [o.x + o.hx * 1.45, o.y + o.hy * 1.45]; };
+    let nowT = 0;
 
     let ballPos = sc.steps[0].ball || atFeet(sc.holder);
     let carrier = sc.holder;
@@ -167,16 +175,28 @@
     const moveTo = (o, tx, ty, v, dt) => {
       const s2 = dt / 1000, dx = tx - o.x, dy = ty - o.y, d = Math.hypot(dx, dy);
       const want = d < 0.05 ? 0 : v * Math.min(1, d / 6); // freia aos poucos nos últimos metros
-      const wx = d ? dx / d * want : 0, wy = d ? dy / d * want : 0;
+      // corrida com curvas: a direção desejada oscila um pouco enquanto ele ainda está longe
+      if (o.ws == null) o.ws = Math.random() * 6.28;
+      const ang = (Math.sin(nowT * 1.6 + o.ws) * 0.6 + Math.sin(nowT * 0.7 + o.ws * 2) * 0.3) * Math.min(1, d / 6), ca = Math.cos(ang), sa = Math.sin(ang);
+      const ux = d ? dx / d : 0, uy = d ? dy / d : 0;
+      const wx = (ux * ca - uy * sa) * want, wy = (ux * sa + uy * ca) * want;
       o.vx = o.vx || 0; o.vy = o.vy || 0;
       let ax = wx - o.vx, ay = wy - o.vy;
       const a = Math.hypot(ax, ay), maxA = ACCEL * s2;
       if (a > maxA) { ax = ax / a * maxA; ay = ay / a * maxA; }
       o.vx += ax; o.vy += ay;
       o.x += o.vx * s2; o.y += o.vy * s2;
+      setHead(o);
     };
     // quando um movimento é guiado pela jogada (conduzir, receber), guarda a velocidade para a transição ser suave
-    const track = (o, nx, ny, dt) => { if (dt > 0) { o.vx = (nx - o.x) / dt * 1000; o.vy = (ny - o.y) / dt * 1000; } o.x = nx; o.y = ny; };
+    const track = (o, nx, ny, dt) => { if (dt > 0) { o.vx = (nx - o.x) / dt * 1000; o.vy = (ny - o.y) / dt * 1000; } o.x = nx; o.y = ny; setHead(o); };
+    // caminho em curva com zigue-zague de drible entre dois pontos
+    const curve = (a, b, bend, weave, cycles) => {
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, px = -dy / len, py = dx / len;
+      const c = [(a[0] + b[0]) / 2 + px * bend * len, (a[1] + b[1]) / 2 + py * bend * len];
+      return (k) => { const u = 1 - k, w = Math.sin(k * Math.PI * 2 * cycles) * weave * (1 - k * 0.4);
+        return [u * u * a[0] + 2 * u * k * c[0] + k * k * b[0] + px * w, u * u * a[1] + 2 * u * k * c[1] + k * k * b[1] + py * w]; };
+    };
     const drift = (dt, bx, by, now) => {
       const t = now / 1000;
       const sway = (o, amp) => Math.sin(t * 1.7 + seed.get(o)) * amp;
@@ -249,7 +269,7 @@
     };
     const frame = (now) => {
       if (finished) return;
-      const dt = last == null ? 16 : now - last; last = now;
+      const dt = last == null ? 16 : now - last; last = now; nowT = now / 1000;
       const stp = sc.steps[i];
       if (!stp) {
         if (!ended) {
@@ -268,20 +288,32 @@
         stp.from = ballPos.slice();
         if (stp.cap) { cap.textContent = stp.cap; cap.className = 'hl-cap'; }
         if (stp.who) { stp.w0 = [stp.who.x, stp.who.y]; }
-        if (stp.k === 'pass') { stp.r0 = [stp.to.x, stp.to.y]; stp.to.run = true; label(stp.to, true); }
+        if (stp.k === 'carry') stp.path = curve(stp.w0, stp.to, (Math.random() - 0.5) * 0.7, sc.mode === 'open' ? 0.85 : 0, 1.5 + Math.random());
+        if (stp.k === 'pass') {
+          stp.r0 = [stp.to.x, stp.to.y]; stp.to.run = true; label(stp.to, true);
+          // o companheiro chega ao ponto do passe virado para a bola, que encosta na frente dele
+          const ddx = stp.meet[0] - stp.r0[0], ddy = stp.meet[1] - stp.r0[1], dl = Math.hypot(ddx, ddy) || 1;
+          const end = [stp.meet[0] - ddx / dl * 1.45, stp.meet[1] - ddy / dl * 1.45];
+          stp.rpath = curve(stp.r0, end, (Math.random() - 0.5) * 0.5, 0, 1);
+        }
         if (stp.k === 'shot' && stp.save && sc.gk) { sc.gk.run = true; stp.g0 = [sc.gk.x, sc.gk.y]; }
       }
       const k = Math.min(1, (now - t0) / stp.dur), q = ease(k), lin = k;
       if (stp.k === 'hold') {
-        ballPos = stp.ball;
+        if (sc.mode === 'open') {
+          const tt = (now - t0) / 1000; // domina e protege a bola, mexendo-se no lugar
+          track(stp.who, stp.w0[0] + Math.sin(tt * 2.4) * 0.8, stp.w0[1] + Math.sin(tt * 1.7 + 1) * 0.7, dt);
+          ballPos = atFeet(stp.who);
+        } else ballPos = stp.ball;
         setBall(ballPos[0], ballPos[1]);
       } else if (stp.k === 'carry') {
-        // o jogador corre com a bola colada no pé
-        track(stp.who, lerp(stp.w0[0], stp.to[0], lin), lerp(stp.w0[1], stp.to[1], lin), dt);
+        // o jogador corre com a bola no pé, em curva e driblando
+        const pt = stp.path(lin);
+        track(stp.who, pt[0], pt[1], dt);
         ballPos = atFeet(stp.who); setBall(ballPos[0], ballPos[1]);
       } else if (stp.k === 'pass') {
         // a bola vai ao ponto de encontro; o companheiro chega lá junto com ela
-        track(stp.to, lerp(stp.r0[0], stp.meet[0] - 1.25, lin), lerp(stp.r0[1], stp.meet[1], lin), dt);
+        const rp = stp.rpath(lin); track(stp.to, rp[0], rp[1], dt);
         const qb = 1 - Math.pow(1 - k, 1.6); // a bola sai forte e perde velocidade
         ballPos = [lerp(stp.from[0], stp.meet[0], qb), lerp(stp.from[1], stp.meet[1], qb)];
         setBall(ballPos[0], ballPos[1], stp.arc ? Math.sin(Math.PI * k) * stp.arc : 0);
