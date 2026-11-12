@@ -823,9 +823,9 @@
     const obj = JSON.parse(text);
     if (obj && obj.type === 'patch') {
       const db = A.db();
-      const n = P.applyPatch(db, obj);
+      const n = P.applyPatch(db, obj, A.g);
       if (A.g) A.save();
-      return `Patch "${obj.name || 'sem nome'}" aplicado em ${n} clubes`;
+      return `Patch "${obj.name || 'sem nome'}" aplicado: ${typeof n === 'number' ? n + ' clubes' : n}`;
     }
     if (obj && obj.cal && obj.db) {
       obj.db = P.normalizeDb(obj.db);

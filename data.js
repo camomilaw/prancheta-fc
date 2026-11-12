@@ -72,7 +72,27 @@
     CMR: { n: 'Camarões', lang: 'af' }, MAR: { n: 'Marrocos', lang: 'ar' }, EGY: { n: 'Egito', lang: 'ar' },
     ALG: { n: 'Argélia', lang: 'ar' }, KSA: { n: 'Arábia Saudita', lang: 'ar' }, JPN: { n: 'Japão', lang: 'jp' },
     KOR: { n: 'Coreia do Sul', lang: 'kr' }, CHN: { n: 'China', lang: 'cn' }, HKG: { n: 'Hong Kong', lang: 'cn' },
-    ANG: { n: 'Angola', lang: 'pt' }, MOZ: { n: 'Moçambique', lang: 'pt' }, CPV: { n: 'Cabo Verde', lang: 'pt' }
+    ANG: { n: 'Angola', lang: 'pt' }, MOZ: { n: 'Moçambique', lang: 'pt' }, CPV: { n: 'Cabo Verde', lang: 'pt' },
+    // nacionalidades extras (usadas pelo patch de clubes reais)
+    UKR: { n: 'Ucrânia', lang: 'sl' }, RUS: { n: 'Rússia', lang: 'sl' }, GEO: { n: 'Geórgia', lang: 'sl' },
+    ARM: { n: 'Armênia', lang: 'sl' }, HUN: { n: 'Hungria', lang: 'sl' }, CZE: { n: 'Tchéquia', lang: 'sl' },
+    SVK: { n: 'Eslováquia', lang: 'sl' }, SVN: { n: 'Eslovênia', lang: 'sl' }, BIH: { n: 'Bósnia', lang: 'sl' },
+    MNE: { n: 'Montenegro', lang: 'sl' }, MKD: { n: 'Macedônia do Norte', lang: 'sl' }, KOS: { n: 'Kosovo', lang: 'sl' },
+    ALB: { n: 'Albânia', lang: 'sl' }, ROU: { n: 'Romênia', lang: 'sl' }, BUL: { n: 'Bulgária', lang: 'sl' },
+    MDA: { n: 'Moldávia', lang: 'sl' }, LTU: { n: 'Lituânia', lang: 'sl' }, LVA: { n: 'Letônia', lang: 'sl' },
+    EST: { n: 'Estônia', lang: 'sl' }, UZB: { n: 'Uzbequistão', lang: 'sl' },
+    FIN: { n: 'Finlândia', lang: 'sc' }, ISL: { n: 'Islândia', lang: 'sc' }, FRO: { n: 'Ilhas Faroé', lang: 'sc' },
+    NIR: { n: 'Irlanda do Norte', lang: 'en' }, NZL: { n: 'Nova Zelândia', lang: 'en' }, JAM: { n: 'Jamaica', lang: 'en' },
+    LUX: { n: 'Luxemburgo', lang: 'fr' }, CYP: { n: 'Chipre', lang: 'gr' }, ISR: { n: 'Israel', lang: 'en' },
+    IRN: { n: 'Irã', lang: 'ar' }, JOR: { n: 'Jordânia', lang: 'ar' }, TUN: { n: 'Tunísia', lang: 'ar' },
+    IDN: { n: 'Indonésia', lang: 'en' }, SUR: { n: 'Suriname', lang: 'nl' },
+    MLI: { n: 'Mali', lang: 'af' }, GUI: { n: 'Guiné', lang: 'af' }, BFA: { n: 'Burkina Faso', lang: 'af' },
+    COD: { n: 'RD Congo', lang: 'af' }, GAB: { n: 'Gabão', lang: 'af' }, CAF: { n: 'Rep. Centro-Africana', lang: 'af' },
+    GAM: { n: 'Gâmbia', lang: 'af' }, GNB: { n: 'Guiné-Bissau', lang: 'pt' }, GNQ: { n: 'Guiné Equatorial', lang: 'es' },
+    BDI: { n: 'Burundi', lang: 'af' }, ZIM: { n: 'Zimbábue', lang: 'af' }, RSA: { n: 'África do Sul', lang: 'af' },
+    ZAM: { n: 'Zâmbia', lang: 'af' }, BEN: { n: 'Benin', lang: 'af' }, TOG: { n: 'Togo', lang: 'af' },
+    PAN: { n: 'Panamá', lang: 'es' }, CRC: { n: 'Costa Rica', lang: 'es' }, DOM: { n: 'Rep. Dominicana', lang: 'es' },
+    SLV: { n: 'El Salvador', lang: 'es' }, GUA: { n: 'Guatemala', lang: 'es' }, BOL: { n: 'Bolívia', lang: 'es' }
   };
   P.countryName = (c) => (P.COUNTRIES[c] ? P.COUNTRIES[c].n : c || '—');
 
@@ -272,6 +292,7 @@
     if (x < 0.80) return 24 + Math.floor(r() * 7);
     return 31 + Math.floor(r() * 5);
   }
+  P.ageAdj = (age) => ageEffect(age);
   function ageEffect(age) {
     if (age <= 19) return -2.5;
     if (age <= 21) return -1.5;
@@ -343,18 +364,63 @@
     return db;
   };
 
-  // Aplica um patch (nomes, cores, países...) aos clubes pelo id
-  P.applyPatch = function (db, patch) {
+  // Aplica um patch (nomes, cores, países... e, se vier, o elenco) aos clubes pelo id.
+  // Elenco no patch: players: [[nome, posição, idade, país, força 1-99], ...]
+  // Os atributos são gerados para chegar perto da força indicada.
+  const lvlFor = (ovr) => P.clamp((ovr - 14) / 4.7, 1, 20);
+  P.realPlayer = function (r, row, clubId) {
+    const [name, pos, age, nat, ovr] = row;
+    const target = P.clamp(Number(ovr) || 60, 30, 99);
+    const p = P.makePlayer(r, { pos, age: Number(age) || 25, level: lvlFor(target) - P.ageAdj(Number(age) || 25), clubId, nat, name: String(name) });
+    // ajusta os atributos até a força bater com a do patch
+    const keys = P.ATTRS.map((a) => a.k).filter((k) => pos === 'GOL' || !P.GK_ATTRS.includes(k));
+    for (let i = 0; i < 80; i++) {
+      const d = target - P.ovrAt(p, pos);
+      if (Math.abs(d) <= 0) break;
+      const k = P.pick(r, keys), v = p.a[k] + Math.sign(d);
+      if (v >= 1 && v <= 20) p.a[k] = v;
+    }
+    // potencial: jovens têm margem para crescer
+    const a = p.age, cur = P.ovrAt(p, pos);
+    const room = a <= 18 ? 12 : a <= 20 ? 9 : a <= 22 ? 6 : a <= 24 ? 3 : 0;
+    p.potO = P.clamp(Math.round(cur + room * (0.6 + r() * 0.8)), cur, 99);
+    p.pot = p.potO / 5;
+    return p;
+  };
+  P.applyPatch = function (db, patch, g) {
     if (!patch || !Array.isArray(patch.clubs)) throw new Error('Patch sem lista de clubes.');
-    let n = 0;
+    const r = P.rng(Date.now() % 100000);
+    let n = 0, np = 0;
     for (const pc of patch.clubs) {
       const c = db.clubs.find((x) => x.id === pc.id);
       if (!c) continue;
       for (const k of ['name', 'short', 'city', 'stadium', 'country']) if (pc[k]) c[k] = String(pc[k]);
       if (Array.isArray(pc.colors) && pc.colors.length >= 2) c.colors = pc.colors.slice(0, 2);
       if (pc.rep) c.rep = P.clamp(Number(pc.rep) || c.rep, 1, 100);
+      if (Array.isArray(pc.players) && pc.players.length) {
+        for (const p of Object.values(db.players)) if (p.clubId === c.id) delete db.players[p.id];
+        const made = pc.players.filter((row) => Array.isArray(row) && row.length >= 5 && P.POS.includes(row[1])).map((row) => P.realPlayer(r, row, c.id));
+        made.forEach((p) => { db.players[p.id] = p; });
+        // completa posições que faltarem (mínimo 22 jogadores) com genéricos do nível do elenco
+        const avg = made.map((p) => P.ovrAt(p, p.pos)).sort((a, b) => b - a).slice(0, 14);
+        const lvl = lvlFor(avg.reduce((s, x) => s + x, 0) / Math.max(1, avg.length)) - 1.5;
+        const count = (pos) => Object.values(db.players).filter((p) => p.clubId === c.id && p.pos === pos).length;
+        const total = () => Object.values(db.players).filter((p) => p.clubId === c.id).length;
+        for (const pos of Object.keys(P.SQUAD_TEMPLATE)) {
+          const need = pos === 'GOL' ? 2 : Math.min(1, P.SQUAD_TEMPLATE[pos]);
+          for (let i = count(pos); i < need; i++) { const p = P.makePlayer(r, { pos, level: lvl, clubId: c.id, country: c.country }); db.players[p.id] = p; }
+        }
+        while (total() < 22) {
+          const pos = Object.keys(P.SQUAD_TEMPLATE).find((ps) => count(ps) < P.SQUAD_TEMPLATE[ps]) || 'MC';
+          const p = P.makePlayer(r, { pos, level: lvl, clubId: c.id, country: c.country, age: 18 + Math.floor(r() * 4) });
+          db.players[p.id] = p;
+        }
+        np += made.length;
+        if (g) { P.dirty(g); if (g.tac && g.tac[c.id]) { g.tac[c.id].xi = []; P.fixXI(g, c.id); } }
+      }
       n++;
     }
-    return n;
+    if (g) P.ensureEconomy(g);
+    return np ? `${n} clubes e ${np} jogadores` : n;
   };
 })(window.PFC);
