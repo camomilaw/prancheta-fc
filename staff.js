@@ -91,7 +91,7 @@
         const list = mine.filter((s) => s.role === k);
         if (!list.length) return `<div class="staff-row"><div style="flex:1;min-width:0"><b>${r.n}</b><div class="muted" style="font-size:.85rem">Vago · ${esc(r.desc)}</div></div><button class="btn sm" data-a="stRole" data-r="${k}">Ver candidatos</button></div>`;
         return list.map((s) => `<div class="staff-row"><div style="flex:1;min-width:0"><b>${r.n}: ${esc(s.name)}</b> ${stars(s.stars)}
-          <div class="muted" style="font-size:.85rem">${esc(r.eff(s.stars))} · ${P.money(s.wage)}/mês${k === 'olheiro' ? (s.mission ? ` · em missão (${esc(P.FOCUS[s.mission.focus].n.toLowerCase())})` : ' · <b>sem missão</b>') : ''}</div></div>
+          <div class="muted" style="font-size:.85rem">${esc(r.eff(s.stars))} · ${P.money(s.wage)}/mês${k === 'olheiro' ? (s.mission ? ` · em missão (${esc(P.missionLabel ? P.missionLabel(s.mission) : ((P.FOCUS[s.mission.focus] || {}).n || 'em andamento'))})` : ' · <b>sem missão</b>') : ''}</div></div>
           ${A.st.mk.fire === s.id ? `<button class="btn sm" data-a="stFireNo">Cancelar</button><button class="btn sm danger" data-a="stFireYes" data-id="${s.id}">Confirmar</button>` : `<button class="btn sm danger" data-a="stFire" data-id="${s.id}">Demitir</button>`}</div>`).join('');
       }).join('')}</div>
       <div class="row" style="margin:18px 0 8px"><span class="label" style="flex:1">Disponíveis nesta temporada</span>
