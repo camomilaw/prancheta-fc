@@ -97,7 +97,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
   background: var(--surface); border-top: 1px solid var(--line);
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
 }
@@ -347,3 +347,11 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .mv { display: inline-flex; align-items: center; gap: 2px; margin-right: 6px; font-weight: 600; }
 .zone.z2 { color: var(--ink); }
 .field .search { flex: none; height: 40px; min-height: 40px; }
+/* ---------- Mercado ---------- */
+.window { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: .82rem; font-weight: 600; background: var(--surface-2); color: var(--muted); }
+.window.open { background: color-mix(in srgb, var(--good) 18%, var(--surface)); color: var(--good); }
+.offer { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.msg { padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--warn) 15%, var(--surface)); font-weight: 600; }
+.msg.good { background: color-mix(in srgb, var(--good) 15%, var(--surface)); color: var(--good); }
+.nav button span { white-space: nowrap; }
+@media (max-width: 360px) { .nav button { font-size: .64rem; } }
