@@ -4,6 +4,8 @@ Jogo de gerenciamento de futebol no navegador: a agilidade do Brasfoot com atrib
 
 **Ultraliga:** 160 clubes de 17 países em 8 divisões de 20. Sobem 2 direto + o vencedor do playoff (3º a 6º), descem 3. Copa Ultra em mata-mata com todos os clubes. Da 3ª à 8ª divisão há também copas por faixa (grupos + mata-mata): Taça Orton Barrera (3ª e 4ª), Taça Júnior Maestro (5ª e 6ª) e Copa Meir Afrayat (7ª e 8ª). A cada 4 anos, a Supercopa Ultra reúne os campeões da Ultraliga e da Copa Ultra do ciclo. Você pode escolher qualquer clube ou criar o seu.
 
+**Escudos em imagem:** ao criar um clube ou no Editor › clube, dá para enviar uma imagem do aparelho como escudo (reduzida para 128×128 e guardada no save). Os patches também podem levar escudos (campo `logo` com a imagem em data URL; `null` volta ao escudo desenhado).
+
 **Patch de clubes reais:** o banco padrão é fictício. O arquivo `patch-clubes-reais.json` (fora do repositório) troca nomes, cores e países pelos clubes reais. Importe pelo jogo em Importar ou Editor › Banco e patches.
 
 ## Como rodar

@@ -75,6 +75,7 @@
           <div class="field"><label class="label" for="cf-country">País</label><select id="cf-country" data-c="cf" data-k="country">${A.countryOpts(c.country)}</select></div>
           <div class="field"><label class="label" for="cf-rep">Reputação (1-100)</label><input id="cf-rep" type="number" min="1" max="100" data-c="cf" data-k="rep" value="${c.rep}"></div>
           ${A.g ? `<div class="field"><label class="label" for="cf-bal">Saldo (R$ milhões)</label><input id="cf-bal" type="text" inputmode="decimal" autocomplete="off" data-c="cf" data-k="bal" value="${String(Math.round((c.bal || 0) / 1e5) / 10).replace('.', ',')}"><small class="muted" style="font-size:.76rem">Hoje: ${P.money(c.bal || 0)}. Aceita valor negativo.</small></div>` : ''}
+          <div class="field logo-field"><span class="label">Escudo</span><label class="btn sm logo-btn"><input type="file" accept="image/*" data-c="cfLogo" hidden>${P.isLogo(c.logo) ? 'Trocar imagem' : 'Enviar imagem do aparelho'}</label>${P.isLogo(c.logo) ? '<button class="btn sm ghost" data-a="cfLogoDel">Voltar ao escudo desenhado</button>' : '<small class="muted">Sem imagem, o escudo é desenhado com as cores e a sigla.</small>'}</div>
           <div class="field"><label class="label" for="cf-c0">Cor principal</label><input id="cf-c0" type="color" data-c="cfColor" data-i="cfColorLive" data-n="0" value="${esc(c.colors[0])}"></div>
           <div class="field"><label class="label" for="cf-c1">Cor secundária</label><input id="cf-c1" type="color" data-c="cfColor" data-i="cfColorLive" data-n="1" value="${esc(c.colors[1])}"></div>
         </div>
@@ -146,7 +147,7 @@
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><h3>Exportar como patch</h3>
         <p class="muted" style="margin:0">Só os dados dos clubes (nomes, cores, países). Leve e fácil de compartilhar.</p>
         <div><button class="btn" data-a="edExportPatch">Gerar patch</button></div>
-        ${io === 'patch' ? `<div class="field"><textarea id="ed-io" readonly>${esc(JSON.stringify({ type: 'patch', name: 'Meu patch', version: 1, clubs: db().clubs.map((c) => ({ id: c.id, name: c.name, short: c.short, country: c.country, city: c.city, stadium: c.stadium, colors: c.colors })) }))}</textarea></div><div><button class="btn" data-a="copy" data-t="ed-io">Copiar</button></div>` : ''}
+        ${io === 'patch' ? `<div class="field"><textarea id="ed-io" readonly>${esc(JSON.stringify({ type: 'patch', name: 'Meu patch', version: 1, clubs: db().clubs.map((c) => Object.assign({ id: c.id, name: c.name, short: c.short, country: c.country, city: c.city, stadium: c.stadium, colors: c.colors }, P.isLogo(c.logo) ? { logo: c.logo } : {})) }))}</textarea></div><div><button class="btn" data-a="copy" data-t="ed-io">Copiar</button></div>` : ''}
       </div>
       ${setupMode ? `<div class="card" style="display:flex;flex-direction:column;gap:12px;grid-column:1/-1"><h3>Gerar de novo</h3>
         <p class="muted" style="margin:0">Cria clubes e jogadores fictícios novos, com nomes e atributos sorteados.</p>
@@ -156,6 +157,7 @@
 
   // ---------- Ações ----------
   Object.assign(A.ACT, {
+    cfLogoDel() { const c = club(A.st.ed.cid); if (!c) return; delete c.logo; changed([]); A.render(); A.toast('Escudo desenhado de volta'); },
     edGo(d) { const keep = A.st.ed || {}; A.st.ed = { v: d.v || 'clubs', div: keep.div, q: keep.q }; A.st.confirm = null; A.st.edio = ''; A.render(); window.scrollTo(0, 0); },
     edExit() { A.setup.editing = false; A.render(); window.scrollTo(0, 0); },
     edClub(d) { if (!d.id) return A.ACT.edGo({ v: 'clubs' }); const keep = A.st.ed || {}; A.st.ed = { v: 'club', cid: d.id, div: keep.div, q: keep.q }; A.st.confirm = null; A.render(); window.scrollTo(0, 0); },
@@ -222,6 +224,10 @@
       c[k] = v; el.value = v;
       const b = document.getElementById('ed-badge'); if (b) b.innerHTML = P.badge(c, 48);
       changed([]);
+    },
+    cfLogo(el) {
+      const c = club(A.st.ed.cid), file = el.files && el.files[0]; if (!c || !file) return;
+      A.readLogo(file).then((url) => { c.logo = url; changed([]); A.render(); A.toast(`Escudo do ${c.name} atualizado`); }).catch((e) => A.toast(e.message));
     },
     cfColor(el) { const c = club(A.st.ed.cid); c.colors[Number(el.dataset.n)] = el.value; changed([]); },
     pf(el) {

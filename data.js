@@ -396,6 +396,7 @@
       if (!c) continue;
       for (const k of ['name', 'short', 'city', 'stadium', 'country']) if (pc[k]) c[k] = String(pc[k]);
       if (Array.isArray(pc.colors) && pc.colors.length >= 2) c.colors = pc.colors.slice(0, 2);
+      if (pc.logo === null) delete c.logo; else if (pc.logo && P.isLogo && P.isLogo(pc.logo)) c.logo = pc.logo; // escudo em imagem
       if (pc.rep) c.rep = P.clamp(Number(pc.rep) || c.rep, 1, 100);
       if (Array.isArray(pc.players) && pc.players.length) {
         for (const p of Object.values(db.players)) if (p.clubId === c.id) delete db.players[p.id];

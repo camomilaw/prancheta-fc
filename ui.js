@@ -47,9 +47,12 @@
   };
 
   // ---------- Escudo ----------
+  // Escudo enviado pelo usuário: imagem pequena guardada no próprio clube (data URL)
+  P.isLogo = (s) => typeof s === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(s) && s.length < 400000;
   P.badge = function (club, size) {
     size = size || 32;
     if (!club) return '';
+    if (P.isLogo(club.logo)) return `<img class="badge badge-img" src="${club.logo}" width="${size}" height="${Math.round(size * 1.15)}" alt="" aria-hidden="true">`;
     const c1 = club.colors && club.colors[0] || '#888', c2 = club.colors && club.colors[1] || '#fff';
     const path = 'M20 2 L37 7 V22 C37 33 29 40 20 44 C11 40 3 33 3 22 V7 Z';
     return `<svg class="badge" width="${size}" height="${Math.round(size * 1.15)}" viewBox="0 0 40 46" aria-hidden="true">
@@ -182,7 +185,7 @@
     const ovrs = P.clubOvrs(db);
     const divClubs = P.divClubs(db, f.div).sort((a, b) => ovrs[a.id] - ovrs[b.id]);
     if (!f.replaceId || !divClubs.find((c) => c.id === f.replaceId)) f.replaceId = divClubs[0].id;
-    const preview = { name: f.name || 'Meu Clube', short: (f.short || 'MEU').toUpperCase(), colors: [f.c1, f.c2] };
+    const preview = { name: f.name || 'Meu Clube', short: (f.short || 'MEU').toUpperCase(), colors: [f.c1, f.c2], logo: f.logo };
     const inp = (k, label, extra) => `<div class="field"><label class="label" for="cc-${k}">${label}</label><input id="cc-${k}" data-i="cc" data-k="${k}" value="${esc(f[k])}" ${extra || ''}></div>`;
     return `<div class="setup">
       <div class="row"><button class="btn" data-a="createClose">‹ Voltar</button></div>
@@ -194,6 +197,7 @@
           ${inp('city', 'Cidade', 'maxlength="40"')}
           ${inp('stadium', 'Estádio', 'maxlength="50"')}
           <div class="field"><label class="label" for="cc-country">País</label><select id="cc-country" data-c="ccSel" data-k="country">${countryOpts(f.country)}</select></div>
+          <div class="field logo-field"><span class="label">Escudo (opcional)</span><label class="btn sm logo-btn"><input type="file" accept="image/*" data-c="ccLogo" hidden>${f.logo ? 'Trocar imagem' : 'Enviar imagem'}</label>${f.logo ? '<button class="btn sm ghost" data-a="ccLogoDel">Usar o escudo padrão</button>' : '<small class="muted">Sem imagem, o escudo é desenhado com as cores e a sigla.</small>'}</div>
           <div class="field"><label class="label" for="cc-c1">Cor principal</label><input id="cc-c1" type="color" data-i="cc" data-k="c1" value="${esc(f.c1)}"></div>
           <div class="field"><label class="label" for="cc-c2">Cor secundária</label><input id="cc-c2" type="color" data-i="cc" data-k="c2" value="${esc(f.c2)}"></div>
         </div>
@@ -848,6 +852,28 @@
     const fallback = () => { ta.focus(); ta.select(); A.toast('Texto selecionado: copie manualmente'); };
     try { navigator.clipboard.writeText(ta.value).then(() => A.toast('Copiado'), fallback); } catch (e) { fallback(); }
   };
+  // Lê uma imagem do aparelho e reduz para no máximo 128×128 (mantém transparência)
+  A.readLogo = function (file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !/^image\//.test(file.type)) { reject(new Error('Escolha um arquivo de imagem (PNG, JPG, WebP…).')); return; }
+      if (file.size > 10 * 1024 * 1024) { reject(new Error('A imagem passa de 10 MB.')); return; }
+      const fr = new FileReader();
+      fr.onerror = () => reject(new Error('Não foi possível ler o arquivo.'));
+      fr.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Este arquivo não é uma imagem válida.'));
+        img.onload = () => {
+          const k = Math.min(1, 128 / Math.max(img.width, img.height));
+          const cv = document.createElement('canvas');
+          cv.width = Math.max(1, Math.round(img.width * k)); cv.height = Math.max(1, Math.round(img.height * k));
+          const cx = cv.getContext('2d'); cx.imageSmoothingQuality = 'high'; cx.drawImage(img, 0, 0, cv.width, cv.height);
+          resolve(cv.toDataURL('image/png'));
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  };
   A.readFileInto = function (input, taId) {
     const f = input.files && input.files[0]; if (!f) return;
     const rd = new FileReader();
@@ -930,6 +956,7 @@
     // tela inicial
     continue() { const s = A.loadSave(); if (s) { s.db = P.normalizeDb(s.db); P.ensureEconomy(s); A.g = s; A.save(); A.view = 'inicio'; A.render(); } },
     pickClub(d) { A.setup.club = d.id; A.render(); },
+    ccLogoDel() { A.setup.form.logo = null; A.render(); },
     start() {
       const s = A.setup; if (!s.club) return;
       A.g = P.newGame(s.db, s.club, (s.manager || '').trim() || 'Técnico');
@@ -950,7 +977,7 @@
       const short = (f.short.trim() || f.name.trim().slice(0, 3)).toUpperCase().slice(0, 3);
       const c = P.createClub(A.setup.db, {
         replaceId: f.replaceId, name: f.name.trim(), short, city: f.city.trim() || f.name.trim(),
-        stadium: f.stadium.trim() || 'Estádio ' + (f.city.trim() || f.name.trim()), country: f.country, c1: f.c1, c2: f.c2, squad: f.squad
+        stadium: f.stadium.trim() || 'Estádio ' + (f.city.trim() || f.name.trim()), country: f.country, c1: f.c1, c2: f.c2, squad: f.squad, logo: f.logo || null
       });
       if (P.applyCreateExtra) P.applyCreateExtra(c, f);
       A.setup.club = c.id; A.setup.divF = c.div; A.setup.q = ''; A.setup.creating = false; A.setup.form = null;
@@ -969,6 +996,10 @@
     setupDiv(el) { A.setup.divF = Number(el.value); A.setup.q = ''; A.render(); },
     ccDiv(el) { A.setup.form.div = Number(el.value); A.setup.form.replaceId = null; A.render(); },
     ccSel(el) { A.setup.form[el.dataset.k] = el.value; },
+    ccLogo(el) {
+      const file = el.files && el.files[0]; if (!file) return;
+      A.readLogo(file).then((url) => { A.setup.form.logo = url; A.render(); A.toast('Escudo carregado'); }).catch((e) => A.toast(e.message));
+    },
     impFile(el) { A.readFileInto(el, 'imptext'); },
     ioFile(el) { A.readFileInto(el, 'io-text'); }
   });
@@ -985,7 +1016,7 @@
     cc(el) {
       const f = A.setup.form; f[el.dataset.k] = el.value;
       const b = document.getElementById('cc-badge');
-      if (b) b.innerHTML = P.badge({ name: f.name, short: (f.short || 'MEU').toUpperCase(), colors: [f.c1, f.c2] }, 56);
+      if (b) b.innerHTML = P.badge({ name: f.name, short: (f.short || 'MEU').toUpperCase(), colors: [f.c1, f.c2], logo: f.logo }, 56);
     }
   });
 

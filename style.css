@@ -660,3 +660,9 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .hl-cap.big.goal { color: var(--accent); }
 @keyframes hl-pop { from { transform: translateY(-50%) scale(.7); opacity: 0; } }
 .hl-cap.big.save { font-size: 1.3rem; letter-spacing: .02em; line-height: 1.15; }
+
+/* Escudo em imagem */
+img.badge-img { object-fit: contain; display: inline-block; vertical-align: middle; flex: none; }
+.logo-field { gap: 6px; }
+.logo-field .logo-btn { align-self: flex-start; cursor: pointer; }
+.logo-field small { font-size: .76rem; }

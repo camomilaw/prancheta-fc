@@ -1112,6 +1112,7 @@
       name: opts.name, short: opts.short, city: opts.city, stadium: opts.stadium, country: opts.country,
       colors: [opts.c1, opts.c2], rep: Math.round(divReps.reduce((a, b) => a + b, 0) / divReps.length * 10) / 10, custom: true
     });
+    if (opts.logo && P.isLogo && P.isLogo(opts.logo)) c.logo = opts.logo; else delete c.logo;
     const used = new Set(Object.values(db.players).map((p) => p.name));
     if (opts.squad === 'generic') {
       // jogadores genéricos numerados, para você renomear como quiser
