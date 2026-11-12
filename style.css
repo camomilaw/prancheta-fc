@@ -355,3 +355,9 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .msg.good { background: color-mix(in srgb, var(--good) 15%, var(--surface)); color: var(--good); }
 .nav button span { white-space: nowrap; }
 @media (max-width: 360px) { .nav button { font-size: .64rem; } }
+/* ---------- Sub-20 e olheiros ---------- */
+.stars { color: var(--warn); letter-spacing: 1px; font-size: .85rem; }
+.stars .off { color: var(--line); }
+.report { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.potbox { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.pot { font-family: var(--f-display); font-weight: 700; font-size: 1.15rem; color: var(--good); }
