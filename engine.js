@@ -906,6 +906,8 @@
     if (P.scWeek) P.scWeek(g, step, results);
     if (P.rzWeek) P.rzWeek(g, step, results);
 
+    if (P.titleCheck) P.titleCheck(g, step); // tela de título
+
     // 7. dados da animação (antes de enxugar o que não precisa ficar salvo)
     const anim = results.map(({ it }) => ({
       h: it.m.h, a: it.m.a, comp: it.comp, div: it.div, pen: it.m.pen || null,

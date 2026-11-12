@@ -125,6 +125,7 @@
     // faixas de abas com rolagem: mostra a aba ativa
     root.querySelectorAll('.tabs-x').forEach((bar) => { const on = bar.querySelector('.on'); if (on) bar.scrollLeft = on.offsetLeft - bar.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2; });
     if (P.firedModal) P.firedModal(g);
+    if (P.showCelebration) P.showCelebration(g);
   };
 
   // ---------- Tela inicial ----------

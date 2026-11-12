@@ -622,3 +622,27 @@ fieldset.radio input { margin-top: 4px; accent-color: var(--pitch); width: 18px;
 .mg-trophy.t-tv { background: color-mix(in srgb, #2f8f8a 22%, var(--surface)); } .mg-t.t-tv { border-left-color: #2f8f8a; }
 .mg-trophy.t-as { background: color-mix(in srgb, #7a5cc8 22%, var(--surface)); } .mg-t.t-as { border-left-color: #7a5cc8; }
 .tier-pick small { font-size: .7rem; margin-left: 2px; }
+
+/* Tela de título */
+#cele[hidden] { display: none; }
+.cele { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; overflow: hidden; padding: 20px;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--c1) 55%, #000) 0%, #0b0f0c 70%); color: #fff; animation: cele-in .35s ease-out; }
+.cele-in { position: relative; z-index: 1; width: min(420px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.cele-kicker { font-family: var(--f-display); letter-spacing: .25em; text-transform: uppercase; font-size: .85rem; color: #ffd95a; }
+.cele-cup { width: 130px; height: 150px; filter: drop-shadow(0 8px 24px rgba(255, 217, 90, .45)); animation: cele-cup 2.4s ease-in-out infinite; }
+.cele.big .cele-cup { width: 160px; height: 185px; }
+.cele-comp { margin: 0; font-family: var(--f-display); font-size: 2rem; line-height: 1.05; color: #fff; text-shadow: 0 2px 12px rgba(0, 0, 0, .5); }
+.cele-club { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.cele-club b { font-size: 1.15rem; }
+.cele-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.cele-facts > div { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .15); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+.cele-facts .label { color: rgba(255, 255, 255, .65); }
+.cele-facts small { font-weight: 400; opacity: .75; }
+.cele-btn { margin-top: 6px; min-width: 180px; }
+.cele-conf { position: absolute; inset: 0; pointer-events: none; }
+.cele-conf i { position: absolute; top: -20px; width: 8px; height: 14px; border-radius: 2px; opacity: .9; animation: cele-fall 3.2s linear infinite; }
+.cele-conf i:nth-child(3n) { width: 6px; height: 10px; animation-duration: 2.6s; }
+.cele-conf i:nth-child(4n) { animation-duration: 3.8s; }
+@keyframes cele-fall { to { transform: translateY(110vh) rotate(540deg); } }
+@keyframes cele-cup { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+@keyframes cele-in { from { opacity: 0; transform: scale(.96); } }
