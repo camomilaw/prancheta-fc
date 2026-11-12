@@ -27,6 +27,9 @@ Está publicado na Vercel a partir do GitHub: cada alteração salva no reposit�
 | `calendar.js` | Calendário com datas, plano de treino por semana (adjunto decide quando vazio) e simulação até uma data |
 | `live.js` | Partida ao vivo: pausa em expulsão, lesão e intervalo; substituições e mentalidade durante o jogo |
 | `potential.js` | Potencial dinâmico: sobe com tempo de jogo e boas notas, cai para quem não joga (até 24 anos e Sub-20) |
+| `club.js` | Dificuldade (diretoria e negociações), confiança, demissão, propostas de emprego, estádio e estrutura |
+| `people.js` | Discurso pós-jogo, insatisfação, conversas individuais e tipos de lesão |
+| `stats.js` | Estatísticas da temporada e da carreira e resumo de fim de temporada |
 | `editor.js` | Editor de clubes, jogadores e banco de dados |
 | `main.js` | Inicialização |
 | `style.css` | Visual (cores no topo do arquivo, tema claro e escuro) |

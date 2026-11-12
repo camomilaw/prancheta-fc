@@ -105,10 +105,12 @@
       ${done ? `<div class="kv"><div><span class="label">Finalizações</span><b class="num">${st.shots[0]} × ${st.shots[1]}</b></div><div><span class="label">Posse</span><b class="num">${poss}% × ${100 - poss}%</b></div></div>` : ''}
       <ul class="feed" aria-live="polite">${evs.map((e) => A.evLine(e, m)).join('')}</ul>
       ${L.others.length ? `<div class="label">${label}</div><div class="others">${others}</div>` : ''}
+      ${done && P.teamTalkPanel ? P.teamTalkPanel() : ''}
       ${done ? '<div class="row"><button class="btn" data-a="lvClose" data-v="tabela">Ver tabela</button><span class="spacer"></span><button class="btn primary" data-a="lvClose" data-v="inicio">Continuar</button></div>' : ''}
     </div>`;
   }
 
+  A.redrawMd = () => { if (A.live) draw(); };
   Object.assign(A.ACT, {
     lvSpeed(d) { A.live.speed = Number(d.s); draw(); tick(); },
     lvPause() { const L = A.live; if (!L || L.done) return; clearTimeout(A._lvt); L.pause = { reason: 'Jogo pausado' }; draw(); },

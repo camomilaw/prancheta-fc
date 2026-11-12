@@ -420,9 +420,10 @@
         // jogadores cansados (condição < 65) aumentam o risco de lesão
         if (rnd() < T.injuryPerMin * (act.some((x) => x.p.cond < 65) ? 1.8 : 1)) {
           const s = P.weighted(rnd, act, (x) => (110 - x.p.cond) / 10 + 1);
-          const weeks = 1 + Math.floor(rnd() * 5);
-          s.off = true; s.injured = weeks;
-          const e = Object.assign(mm(min), { t: 'lesao', s: side, p: s.p.id, w: weeks });
+          const ity = P.injuryType ? P.injuryType(rnd) : { n: 'Lesão', w: 1 + Math.floor(rnd() * 5) };
+          const weeks = ity.w;
+          s.off = true; s.injured = weeks; s.injN = ity.n;
+          const e = Object.assign(mm(min), { t: 'lesao', s: side, p: s.p.id, w: weeks, n: ity.n });
           const lu = L[side];
           if (lu.subs < 5 && lu.bench.length && !lu.manual) {
             lu.bench.sort((a, b) => P.ovrAt(b, s.pos) * P.condF(b) - P.ovrAt(a, s.pos) * P.condF(a));
@@ -476,7 +477,7 @@
       hg: goals[0], ag: goals[1], ev,
       st: { pos: Math.round(posAcc[0] / tot * 100), sh: shots },
       notes, played: [Array.from(L[0].played), Array.from(L[1].played)],
-      yel: [L[0].yel, L[1].yel], inj: L.map((lu) => lu.on.filter((s) => s.injured).map((s) => [s.p.id, s.injured])),
+      yel: [L[0].yel, L[1].yel], inj: L.map((lu) => lu.on.filter((s) => s.injured).map((s) => [s.p.id, s.injured, s.injN])),
       L
     };
   };
@@ -693,7 +694,7 @@
             }
           }
         }
-        for (const [id, w] of r.inj[side]) g.db.players[id].inj = w;
+        for (const [id, w, n] of r.inj[side]) { g.db.players[id].inj = w; g.db.players[id].injN = n || 'Lesão'; }
       });
       for (const e of r.ev) {
         if (e.t === 'gol') {
@@ -717,7 +718,7 @@
     for (const { it } of results) {
       const m = it.m, hc = P.club(g, m.h);
       const occ = P.clamp(0.4 + 0.4 * (1 - (posIn(m.h) - 1) / 19) + (it.ko ? 0.15 : 0), 0.25, 1);
-      const gate = Math.round(hc.cap * occ * P.ECON.ticket(hc.div));
+      const gate = P.gateFor ? P.gateFor(g, hc, occ) : Math.round(hc.cap * occ * P.ECON.ticket(hc.div));
       if (m.neutral) { P.pay(g, m.h, gate / 2, 'Bilheteria'); P.pay(g, m.a, gate / 2, 'Bilheteria'); }
       else P.pay(g, m.h, gate, 'Bilheteria');
       if (it.comp === 'cup') P.pay(g, m.w, P.ECON.cupPrize[step.r], 'Premiação');
@@ -732,6 +733,7 @@
     if (after < 0 && before >= 0) P.news(g, 'O saldo do clube ficou negativo. A diretoria pede corte de gastos.', 'bad');
     if (P.marketWeek) P.marketWeek(g, step);
     if (P.youthWeek) P.youthWeek(g, step);
+    if (P.clubWeek) P.clubWeek(g, step, ctx);
     if (g.week === 30) {
       const exp = P.squad(g, g.user).filter((p) => p.ctr <= g.season);
       if (exp.length) P.news(g, `${exp.length} ${exp.length === 1 ? 'contrato termina' : 'contratos terminam'} nesta temporada: ${exp.map((p) => p.name).join(', ')}. Renove pela ficha do jogador ou eles saem de graça.`, 'warn');
@@ -757,10 +759,11 @@
       for (const e of m.ev) {
         if (e.s !== (home ? 0 : 1)) continue;
         const p = g.db.players[e.p];
-        if (e.t === 'lesao') P.news(g, `${p.name} se lesionou e fica fora por ${e.w} ${e.w === 1 ? 'semana' : 'semanas'}.`, 'bad');
+        if (e.t === 'lesao') P.news(g, `${p.name} sofreu ${e.n ? e.n.toLowerCase() : 'uma lesão'} e fica fora por ${e.w} ${e.w === 1 ? 'semana' : 'semanas'}.`, 'bad');
         if (e.t === 'vermelho') P.news(g, `${p.name} foi expulso e está suspenso.`, 'bad');
       }
       if (P.chemAfterMatch) P.chemAfterMatch(g, m, mine.r, home);
+      if (P.afterUserMatch) P.afterUserMatch(g, mine.it, mine.r, home);
     }
     if (step.t === 'cup' && step.r === P.CUP_NAMES.length - 1) {
       const fin = g.cup.rounds[step.r].ties[0];
@@ -874,6 +877,8 @@
     if (moves[g.user] > me.div) result = 'Rebaixado';
     if (pos === 1) result = me.div === 1 ? 'Campeão da Ultraliga' : 'Campeão e acesso';
     if (P.potentialUpdate) P.potentialUpdate(g, 'end');
+    if (P.seasonStats) P.seasonStats(g);
+    if (P.boardSeasonEnd) P.boardSeasonEnd(g);
     const top = P.scorers(g, 1, 1)[0];
     g.hist.push({
       season: g.season, div: me.div, pos, result,
@@ -949,6 +954,7 @@
     if (promoted.length) P.news(g, `Para completar o elenco, subiram da base: ${promoted.map((p) => p.name).join(', ')}.`, '');
     P.news(g, `Começa a temporada ${g.season} na ${me.div}ª divisão. Meta da diretoria: ${P.expectation(g, g.user).toLowerCase()}.`, 'good');
     retired.forEach((t) => P.news(g, t + '.', ''));
+    if (P.clubNewSeason) P.clubNewSeason(g);
   };
 
   // ---------- Criar clube próprio (antes da carreira) ----------

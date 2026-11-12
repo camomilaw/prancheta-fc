@@ -66,7 +66,7 @@
   const vcls = (v) => (v <= 6 ? 'v1' : v <= 10 ? 'v2' : v <= 15 ? 'v3' : 'v4');
   const condCls = (c) => (c >= 80 ? '' : c >= 60 ? 'mid' : 'low');
   const condBar = (p) => `<span class="cond ${condCls(p.cond)}" title="Condição ${Math.round(p.cond)}%"><i style="width:${Math.round(p.cond)}%"></i></span>`;
-  const status = (p) => (p.inj ? `<span class="chip inj">Lesão ${p.inj}s</span>` : '') + (p.susp ? '<span class="chip sus">Suspenso</span>' : '');
+  const status = (p) => (p.inj ? `<span class="chip inj">${p.injN ? esc(p.injN) + ' · ' : 'Lesão '}${p.inj}s</span>` : '') + (p.susp ? '<span class="chip sus">Suspenso</span>' : '') + (p.unh ? '<span class="chip sus">Insatisfeito</span>' : '');
   const avgNote = (p) => (p.s.j ? (p.s.nt / p.s.j).toFixed(1).replace('.', ',') : '–');
   const ord = (n) => n + 'º';
   const divName = (d) => `${d}ª divisão`;
@@ -106,9 +106,9 @@
       return;
     }
     const g = A.g, me = club(g.user);
-    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), calendario: () => P.calendarView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
+    const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), calendario: () => P.calendarView(), clube: () => P.clubView(), stats: () => P.statsView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false) };
     const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
-    const active = (A.view === 'editor' || A.view === 'financas') ? 'mais' : A.view === 'base' ? 'elenco' : A.view === 'calendario' ? 'inicio' : A.view;
+    const active = (A.view === 'editor' || A.view === 'financas' || A.view === 'clube' || A.view === 'stats') ? 'mais' : A.view === 'base' ? 'elenco' : A.view === 'calendario' ? 'inicio' : A.view;
     const step = g.cal[g.week];
     const meta = g.over ? `Temporada ${g.season} encerrada` : `${divName(me.div)} · ${P.stepLabel(step)} · ${g.season}`;
     const hasGame = !g.over && P.userMatch(g);
@@ -122,6 +122,7 @@
       <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span></button>`).join('')}</nav>
       <main class="main" id="view">${(views[A.view] || vInicio)()}</main>
     </div>`;
+    if (P.firedModal) P.firedModal(g);
   };
 
   // ---------- Tela inicial ----------
@@ -146,6 +147,7 @@
           <button class="btn sm" data-a="setupImport">Importar</button></div>
         ${s.importing ? importBox() : ''}
         <div class="field" style="max-width:360px"><label class="label" for="mgr">Nome do técnico</label><input id="mgr" data-i="mgr" value="${esc(s.manager)}" placeholder="Seu nome" maxlength="30"></div>
+        ${P.setupExtra ? P.setupExtra() : ''}
         <div class="create-cta"><div style="flex:1;min-width:0"><b>Criar meu clube</b><div class="muted" style="font-size:.88rem">Nome, cores, estádio, país, divisão e elenco do seu jeito.</div></div><button class="btn" data-a="createOpen">Criar clube</button></div>
         <div class="label">Ou escolha um dos 160 clubes</div>
         <div class="filters">${divSel(s.divF, 'setupDiv')}<input class="sel search" id="clubq" data-i="clubQ" value="${esc(s.q)}" placeholder="Buscar clube, cidade ou país" aria-label="Buscar clube"></div>
@@ -197,6 +199,7 @@
           <div class="field"><label class="label" for="cc-div">Divisão inicial</label>${divSel(f.div, 'ccDiv', 'Divisão inicial').replace('<select', '<select id="cc-div"')}</div>
           <div class="field"><label class="label" for="cc-rep">Entra no lugar de</label><select id="cc-rep" data-c="ccSel" data-k="replaceId">${divClubs.map((c) => `<option value="${c.id}" ${f.replaceId === c.id ? 'selected' : ''}>${esc(c.name)} (força ${ovrs[c.id]})</option>`).join('')}</select></div>
         </div>
+        ${P.createExtra ? P.createExtra(f) : ''}
         <fieldset class="radio"><legend class="label">Elenco inicial</legend>
           <label><input type="radio" name="squad" value="auto" data-c="ccSel" data-k="squad" ${f.squad === 'auto' ? 'checked' : ''}> <span><b>Gerado automaticamente</b><br><span class="muted">26 jogadores com nomes do país do clube, no nível da divisão.</span></span></label>
           <label><input type="radio" name="squad" value="generic" data-c="ccSel" data-k="squad" ${f.squad === 'generic' ? 'checked' : ''}> <span><b>Jogadores genéricos</b><br><span class="muted">"Jogador 01" a "Jogador 26", para você renomear e ajustar um por um.</span></span></label>
@@ -274,6 +277,7 @@
     const hist = userHistory(g).slice(-5).reverse();
 
     return `${top}
+      ${P.boardCard ? P.boardCard(g) : ''}
       <div class="grid2">
         <div class="card"><div class="head"><span class="label">Situação</span><span class="label">Meta: ${esc(P.expectation(g, g.user))}</span></div>
           <div class="kv">
@@ -318,6 +322,7 @@
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Div</th><th>Campeão</th><th>Sobem</th><th>Descem</th></tr></thead><tbody>
         ${s.divs.map((d) => `<tr class="${club(g.user) && d.d === me.div ? 'me' : ''}"><td>${d.d}ª</td><td>${esc(club(d.champ).short)}</td><td>${mv(d.up, I.up) || '–'}</td><td>${mv(d.down, I.down) || '–'}</td></tr>`).join('')}
       </tbody></table></div>
+      ${P.seasonExtra ? P.seasonExtra(g) : ''}
       <p class="muted" style="margin:12px 0">Na virada os jogadores envelhecem, jovens evoluem, veteranos caem de rendimento e alguns se aposentam.</p>
       <button class="btn primary" data-a="newSeason">Começar temporada ${g.season + 1}</button></div>`;
   }
@@ -376,6 +381,7 @@
         : `<div class="confirm"><b>${esc(p.name)} não quer renovar agora.</b><div class="muted">A moral dele está baixa. Coloque-o para jogar e vencer que ele muda de ideia.</div><div><button class="btn" data-a="player" data-id="${p.id}">Ok</button></div></div>`;
     }
     if (!mine && g && (mode === 'offer' || mode === 'loan')) action = P.marketPanel(p, mode);
+    if (mine && mode === 'talk' && P.talkPanel) action = P.talkPanel(p);
     if (mine && mode === 'release') {
       const cost = P.releaseCost(g, p);
       action = `<div class="confirm"><b>Dispensar ${esc(p.name)}?</b><div>A rescisão custa <b>${P.money(cost)}</b> (metade dos salários restantes). Ele vira jogador livre.</div>
@@ -405,7 +411,7 @@
       <div class="attrs">${Object.entries(groups).map(([gname, list]) => `<div class="grp"><h4 class="label">${gname}</h4>${list.map((at) => `<div class="attr"><span>${at.n}</span><b class="${vcls(p.a[at.k])}">${p.a[at.k]}</b></div>`).join('')}</div>`).join('')}</div>
       <div><div class="label" style="margin-bottom:6px">Rende em</div><div class="row">${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}" style="padding:4px 10px">${b.pos} ${b.v}</span>`).join('')}</div></div>
       ${action}
-      <div class="row">${!mode && g ? P.marketButtons(p) : ''}${mine && !mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);
+      <div class="row">${mine && !mode && P.talkButton ? P.talkButton(p) : ''}${!mode && g ? P.marketButtons(p) : ''}${mine && !mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);
     if (mode) { const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sh.scrollHeight; }
   };
   function moraleWord(m) { return m >= 85 ? 'Ótima' : m >= 68 ? 'Boa' : m >= 50 ? 'Normal' : m >= 35 ? 'Baixa' : 'Péssima'; }
@@ -659,6 +665,7 @@
     const g = A.g, st = A.st;
     const me = club(g.user);
     return `<div class="grid2">
+      ${P.maisExtra ? P.maisExtra() : ''}
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Finanças</h2><b class="${me.bal < 0 ? 'v1' : ''}">${P.money(me.bal)}</b></div>
         <p class="muted" style="margin:0">Saldo, receitas e despesas da temporada, folha salarial e contratos que vão terminar.</p>
         <div><button class="btn primary" data-a="go" data-v="financas">Ver finanças</button></div></div>
@@ -911,6 +918,7 @@
         replaceId: f.replaceId, name: f.name.trim(), short, city: f.city.trim() || f.name.trim(),
         stadium: f.stadium.trim() || 'Estádio ' + (f.city.trim() || f.name.trim()), country: f.country, c1: f.c1, c2: f.c2, squad: f.squad
       });
+      if (P.applyCreateExtra) P.applyCreateExtra(c, f);
       A.setup.club = c.id; A.setup.divF = c.div; A.setup.q = ''; A.setup.creating = false; A.setup.form = null;
       A.st.ed = { v: 'club', cid: c.id }; A.setup.editing = true;
       A.render(); window.scrollTo(0, 0);
