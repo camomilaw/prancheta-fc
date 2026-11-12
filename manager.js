@@ -10,7 +10,7 @@
   const clubOf = (g, cid) => cid && P.club(g, cid);
   // Critérios do Hall da Fama (números sob o seu comando)
   P.HOF = { j: 150, g: 60, as: 50 };
-  const TITLE_N = { lg: 'Ultraliga', div: 'Título de divisão', cup: 'Copa Ultra', sc: 'Supercopa Ultra', rz: 'Taça Raízes', tv: 'Taça Travessia', as: 'Copa Ascensão', up: 'Acesso' };
+  const TITLE_N = { lg: 'Ultraliga', div: 'Título de divisão', cup: 'Copa Ultra', sc: 'Supercopa Ultra', rz: 'Copa Meir Afrayat', tv: 'Taça Júnior Maestro', as: 'Taça Orton Barrera', up: 'Acesso' };
 
   const cur = (g) => g.mgr.stints[g.mgr.stints.length - 1];
 

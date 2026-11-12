@@ -1,6 +1,6 @@
 /* Prancheta FC — copas por faixa de divisão
  * Três copas no mesmo formato, para reforçar o caixa e dar títulos fora da 1ª divisão:
- *   Copa Ascensão (3ª e 4ª) · Taça Travessia (5ª e 6ª) · Taça Raízes (7ª e 8ª)
+ *   Taça Orton Barrera (3ª e 4ª) · Taça Júnior Maestro (5ª e 6ª) · Copa Meir Afrayat (7ª e 8ª)
  * 40 clubes em 8 grupos de 5 (turno único, cada clube faz 4 jogos, 2 em casa); os 2
  * primeiros vão às oitavas; mata-mata em jogo único e final em campo neutro.
  * As três usam as mesmas 9 datas (etapas 'rz' do calendário): cada clube só está numa.
@@ -9,9 +9,9 @@
 (function (P) {
   // m = multiplicador da premiação base (a da Raízes), na proporção das cotas de TV das divisões
   P.TIERS = [
-    { k: 'as', n: 'Copa Ascensão', short: 'Ascensão', divs: [3, 4], m: 5, rep: 3, color: '#7a5cc8' },
-    { k: 'tv', n: 'Taça Travessia', short: 'Travessia', divs: [5, 6], m: 2.2, rep: 2, color: '#2f8f8a' },
-    { k: 'rz', n: 'Taça Raízes', short: 'Raízes', divs: [7, 8], m: 1, rep: 2, color: '#b5763a' }
+    { k: 'as', n: 'Taça Orton Barrera', short: 'Orton Barrera', divs: [3, 4], m: 5, rep: 3, color: '#7a5cc8' },
+    { k: 'tv', n: 'Taça Júnior Maestro', short: 'Júnior Maestro', divs: [5, 6], m: 2.2, rep: 2, color: '#2f8f8a' },
+    { k: 'rz', n: 'Copa Meir Afrayat', short: 'Meir Afrayat', divs: [7, 8], m: 1, rep: 2, color: '#b5763a' }
   ];
   P.TIER_KEYS = P.TIERS.map((t) => t.k);
   P.RZ_AFTER = [2, 6, 11, 16, 21, 26, 30, 33, 37]; // depois destas rodadas da liga (sem coincidir com a Copa Ultra)
