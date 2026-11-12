@@ -30,10 +30,26 @@
     b.list.unshift(Object.assign({ id: P.uid('m'), s: g.season, w: g.week, read: false, l: P.stepLabel(g.cal[g.week]) }, m));
     if (b.list.length > MAX) b.list.length = MAX;
   };
-  P.unread = (g) => (g.inbox ? g.inbox.list.filter((m) => !m.read).length : 0);
+  // Validade: avisos somem depois de 1 semana; propostas depois de 2 semanas ou quando a proposta
+  // deixa de existir (aceita, recusada ou vencida). O e-mail é criado na semana m.w e lido a partir da m.w + 1.
+  function alive(g, m) {
+    if (m.s !== g.season) return false;
+    if (m.k !== 'prop') return g.week < m.w + 2;
+    if (g.week >= m.w + 3) return false;
+    const offers = g.offers || [];
+    return m.oid ? offers.some((o) => o.id === m.oid) : offers.some((o) => o.pid === m.pid);
+  }
+  function prune(g) {
+    const b = box(g), before = b.list.length;
+    b.list = b.list.filter((m) => alive(g, m));
+    return before !== b.list.length;
+  }
+  P.mailPrune = prune;
+  P.unread = (g) => { if (!g.inbox) return 0; prune(g); return g.inbox.list.filter((m) => !m.read).length; };
 
   // ---------- Cartão na tela inicial ----------
   P.inboxCard = function (g) {
+    prune(g);
     const b = box(g), st = A.st.inbox || (A.st.inbox = { all: false });
     const n = P.unread(g);
     const list = b.list.slice(0, st.all ? MAX : 4);
@@ -55,7 +71,8 @@
 
   Object.assign(A.ACT, {
     mailOpen(d) {
-      const g = A.g, m = box(g).list.find((x) => x.id === d.id); if (!m) return;
+      const g = A.g; prune(g);
+      const m = box(g).list.find((x) => x.id === d.id); if (!m) { A.render(); return; }
       m.read = true;
       if (m.k === 'prop') { A.st.mk = Object.assign(A.st.mk || {}, { tab: 'prop' }); A.view = 'mercado'; }
       else A.view = 'tatica';

@@ -136,9 +136,10 @@
       if (buyers.length && !(g.offers || []).some((o) => o.pid === p.id)) {
         const b = P.pick(rnd, buyers);
         const fee = Math.round(P.value(p) * (p.listed ? 0.8 + rnd() * 0.25 : 0.9 + rnd() * 0.4) * (isStarter(g, p) ? 1.15 : 1) * (P.diffM ? P.diffM(g, 'offer') : 1) / 10000) * 10000;
-        g.offers.push({ id: P.uid('o'), pid: p.id, from: b.id, fee, until: g.week + 2 });
+        const oid = P.uid('o');
+        g.offers.push({ id: oid, pid: p.id, from: b.id, fee, until: g.week + 2 });
         P.news(g, `O ${b.name} fez uma proposta de ${P.money(fee)} por ${p.name}. Veja em Mercado › Propostas.`, 'warn');
-        if (P.mail) P.mail(g, { k: 'prop', pid: p.id, subj: `${b.name} quer o ${p.name}`, body: `Chefe, o ${b.name} (${b.div}ª divisão) ofereceu ${P.money(fee)} pelo ${p.name}, que tem força ${P.ovr(p)} e valor de mercado de ${P.money(P.value(p))}. A proposta vale por 2 semanas.` });
+        if (P.mail) P.mail(g, { k: 'prop', pid: p.id, oid, subj: `${b.name} quer o ${p.name}`, body: `Chefe, o ${b.name} (${b.div}ª divisão) ofereceu ${P.money(fee)} pelo ${p.name}, que tem força ${P.ovr(p)} e valor de mercado de ${P.money(P.value(p))}. A proposta vale por 2 semanas.` });
       }
     }
 
