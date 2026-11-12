@@ -58,7 +58,7 @@
         const potF = P.ovr(p) / 5 < p.pot ? 1 : 0.25;
         // atributos treinados: foco individual/do grupo e posição em treino (training.js), ou o foco da semana
         const list = P.trainList ? P.trainList(g, p, plan) : (p.pos === 'GOL' && plan.foco !== 'fis' ? ['ref', 'aer', 'um1'] : F.at).map((k) => [k, 1]);
-        for (const [k, w] of list) if (p.a[k] < 20 && r() < 0.025 * w * I.dev * ageF * potF * (P.facLvl ? 1 + (P.facLvl(g, 'ct') - 3) * 0.12 : 1) * (P.adF ? P.adF(g, p) : 1)) p.a[k]++;
+        for (const [k, w] of list) if (p.a[k] < 20 && r() < 0.021 * w * I.dev * ageF * potF * (P.facLvl ? 1 + (P.facLvl(g, 'ct') - 3) * 0.12 : 1) * (P.adF ? P.adF(g, p) : 1)) p.a[k]++;
       }
       if (I.inj && r() < I.inj) { p.inj = 1 + Math.floor(r() * 2); hurt.push(p.name); }
     }

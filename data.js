@@ -305,6 +305,17 @@
   P.blankStats = () => ({ j: 0, g: 0, as: 0, ca: 0, cv: 0, nt: 0, cg: 0 });
 
   // Cria um jogador. level = média de atributos esperada (1-20)
+  // Experiência (1-20): cresce com a idade e com os jogos disputados. Não entra na força (over),
+  // mas pesa nos jogos, na adaptação e em quanto o jogador perde com a idade.
+  P.xpFromAge = (age, r) => P.clamp(Math.round(((age - 16) * 0.95 + 1 + (r ? P.gauss(r) * 1.2 : 0)) * 10) / 10, 1, 20);
+  P.xp = function (p) {
+    if (p.xp == null) {
+      let h = 0; for (const ch of String(p.id)) h = (h * 31 + ch.charCodeAt(0)) | 0;
+      p.xp = P.clamp(Math.round(((p.age - 16) * 0.95 + 1 + ((Math.abs(h) % 25) - 12) / 10) * 10) / 10, 1, 20);
+    }
+    return p.xp;
+  };
+  P.xpWord = (x) => (x >= 17 ? 'Lenda' : x >= 13 ? 'Veterano' : x >= 9 ? 'Rodado' : x >= 5 ? 'Em formação' : 'Novato');
   P.makePlayer = function (r, opts) {
     const pos = opts.pos;
     const age = opts.age || pickAge(r);
@@ -324,7 +335,7 @@
     return {
       id: opts.id || P.uid('p'),
       name: opts.name || P.makeName(r, opts.used, nat),
-      age, pos, nat, clubId: opts.clubId || null, a, pot,
+      age, pos, nat, clubId: opts.clubId || null, a, pot, xp: P.xpFromAge(age, r),
       cond: 100, mor: 70, inj: 0, susp: 0, ylw: 0,
       s: P.blankStats()
     };

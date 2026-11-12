@@ -111,6 +111,7 @@
         <div class="form-grid">
           <div class="field"><label class="label" for="pf-name">Nome</label><input id="pf-name" data-c="pf" data-k="name" value="${esc(p.name)}" maxlength="40"></div>
           <div class="field"><label class="label" for="pf-age">Idade</label><input id="pf-age" type="number" min="15" max="45" data-c="pf" data-k="age" value="${p.age}"></div>
+          ${P.xp ? `<div class="field"><label class="label" for="pf-xp">Experiência (1-20)</label><input id="pf-xp" type="number" min="1" max="20" data-c="pf" data-k="xp" value="${Math.round(P.xp(p))}"></div>` : ''}
           <div class="field"><label class="label" for="pf-nat">Nacionalidade</label><select id="pf-nat" data-c="pf" data-k="nat">${A.countryOpts(p.nat)}</select></div>
           <div class="field"><label class="label" for="pf-pos">Posição</label><select id="pf-pos" data-c="pf" data-k="pos">${P.POS.map((x) => `<option value="${x}" ${p.pos === x ? 'selected' : ''}>${x} · ${P.POS_NAME[x]}</option>`).join('')}</select></div>
           <div class="field"><label class="label" for="pf-club">Clube</label><select id="pf-club" data-c="pf" data-k="clubId">${clubOpts.map((x) => `<option value="${x.id}" ${p.clubId === x.id ? 'selected' : ''}>${x.div}ª · ${esc(x.name)}</option>`).join('')}</select></div>
@@ -234,6 +235,7 @@
       const p = db().players[A.st.ed.pid], k = el.dataset.k;
       if (k === 'name') { p.name = el.value.trim() || p.name; el.value = p.name; changed([]); return; }
       if (k === 'age') { p.age = P.clamp(Math.round(Number(el.value) || p.age), 15, 45); el.value = p.age; changed([]); return; }
+      if (k === 'xp') { p.xp = P.clamp(Math.round(Number(el.value) || P.xp(p)), 1, 20); el.value = p.xp; changed([]); return; }
       if (k === 'pot') { p.pot = P.clamp(Number(el.value) || p.pot, 1, 20); el.value = p.pot; changed([]); return; }
       if (k === 'nat') { p.nat = el.value; changed([]); return; }
       if (k === 'wage') { p.wage = Math.max(0, Math.round(Number(el.value) || 0)); el.value = p.wage; changed([]); return; }

@@ -271,7 +271,7 @@
       if (s.off) continue;
       n++;
       const p = s.p, r = P.roles(p);
-      const f = P.fitP(p, s.pos) * P.condF(p) * P.morF(p) * (s.chem || 1);
+      const f = P.fitP(p, s.pos) * P.condF(p) * P.morF(p) * (s.chem || 1) * (P.xp ? 1 + P.clamp((P.xp(p) - 8) * 0.0025, -0.02, 0.03) : 1);
       const role = P.roleOf ? P.roleOf(tac, s.i, s.pos) : null;
       const pc = (tac.roles && tac.roles[s.i] && tac.roles[s.i].post) || 'equ';
       const post = (P.POSTURE && P.POSTURE[pc]) || { a: 1, m: 1, d: 1 };
@@ -1064,15 +1064,20 @@
         delete g.db.players[p.id];
         continue;
       }
+      // experiência: um pouco por ano de vida, mais para quem jogou bastante
+      if (P.xp) p.xp = P.clamp(Math.round((P.xp(p) + 0.4 + (p.s.j >= 25 ? 0.7 : p.s.j >= 10 ? 0.45 : p.s.j >= 3 ? 0.2 : 0)) * 10) / 10, 1, 20);
       p.age++;
-      let base = p.age <= 21 ? 0.9 : p.age <= 24 ? 0.5 : p.age <= 29 ? 0.1 : p.age <= 32 ? -0.3 : -0.8;
+      // evolução (levemente reduzida) e queda mais suave até os 34-35 anos
+      let base = p.age <= 21 ? 0.75 : p.age <= 24 ? 0.42 : p.age <= 29 ? 0.08 : p.age <= 32 ? -0.1 : p.age <= 34 ? -0.25 : p.age === 35 ? -0.5 : -0.8;
+      // quem tem rodagem segura melhor a queda
+      if (base < 0 && P.xp) base += P.clamp((P.xp(p) - 12) * 0.012, -0.05, 0.08);
       if (p.age <= 24 && P.ovr(p) / 5 >= p.pot) base = Math.min(base, 0.1);
       if (avgNote >= 7) base += 0.2;
       if (base > 0 && p.clubId === g.user && P.adF) base *= P.adF(g, p);
       for (const at of P.ATTRS) {
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         let d = base + P.gauss(r) * 0.6;
-        if (p.age >= 30 && P.PHYS_ATTRS.includes(at.k)) d -= 0.4;
+        if (p.age >= 31 && P.PHYS_ATTRS.includes(at.k)) d -= p.age >= 35 ? 0.4 : p.age >= 33 ? 0.3 : 0.2;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, d), 1, 20);
       }
       p.s = P.blankStats(); p.cs = {}; p.cond = 100; p.mor = 70; p.inj = 0; p.susp = 0; p.ylw = 0;

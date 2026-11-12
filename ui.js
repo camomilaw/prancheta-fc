@@ -440,6 +440,7 @@
         <div><span class="label">Contrato até</span><b class="${g && p.ctr <= g.season ? 'v2' : ''}">${p.ctr || '—'}</b></div>
         <div><span class="label">Condição</span><b class="${p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : ''}">${Math.round(p.cond)}%</b></div>
         <div><span class="label">Moral</span><b>${moraleWord(p.mor)}</b></div>
+        ${P.xp ? `<div><span class="label">Experiência</span><b>${Math.round(P.xp(p))} <small class="muted" style="font-size:.7rem">${P.xpWord(P.xp(p))}</small></b></div>` : ''}
         <div><span class="label">Jogos</span><b>${p.s.j}</b></div>
         <div><span class="label">Gols liga</span><b>${p.s.g}</b></div>
         <div><span class="label">Gols copa</span><b>${p.s.cg}</b></div>

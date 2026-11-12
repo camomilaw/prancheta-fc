@@ -79,7 +79,7 @@
       if (!n) { delete p.ad; continue; }
       const h = helpers(g, p);
       const young = p.age <= 18 ? 1.6 : p.age <= 21 ? 1.3 : p.age <= 25 ? 1 : p.age <= 29 ? 0.75 : 0.55;
-      const exp = p.age <= 18 ? 0.6 : p.age <= 21 ? 0.8 : p.age <= 25 ? 1 : p.age <= 29 ? 1.25 : 1.45;
+      const exp = P.xp ? 0.6 + P.xp(p) * 0.045 : (p.age <= 18 ? 0.6 : p.age <= 21 ? 0.8 : p.age <= 25 ? 1 : p.age <= 29 ? 1.25 : 1.45);
       const helpL = 1 + Math.min(0.5, 0.3 * h.comp.length + 0.12 * h.speak.length + 0.25 * (h.stComp.length + h.stLang.length));
       const helpC = 1 + Math.min(0.7, 0.35 * h.comp.length + 0.3 * h.stComp.length + 0.1 * h.stLang.length);
       const before = P.adLevel(g, p);
