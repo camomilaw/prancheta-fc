@@ -21,7 +21,8 @@
     if (step.t === 'lg') others = others.filter((o) => o.div === myDiv);
     if (step.t === 'po') others = others.filter((o) => o.div === ctx.live.it.div);
     if (step.t === 'rz') others = others.filter((o) => o.comp === ctx.live.it.comp);
-    A.live = { ctx, side: ctx.live.side, st: ctx.live.st, m: ctx.live.it.m, ko: ctx.live.it.ko, step, T: 0, speed: 1, pause: null, ht: false, others, sel: {}, done: false, msg: '' };
+    A.live = { ctx, side: ctx.live.side, st: ctx.live.st, m: ctx.live.it.m, ko: ctx.live.it.ko, step, T: 0, speed: 1, pause: null, ht: false, others, sel: {}, done: false, msg: '',
+      hlQ: [], hl: null, hlCtl: null, evSeen: 0, hide: [0, 0], pend: new Set(), hlHost: null };
     let el = document.getElementById('md');
     if (!el) { el = document.createElement('div'); el.id = 'md'; el.className = 'md'; document.body.appendChild(el); }
     el.hidden = false; el.scrollTop = 0;
@@ -31,7 +32,7 @@
   function tick() {
     clearTimeout(A._lvt);
     const L = A.live;
-    if (!L || L.pause || L.done) return;
+    if (!L || L.pause || L.done || L.hl) return;
     A._lvt = setTimeout(stepMinute, L.speed === 1 ? 140 : 35);
   }
   function stepMinute() {
@@ -44,8 +45,52 @@
       const p = A.g.db.players[e.p];
       L.pause = { reason: e.t === 'lesao' ? `${p.name} se lesionou` : `${p.name} foi expulso`, t: e.t };
     } else if (L.T === 45 && !L.ht) { L.ht = true; L.pause = { reason: 'Intervalo' }; }
+    // melhores momentos: gols, grandes chances e pênaltis viram lances animados (só na velocidade Normal)
+    queueHL(L);
+    if (L.hlQ.length && !L.hl) { nextHL(); return; }
     if (L.T >= st.end && !L.pause) { finish(); return; }
     draw(); tick();
+  }
+  const HL_TYPES = ['gol', 'chance', 'penmiss'];
+  function queueHL(L) {
+    const fresh = L.st.ev.slice(L.evSeen); L.evSeen = L.st.ev.length;
+    if (L.speed !== 1 || !P.playHighlight) return;
+    for (const e of fresh) {
+      if (!HL_TYPES.includes(e.t)) continue;
+      L.hlQ.push(e); L.pend.add(e);
+      if (e.t === 'gol') L.hide[e.s]++; // o placar só muda quando a bola entra
+    }
+  }
+  function revealHL(L, e) {
+    if (!L.pend.has(e)) return;
+    L.pend.delete(e);
+    if (e.t === 'gol') L.hide[e.s] = Math.max(0, L.hide[e.s] - 1);
+  }
+  function revealAll(L) { for (const e of Array.from(L.pend)) revealHL(L, e); L.hlQ = []; }
+  function nextHL() {
+    const L = A.live; if (!L) return;
+    const e = L.hlQ.shift();
+    if (!e) {
+      L.hl = null; L.hlCtl = null;
+      draw();
+      if (L.pause || L.done) return;
+      if (L.T >= L.st.end) finish(); else tick();
+      return;
+    }
+    L.hl = e;
+    if (!L.hlHost) { L.hlHost = document.createElement('div'); L.hlHost.className = 'hl-box'; }
+    draw();
+    L.hlCtl = P.playHighlight(L.hlHost, {
+      st: L.st, e, m: L.m,
+      onReveal: () => { revealHL(L, e); draw(); },
+      onEnd: () => { if (A.live === L && L.hl === e) setTimeout(nextHL, 120); }
+    });
+  }
+  function stopHL(L) {
+    if (!L) return;
+    const ctl = L.hlCtl; L.hlCtl = null; L.hl = null;
+    revealAll(L);
+    if (ctl) ctl.skip();
   }
   function finish() {
     const L = A.live; if (!L || L.done) return;
@@ -126,7 +171,7 @@
     const tot = st.posAcc[0] + st.posAcc[1];
     const poss = tot ? Math.round(st.posAcc[0] / tot * 100) : 50;
     const clock = done ? (m.pen ? `Fim de jogo · pênaltis ${m.pen[0]} × ${m.pen[1]}` : 'Fim de jogo') : L.pause && L.pause.reason === 'Intervalo' ? 'Intervalo' : L.T === 0 ? 'Bola rolando' : L.T <= 90 ? `${L.T}'` : `90+${L.T - 90}'`;
-    const evs = st.ev.filter((e) => e.t !== 'int' || L.T > 45).slice().reverse();
+    const evs = st.ev.filter((e) => (e.t !== 'int' || L.T > 45) && !L.pend.has(e)).slice().reverse();
     const Tshow = done ? 96 : L.T;
     const others = L.others.map((o) => {
       let h = 0, a = 0; for (const e of o.goals) if (key(e) <= Tshow) { if (e.s === 0) h++; else a++; }
@@ -140,7 +185,8 @@
     const label = L.step.t === 'lg' ? `Outros jogos da ${club(A.g.user).div}ª divisão` : L.step.t === 'cup' || L.step.t === 'sc' ? 'Outros jogos da fase' : L.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g)}` : 'Playoffs';
     el.innerHTML = `<div class="md-in">
       <div class="row"><h2 style="flex:1;min-width:0">${esc(P.stepLabel(L.step))}</h2>${controls}</div>
-      ${A.boardHTML(m, st.goals[0], st.goals[1], clock, { pos: poss })}
+      ${A.boardHTML(m, st.goals[0] - L.hide[0], st.goals[1] - L.hide[1], clock, { pos: poss })}
+      ${L.hl ? `<div class="hl-wrap"><div class="row" style="gap:8px"><span class="label" style="flex:1">Melhores momentos · ${L.hl.x ? '90+' + L.hl.x : L.hl.m}'</span><button class="btn sm" data-a="lvHlSkip">Pular lance</button></div><div id="hl-slot"></div></div>` : ''}
       ${verdict}
       ${L.pause ? pausePanel(L) : ''}
       ${A.matchStatsHTML(A.statsFrom({ pos: poss, sh: st.shots, sot: st.sot, xg: st.xg, fo: st.fouls, co: st.corners }, st.ev))}
@@ -149,16 +195,25 @@
       ${done && P.teamTalkPanel ? P.teamTalkPanel() : ''}
       ${done ? '<div class="row"><button class="btn" data-a="lvClose" data-v="tabela">Ver tabela</button><span class="spacer"></span><button class="btn primary" data-a="lvClose" data-v="inicio">Continuar</button></div>' : ''}
     </div>`;
+    // o campinho do lance é o mesmo nó a cada redesenho (a animação continua)
+    const slot = el.querySelector('#hl-slot');
+    if (slot && L.hlHost) slot.appendChild(L.hlHost);
   }
 
   A.redrawMd = () => { if (A.live) draw(); };
   Object.assign(A.ACT, {
-    lvSpeed(d) { A.live.speed = Number(d.s); draw(); tick(); },
+    lvSpeed(d) {
+      const L = A.live; L.speed = Number(d.s);
+      if (L.speed !== 1 && L.hl) { stopHL(L); draw(); if (!L.pause) { if (L.T >= L.st.end) finish(); else tick(); } return; } // Rápido: sem lances
+      draw(); tick();
+    },
+    lvHlSkip() { const L = A.live; if (L && L.hlCtl) L.hlCtl.skip(); },
     lvPause() { const L = A.live; if (!L || L.done) return; clearTimeout(A._lvt); L.pause = { reason: 'Jogo pausado' }; draw(); },
     lvGo() { const L = A.live; L.pause = null; L.sel = {}; L.msg = ''; draw(); if (L.T >= L.st.end) finish(); else tick(); },
     lvSkip() {
       const L = A.live; if (!L || L.done) return;
       clearTimeout(A._lvt);
+      stopHL(L);
       L.st.L[L.side].manual = false; // sem pausas: lesões trocadas automaticamente
       P.simAdvance(L.st, L.st.end);
       L.T = L.st.end;
@@ -175,6 +230,7 @@
     },
     lvMen(d) { const L = A.live; A.g.tac[A.g.user].men = d.v; L.st.recalc(); draw(); },
     lvClose(d) {
+      if (A.live) stopHL(A.live);
       clearTimeout(A._lvt); A.live = null;
       const el = document.getElementById('md'); if (el) { el.hidden = true; el.innerHTML = ''; }
       A.view = d.v || 'inicio'; if (d.v === 'tabela') A.st.div = null;
