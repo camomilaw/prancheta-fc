@@ -102,6 +102,12 @@
 
   // ---------- Render principal ----------
   A.render = function () {
+    // um campo que perde o foco durante o redesenho pode pedir outro redesenho: deixa para logo depois
+    if (A._rendering) { clearTimeout(A._rerender); A._rerender = setTimeout(() => A.render(), 0); return; }
+    A._rendering = true;
+    try { renderNow(); } finally { A._rendering = false; }
+  };
+  function renderNow() {
     A.reg = [];
     const root = document.getElementById('root');
     if (!A.g) {
@@ -140,7 +146,7 @@
     root.querySelectorAll('.tabs-x').forEach((bar) => { const on = bar.querySelector('.on'); if (on) bar.scrollLeft = on.offsetLeft - bar.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2; });
     if (P.firedModal) P.firedModal(g);
     if (P.showCelebration) P.showCelebration(g);
-  };
+  }
 
   // ---------- Tela inicial ----------
   function renderSetup() {

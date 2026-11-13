@@ -328,7 +328,7 @@
     const g = A.g, st = A.st;
     if (!g.loanKey && P.windowOpen(g)) refreshAiLoanList(g);
     if (!g.saleInit && P.windowOpen(g)) { g.loanKey = null; refreshAiLoanList(g); g.saleInit = true; }
-    const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', min: 0, sort: 'ovr', div: 0, lst: 'any' }, st.mk || {});
+    const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', omin: '', omax: '', q: '', sort: 'ovr', div: 0, lst: 'any' }, st.mk || {});
     const offers = (g.offers || []).filter((o) => g.db.players[o.pid] && g.db.players[o.pid].clubId === g.user);
     const tabs = `<div class="seg tabs-x">${[['busca', 'Buscar'], ['prop', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'À venda'], ['emp', 'Empréstimos'], ['tx', 'Transferências'], ['func', 'Funcionários']].map(([k, n]) => `<button class="${f.tab === k ? 'on' : ''}" data-a="mkTab" data-k="${k}">${n}</button>`).join('')}</div>`;
     const me = club(g.user);
@@ -349,18 +349,22 @@
       else if (f.ctr === '25') list = list.filter((p) => p.clubId && P.ctrMonths(g, p) > 24);
       else if (f.ctr !== 'any') list = list.filter((p) => p.clubId && P.ctrMonths(g, p) <= Number(f.ctr));
       if (vmin != null || vmax != null) list = list.filter((p) => { const v = P.value(p) / 1e6; return (vmin == null || v >= vmin) && (vmax == null || v <= vmax); });
-      const withO = list.map((p) => ({ p, o: P.ovr(p) })).filter((x) => x.o >= f.min);
+      const omin = num(f.omin), omax = num(f.omax);
+      const qn = (f.q || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (qn) list = list.filter((p) => p.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(qn));
+      const withO = list.map((p) => ({ p, o: P.ovr(p) })).filter((x) => (omin == null || x.o >= omin) && (omax == null || x.o <= omax));
       const sorter = { ovr: (a, b) => b.o - a.o, val: (a, b) => P.value(a.p) - P.value(b.p), age: (a, b) => a.p.age - b.p.age, ctr: (a, b) => P.ctrMonths(g, a.p) - P.ctrMonths(g, b.p) }[f.sort] || ((a, b) => b.o - a.o);
       const res = withO.sort(sorter).slice(0, 40).map((x) => x.p);
       const nats = Object.entries(P.COUNTRIES).sort((a, b) => a[1].n.localeCompare(b[1].n));
       const numIn = (k, ph, step, label) => `<input class="sel num-in" type="number" inputmode="decimal" min="0" step="${step}" data-c="mkF" data-k="${k}" value="${esc(f[k])}" placeholder="${ph}" aria-label="${label}">`;
-      body = `<div class="mk-filters">
+      body = `<div class="field mk-q"><span class="label">Nome</span><input class="sel search" id="mkq" type="search" data-i="mkQ" value="${esc(f.q || '')}" placeholder="Buscar jogador pelo nome…" aria-label="Buscar jogador pelo nome" autocomplete="off"></div>
+        <div class="mk-filters">
           <div class="field"><span class="label">Posição</span>${opt('pos', [['ALL', 'Todas']].concat(P.POS.map((x) => [x, x + ' · ' + P.POS_NAME[x]])), f.pos)}</div>
           <div class="field"><span class="label">Nacionalidade</span>${opt('nat', [['ALL', 'Todas']].concat(nats.map(([k, v]) => [k, v.n])), f.nat)}</div>
           <div class="field"><span class="label">Idade</span><div class="range">${numIn('amin', 'mín', 1, 'Idade mínima')}<span>a</span>${numIn('amax', 'máx', 1, 'Idade máxima')}</div></div>
           <div class="field"><span class="label">Valor (R$ milhões)</span><div class="range">${numIn('vmin', 'mín', 0.1, 'Valor mínimo em milhões')}<span>a</span>${numIn('vmax', 'máx', 0.1, 'Valor máximo em milhões')}</div></div>
           <div class="field"><span class="label">Contrato</span>${opt('ctr', CTR_OPTS, f.ctr)}</div>
-          <div class="field"><span class="label">Força mínima</span>${opt('min', [[0, 'Qualquer'], [50, '50+'], [60, '60+'], [70, '70+'], [80, '80+']], f.min)}</div>
+          <div class="field"><span class="label">Força</span><div class="range">${numIn('omin', 'mín', 1, 'Força mínima')}<span>a</span>${numIn('omax', 'máx', 1, 'Força máxima')}</div></div>
           <div class="field"><span class="label">Divisão</span>${opt('div', [[0, 'Todas']].concat(Array.from({ length: P.DIVS }, (_, i) => [i + 1, (i + 1) + 'ª divisão'])), f.div)}</div>
           <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer jogador'], ['venda', 'À venda (lista de transferência)'], ['emp', 'Na lista de empréstimo']], f.lst)}</div>
           <div class="field"><span class="label">Ordenar</span>${opt('sort', [['ovr', 'Mais fortes'], ['val', 'Mais baratos'], ['age', 'Mais jovens'], ['ctr', 'Contrato acabando']], f.sort)}</div>
@@ -460,9 +464,19 @@
     mkReject(d) { A.g.offers = A.g.offers.filter((o) => o.id !== d.id); A.save(); A.render(); }
   });
   Object.assign(A.CHG, {
-    mkF(el) { const k = el.dataset.k; A.st.mk[k] = ['min', 'div'].includes(k) ? Number(el.value) : el.value; A.render(); }
+    mkF(el) { const k = el.dataset.k; A.st.mk[k] = ['div'].includes(k) ? Number(el.value) : el.value; A.render(); }
   });
   Object.assign(A.INP, {
+    // busca por nome: espera parar de digitar, redesenha e devolve o foco ao campo
+    mkQ(el) {
+      A.st.mk.q = el.value;
+      clearTimeout(A._mkq);
+      A._mkq = setTimeout(() => {
+        A.render();
+        const box = document.getElementById('mkq');
+        if (box) { box.focus({ preventScroll: true }); const n = box.value.length; try { box.setSelectionRange(n, n); } catch (e) { /* type=search */ } }
+      }, 280);
+    },
     ofF(el) { if (A.st.offer) A.st.offer[el.dataset.k] = Math.max(0, Math.round(Number(el.value) || 0)); }
   });
 })(window.PFC);

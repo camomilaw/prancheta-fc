@@ -1045,3 +1045,4 @@ table { font-family: var(--f-body); }
 .big-ovr.rt-big.n-top { color: var(--good); } .big-ovr.rt-big.n-low { color: var(--bad); }
 .sheet-bg { z-index: 70; }
 .pitch.rt .dot::after { display: none; }
+.mk-q { margin-bottom: 10px; } .mk-q .search { width: 100%; min-height: 42px; }
