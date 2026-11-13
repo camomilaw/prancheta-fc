@@ -118,6 +118,7 @@
 
   // Lista de empréstimo dos clubes da IA: jovens e reservas sobrando (renovada a cada janela)
   function refreshAiLoanList(g) {
+    for (const p of Object.values(g.db.players)) if (!p.clubId) { p.loanList = false; p.saleList = false; p.listed = false; }
     const key = g.season + ':' + (P.lgDone(g) < P.MARKET.windows[1][0] ? 0 : 1);
     if (g.loanKey === key) return;
     g.loanKey = key;
@@ -328,7 +329,7 @@
     const g = A.g, st = A.st;
     if (!g.loanKey && P.windowOpen(g)) refreshAiLoanList(g);
     if (!g.saleInit && P.windowOpen(g)) { g.loanKey = null; refreshAiLoanList(g); g.saleInit = true; }
-    const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', omin: '', omax: '', q: '', sort: 'ovr', div: 0, lst: 'any' }, st.mk || {});
+    const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', omin: '', omax: '', dmin: '', dmax: '', q: '', sort: 'ovr', div: 0, lst: 'any' }, st.mk || {});
     const offers = (g.offers || []).filter((o) => g.db.players[o.pid] && g.db.players[o.pid].clubId === g.user);
     const tabs = `<div class="seg tabs-x">${[['busca', 'Buscar'], ['prop', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'À venda'], ['emp', 'Empréstimos'], ['tx', 'Transferências'], ['func', 'Funcionários']].map(([k, n]) => `<button class="${f.tab === k ? 'on' : ''}" data-a="mkTab" data-k="${k}">${n}</button>`).join('')}</div>`;
     const me = club(g.user);
@@ -342,7 +343,9 @@
       if (f.nat !== 'ALL') list = list.filter((p) => p.nat === f.nat);
       if (amin != null) list = list.filter((p) => p.age >= amin);
       if (amax != null) list = list.filter((p) => p.age <= amax);
-      if (f.div) list = list.filter((p) => p.clubId && club(p.clubId).div === Number(f.div));
+      const dmin = num(f.dmin), dmax = num(f.dmax);
+      if (f.div && dmin == null && dmax == null) list = list.filter((p) => p.clubId && club(p.clubId).div === Number(f.div));
+      if (dmin != null || dmax != null) list = list.filter((p) => { const c = p.clubId && club(p.clubId); return c && (dmin == null || c.div >= dmin) && (dmax == null || c.div <= dmax); });
       if (f.lst === 'emp') list = list.filter((p) => p.clubId && p.loanList && !p.loan);
       if (f.lst === 'venda') list = list.filter((p) => p.clubId && p.saleList && !p.loan);
       if (f.ctr === 'free') list = list.filter((p) => !p.clubId);
@@ -365,12 +368,12 @@
           <div class="field"><span class="label">Valor (R$ milhões)</span><div class="range">${numIn('vmin', 'mín', 0.1, 'Valor mínimo em milhões')}<span>a</span>${numIn('vmax', 'máx', 0.1, 'Valor máximo em milhões')}</div></div>
           <div class="field"><span class="label">Contrato</span>${opt('ctr', CTR_OPTS, f.ctr)}</div>
           <div class="field"><span class="label">Força</span><div class="range">${numIn('omin', 'mín', 1, 'Força mínima')}<span>a</span>${numIn('omax', 'máx', 1, 'Força máxima')}</div></div>
-          <div class="field"><span class="label">Divisão</span>${opt('div', [[0, 'Todas']].concat(Array.from({ length: P.DIVS }, (_, i) => [i + 1, (i + 1) + 'ª divisão'])), f.div)}</div>
+          <div class="field"><span class="label">Divisão (1 a ${P.DIVS})</span><div class="range">${numIn('dmin', 'da', 1, 'Da divisão')}<span>a</span>${numIn('dmax', 'até', 1, 'Até a divisão')}</div></div>
           <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer jogador'], ['venda', 'À venda (lista de transferência)'], ['emp', 'Na lista de empréstimo']], f.lst)}</div>
           <div class="field"><span class="label">Ordenar</span>${opt('sort', [['ovr', 'Mais fortes'], ['val', 'Mais baratos'], ['age', 'Mais jovens'], ['ctr', 'Contrato acabando']], f.sort)}</div>
         </div>
         <div class="row" style="margin:6px 0 10px"><span class="muted" style="flex:1;font-size:.88rem">${withO.length} ${withO.length === 1 ? 'jogador encontrado' : 'jogadores encontrados'}${withO.length > 40 ? ' (mostrando 40)' : ''}</span><button class="btn sm ghost" data-a="mkClear">Limpar filtros</button></div>
-        <div class="plist">${res.map((p) => rowP(p, p.saleList && !p.loan ? '<span class="chip sus">À venda</span>' : p.loanList && !p.loan ? `<span class="chip loan">Empréstimo · ${P.money(P.loanFeeOf(p))}</span>` : '')).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
+        <div class="plist">${res.map((p) => rowP(p, p.clubId && p.saleList && !p.loan ? '<span class="chip sus">À venda</span>' : p.clubId && p.loanList && !p.loan ? `<span class="chip loan">Empréstimo · ${P.money(P.loanFeeOf(p))}</span>` : '')).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
         <p class="muted" style="font-size:.85rem">Toque num jogador para ver a ficha e fazer proposta.</p>`;
     } else if (f.tab === 'prop') {
       body = offers.length ? `<div class="plist">${offers.map((o) => {

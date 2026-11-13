@@ -182,7 +182,7 @@
       // o talento que aceita vir acompanha o tamanho do clube (reputação); olheiro melhor acha um pouco acima
       const base = P.levelFromRep(P.club(g, g.user).rep) * 5 + 6;
       const gem = r() < P.YOUTH.gemChance;
-      const potO = gem ? gemPot(r) : base + (s.stars - 3) * 3 + P.gauss(r) * 6 + (r() < 0.04 ? 8 : 0);
+      const potO = gem ? gemPot(r) : base + 1.5 + (s.stars - 2.5) * 3 + P.gauss(r) * 6 + (r() < 0.04 ? 8 : 0);
       const p = youthPlayer(r, { pos, potO, nat: P.pick(r, reg.c), boost: foc.b });
       if (gem) { p.gem = true; gems.push(p.name); }
       const err = STAR_ERR[s.stars];
@@ -270,7 +270,7 @@
     const n = Object.keys(g.y.squad).length;
     for (let i = 0; i < Math.max(4, 16 - n) && n + i < P.YOUTH.maxSquad; i++) {
       const gem = r() < P.YOUTH.gemChance;
-      const y = youthPlayer(r, { pos: randomPos(r), potO: gem ? gemPot(r) : P.levelFromRep(me.rep) * 5 + 4 + P.gauss(r) * 8 + (r() < 0.05 ? 10 : 0) + (P.facLvl ? (P.facLvl(g, 'base') - 3) * 3 : 0), age: 15 + Math.floor(r() * 2), nat: P.pickNat(r, me.country) });
+      const y = youthPlayer(r, { pos: randomPos(r), potO: gem ? gemPot(r) : P.levelFromRep(me.rep) * 5 + 4 + P.gauss(r) * 8 + (r() < 0.05 ? 10 : 0) + (P.facLvl ? (P.facLvl(g, 'base') - 2.5) * 3.5 + 1 : 0), age: 15 + Math.floor(r() * 2), nat: P.pickNat(r, me.country) });
       if (gem) { y.gem = true; P.news(g, `Os treinadores da base não param de falar de ${y.name} (${y.age} anos): pode ser uma joia rara, daquelas que aparecem uma vez na vida.`, 'good'); if (P.flash) P.flash(g, { pri: 3, ttl: 2, kicker: 'Categorias de base', head: `Nasce uma joia: ${y.name}, ${y.age} anos`, dek: `Os treinadores da base do ${me.name} não falam de outra coisa. Pode ser daqueles que aparecem uma vez na vida.` }); }
       g.y.squad[y.id] = y; fresh.push(y.name);
     }
