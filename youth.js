@@ -64,6 +64,14 @@
   };
   const STAR_WAGE = [0, 8000, 20000, 45000, 90000, 160000];
   const STAR_ERR = [0, 12, 9, 6, 4, 2]; // margem do potencial no relatório
+  // Duração da missão: mais tempo = relatório maior, jovens um pouco melhores e avaliação mais precisa
+  P.MISSION_DUR = {
+    3: { n: '3 meses', q: 0, err: 1, gem: 1, desc: 'relatórios frequentes' },
+    6: { n: '6 meses', q: 1.5, err: 0.8, gem: 1.25, desc: 'mais jovens e um pouco melhores' },
+    9: { n: '9 meses', q: 3, err: 0.6, gem: 1.5, desc: 'o maior e mais preciso relatório' }
+  };
+  const durOf = (m) => P.MISSION_DUR[(m && m.dur) || 3] || P.MISSION_DUR[3];
+  P.missionWeeks = (g, m) => Math.round(((m && m.dur) || 3) * g.cal.length / 12);
 
   // ---------- Geração ----------
   function youthPlayer(r, opts) {
@@ -175,17 +183,18 @@
     const legacy = m.cont === undefined; // missões antigas (região + foco)
     const reg = legacy ? P.REGIONS[m.region] : { n: m.nat ? P.countryName(m.nat) : m.cont ? P.CONTINENTS[m.cont].n : 'Mundo inteiro', c: m.nat ? [m.nat] : contCountries(m.cont) };
     const foc = legacy ? P.FOCUS[m.focus] : { n: posLabel(m.pos), pos: null, b: {} };
-    const n = 1 + Math.floor(s.stars / 2);
+    const D = durOf(m), months = m.dur || 3;
+    const n = (1 + Math.floor(s.stars / 2) + 1) * (months / 3);
     const players = [], gems = [];
     for (let i = 0; i < n; i++) {
       const pos = legacy ? (foc.pos ? P.pick(r, foc.pos) : randomPos(r)) : (posPick(r, m.pos) || randomPos(r));
       // o talento que aceita vir acompanha o tamanho do clube (reputação); olheiro melhor acha um pouco acima
       const base = P.levelFromRep(P.club(g, g.user).rep) * 5 + 6;
-      const gem = r() < P.YOUTH.gemChance;
-      const potO = gem ? gemPot(r) : base + 1.5 + (s.stars - 2.5) * 3 + P.gauss(r) * 6 + (r() < 0.04 ? 8 : 0);
+      const gem = r() < P.YOUTH.gemChance * D.gem;
+      const potO = gem ? gemPot(r) : base + 1.5 + D.q + (s.stars - 2.5) * 3 + P.gauss(r) * 6 + (r() < 0.04 ? 8 : 0);
       const p = youthPlayer(r, { pos, potO, nat: P.pick(r, reg.c), boost: foc.b });
       if (gem) { p.gem = true; gems.push(p.name); }
-      const err = STAR_ERR[s.stars];
+      const err = Math.max(1, Math.round(STAR_ERR[s.stars] * D.err));
       const off = Math.round((r() * 2 - 1) * err * 0.7);
       p.lo = P.clamp(p.potO - err + off, 35, 99); p.hi = P.clamp(p.potO + err + off, p.lo + 2, 99);
       if (p.potO < p.lo) p.lo = p.potO; if (p.potO > p.hi) p.hi = p.potO;
@@ -193,7 +202,7 @@
       p.fee = Math.max(50000, Math.round(Math.pow(Math.max(mid - 45, 2), 2) * 900 / 10000) * 10000);
       players.push(p);
     }
-    g.y.reports.unshift({ id: P.uid('r'), sid: s.id, scout: s.name, stars: s.stars, region: m.region, focus: m.focus, lbl: P.missionLabel(m), s: g.season, w: g.week + 1, players });
+    g.y.reports.unshift({ id: P.uid('r'), sid: s.id, scout: s.name, stars: s.stars, region: m.region, focus: m.focus, lbl: P.missionLabel(m) + ' · ' + D.n, s: g.season, w: g.week + 1, players });
     if (g.y.reports.length > 8) g.y.reports.length = 8;
     P.news(g, `Relatório do olheiro ${s.name}: ${n} ${n === 1 ? 'jovem' : 'jovens'} (${foc.n.toLowerCase()}, ${reg.n}). Veja em Sub-20 › Relatórios.`, 'good');
     if (gems.length) { P.news(g, `${s.name} está empolgado: "${gems.join(' e ')} pode ser uma joia rara, daquelas que aparecem uma vez na vida." Veja em Sub-20 › Relatórios.`, 'good'); if (P.flash) P.flash(g, { pri: 3, ttl: 2, kicker: 'Olheiros · ' + reg.n, head: `Olheiro descobre joia: ${gems[0]}`, dek: `${s.name} voltou empolgado da missão: "pode ser uma joia rara, daquelas que aparecem uma vez na vida". O relatório está no Sub-20.` }); }
@@ -204,7 +213,11 @@
     if (!g.y) P.ensureYouth(g);
     if (step.t === 'lg') playYouthRound(g, step);
     for (const s of g.y.staff) {
-      if (s.role === 'olheiro' && s.mission && g.week + 1 >= s.mission.next) { makeReport(g, s); s.mission.next += P.YOUTH.reportEvery; }
+      if (s.role !== 'olheiro' || !s.mission) continue;
+      const m = s.mission;
+      if (m.left == null) m.left = Math.max(1, Math.min(P.missionWeeks(g, m), (m.next || 0) - g.week - 1)); // missões antigas
+      m.left--;
+      if (m.left <= 0) { makeReport(g, s); m.left = P.missionWeeks(g, m); }
     }
     if (P.staffWeek) P.staffWeek(g);
     // salários da base e da equipe técnica
@@ -350,7 +363,7 @@
         <div class="plist">${rep.players.map((p) => `<div class="prow" style="grid-template-columns:44px 1fr auto"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
           <span class="nm"><b>${esc(p.name)}${p.gem ? '<span class="chip gem">Joia rara</span>' : ''}</b><small>${esc(P.countryName(p.nat))} · ${p.age} anos · atual ~${P.ovr(p)}</small></span>
           <span class="potbox"><span class="pot">${p.lo}-${p.hi}</span>${p.signed ? '<span class="chip xi">Contratado</span>' : `<button class="btn sm" data-a="ySign" data-r="${rep.id}" data-id="${p.id}">${P.money(p.fee)}</button>`}</span></div>`).join('')}</div></div>`).join('')
-        : `<p class="empty">Nenhum relatório ainda. Contrate um olheiro e envie-o numa missão: o primeiro relatório chega em ${P.YOUTH.reportEvery} semanas.</p>`;
+        : `<p class="empty">Nenhum relatório ainda. Contrate um olheiro e envie-o numa missão: o relatório chega ao fim da missão (3, 6 ou 9 meses, você escolhe).</p>`;
     }
     return `<div class="card"><div class="head"><h2>Sub-20</h2><button class="btn sm ghost" data-a="go" data-v="elenco">‹ Elenco</button></div>
       <div style="margin-bottom:12px">${tabs}</div>${body}</div>`;
@@ -359,7 +372,7 @@
   const natOpts = (cont, cur) => `<option value="">${cont ? 'Todo o continente (' + esc(P.CONTINENTS[cont].n) + ')' : 'Qualquer país'}</option>` +
     contCountries(cont).map((k) => [k, P.COUNTRIES[k].n]).sort((a, b) => a[1].localeCompare(b[1])).map(([k, n]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${esc(n)}</option>`).join('');
   function missionForm(s, m) {
-    const pos = (m && m.pos) || 'any', cont = (m && m.cont) || '', nat = (m && m.nat) || '';
+    const pos = (m && m.pos) || 'any', cont = (m && m.cont) || '', nat = (m && m.nat) || '', dur = String((m && m.dur) || 3);
     return `<div class="form-grid mission-form" style="margin:8px 0">
       <div class="field"><label class="label" for="ym-pos-${s.id}">Posição ou área</label><select class="sel" id="ym-pos-${s.id}">
         <option value="any" ${pos === 'any' ? 'selected' : ''}>Qualquer posição</option>
@@ -368,6 +381,7 @@
       <div class="field"><label class="label" for="ym-cont-${s.id}">Continente</label><select class="sel" id="ym-cont-${s.id}" data-c="ymCont" data-id="${s.id}">
         <option value="">Mundo inteiro</option>${Object.entries(P.CONTINENTS).map(([k, c]) => `<option value="${k}" ${cont === k ? 'selected' : ''}>${esc(c.n)}</option>`).join('')}</select></div>
       <div class="field"><label class="label" for="ym-nat-${s.id}">País</label><select class="sel" id="ym-nat-${s.id}">${natOpts(cont, nat)}</select></div>
+      <div class="field"><label class="label" for="ym-dur-${s.id}">Duração</label><select class="sel" id="ym-dur-${s.id}">${Object.entries(P.MISSION_DUR).map(([k, d]) => `<option value="${k}" ${dur === k ? 'selected' : ''}>${d.n} · ${esc(d.desc)}</option>`).join('')}</select></div>
     </div>`;
   }
   function scoutCard(g, s) {
@@ -377,7 +391,7 @@
     return `<div class="report"><div class="row" style="gap:8px"><b style="flex:1;min-width:0">${esc(s.name)} <span class="stars">${'★'.repeat(s.stars)}<span class="off">${'★'.repeat(5 - s.stars)}</span></span></b><span class="muted" style="font-size:.8rem">${P.money(s.wage)}/mês</span></div>
       ${edit ? missionForm(s, m && m.cont !== undefined ? m : null) + `
         <div class="row"><button class="btn sm danger" data-a="yFire" data-id="${s.id}">Demitir</button><span class="spacer"></span><button class="btn sm primary" data-a="yMission" data-id="${s.id}">Enviar em missão</button></div>`
-      : `<div class="muted" style="font-size:.88rem;margin:4px 0 8px">Em missão: <b>${esc(P.missionLabel(m))}</b> · próximo relatório na semana ${m.next}</div>
+      : `<div class="muted" style="font-size:.88rem;margin:4px 0 8px">Em missão de ${esc(durOf(m).n)}: <b>${esc(P.missionLabel(m))}</b> · relatório em ${m.left != null ? m.left : Math.max(1, (m.next || 0) - A.g.week - 1)} ${(m.left || 2) === 1 ? 'semana' : 'semanas'} (depois ele continua na mesma missão)</div>
         <div class="row"><button class="btn sm danger" data-a="yFire" data-id="${s.id}">Demitir</button><span class="spacer"></span><button class="btn sm" data-a="yEdit" data-id="${s.id}">Mudar missão</button></div>`}</div>`;
   }
   A.youthSheet = function (id) {
@@ -436,8 +450,9 @@
     yMission(d) {
       const g = A.g, s = g.y.staff.find((x) => x.id === d.id);
       const v = (k) => document.getElementById(`ym-${k}-${s.id}`).value;
-      s.mission = { pos: v('pos'), cont: v('cont'), nat: v('nat'), next: g.week + 1 + P.YOUTH.reportEvery };
-      A.st.yb.edit = null; A.save(); A.render(); A.toast(`Missão definida. Relatório na semana ${s.mission.next}.`);
+      s.mission = { pos: v('pos'), cont: v('cont'), nat: v('nat'), dur: Number(v('dur')) || 3 };
+      s.mission.left = P.missionWeeks(g, s.mission);
+      A.st.yb.edit = null; A.save(); A.render(); A.toast(`Missão de ${durOf(s.mission).n} definida. Relatório em ${s.mission.left} semanas.`);
     },
     ySign(d) {
       const g = A.g, rep = g.y.reports.find((x) => x.id === d.r), p = rep && rep.players.find((x) => x.id === d.id);
