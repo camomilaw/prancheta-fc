@@ -435,7 +435,7 @@
     if (!g) return '';
     if (p.clubId === g.user) return p.loan ? '' : `<button class="btn" data-a="mkList" data-id="${p.id}">${p.listed ? 'Tirar da venda' : 'Colocar à venda'}</button><button class="btn" data-a="mkLoanList" data-id="${p.id}">${p.loanList ? 'Tirar da lista de empréstimo' : 'Lista de empréstimo'}</button>`;
     const free = !p.clubId;
-    return `<button class="btn primary" data-a="offerOpen" data-id="${p.id}">${free ? 'Contratar' : 'Fazer proposta'}</button>${free || p.loan ? '' : `<button class="btn" data-a="loanOpen" data-id="${p.id}">Empréstimo</button>`}`;
+    return `<button class="btn primary" data-a="offerOpen" data-id="${p.id}">${free ? 'Contratar' : 'Fazer proposta'}</button><button class="btn" data-a="cmpOpen" data-id="${p.id}">Comparar</button>${free || p.loan ? '' : `<button class="btn" data-a="loanOpen" data-id="${p.id}">Empréstimo</button>`}`;
   };
 
   // ---------- Ações ----------
