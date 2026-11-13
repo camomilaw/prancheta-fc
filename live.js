@@ -98,6 +98,7 @@
     clearTimeout(A._lvt);
     L.res = P.endWeek(A.g, L.ctx);
     L.done = true; L.pause = null;
+    if (L.m.pen && L.m.penSeq && L.speed === 1 && P.playShootout) L.shoot = true;
     A.save();
     draw();
   }
@@ -171,7 +172,7 @@
     const st = L.st, m = L.m, done = L.done;
     const tot = st.posAcc[0] + st.posAcc[1];
     const poss = tot ? Math.round(st.posAcc[0] / tot * 100) : 50;
-    const clock = done ? (m.pen ? `Fim de jogo · pênaltis ${m.pen[0]} × ${m.pen[1]}` : 'Fim de jogo') : L.pause && L.pause.reason === 'Intervalo' ? 'Intervalo' : L.T === 0 ? 'Bola rolando' : L.T <= 90 ? `${L.T}'` : `90+${L.T - 90}'`;
+    const clock = done && L.shoot ? 'Disputa de pênaltis' : done ? (m.pen ? `Fim de jogo · pênaltis ${m.pen[0]} × ${m.pen[1]}` : 'Fim de jogo') : L.pause && L.pause.reason === 'Intervalo' ? 'Intervalo' : L.T === 0 ? 'Bola rolando' : L.T <= 90 ? `${L.T}'` : `90+${L.T - 90}'`;
     const evs = st.ev.filter((e) => (e.t !== 'int' || L.T > 45) && !L.pend.has(e)).slice().reverse();
     const Tshow = done ? 96 : L.T;
     const others = L.others.map((o) => {
@@ -180,7 +181,7 @@
       return A.ogRow({ h: o.h, a: o.a }, h, a, { flash, pen: done ? o.pen : null });
     }).join('');
     let verdict = '';
-    if (done && L.ko) verdict = `<p class="verdict ${m.w === A.g.user ? 'good' : 'bad'}">${m.w === A.g.user ? 'Classificado!' : 'Eliminado.'}</p>`;
+    if (done && L.ko && !L.shoot) verdict = `<p class="verdict ${m.w === A.g.user ? 'good' : 'bad'}">${m.w === A.g.user ? 'Classificado!' : 'Eliminado.'}</p>`;
     const controls = done ? '' : L.pause ? '<span class="chip sus" style="font-size:.75rem">Pausado</span>'
       : `<div class="seg"><button class="${L.speed === 1 ? 'on' : ''}" data-a="lvSpeed" data-s="1">Normal</button><button class="${L.speed === 3 ? 'on' : ''}" data-a="lvSpeed" data-s="3">Rápido</button></div><button class="btn sm" data-a="lvPause">Pausar</button><button class="btn sm" data-a="lvSkip">Pular</button>`;
     const label = L.step.t === 'lg' ? `Outros jogos da ${club(A.g.user).div}ª divisão` : L.step.t === 'cup' || L.step.t === 'sc' ? 'Outros jogos da fase' : L.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g)}` : 'Playoffs';
@@ -200,7 +201,8 @@
       ${A.boardHTML(m, st.goals[0] - L.hide[0], st.goals[1] - L.hide[1], clock, { pos: poss })}
       ${L.hl ? `<div class="hl-wrap"><div class="row" style="gap:8px"><span class="label" style="flex:1">Melhores momentos · ${L.hl.x ? '90+' + L.hl.x : L.hl.m}'</span><button class="btn sm" data-a="lvHlSkip">Pular lance</button></div><div id="hl-slot"></div></div>` : ''}
       ${verdict}
-      ${done && A.ratingsHTML ? A.ratingsHTML(m) : ''}
+      ${L.shoot ? '<div id="pen-slot"></div>' : ''}
+      ${done && !L.shoot && A.ratingsHTML ? A.ratingsHTML(m) : ''}
       ${L.pause ? pausePanel(L) : ''}
       ${A.matchStatsHTML(A.statsFrom({ pos: poss, sh: st.shots, sot: st.sot, xg: st.xg, fo: st.fouls, co: st.corners }, st.ev))}
       <ul class="feed" aria-live="polite">${evs.map((e) => A.evLine(e, m)).join('')}</ul>
@@ -208,6 +210,16 @@
       ${done && P.teamTalkPanel ? P.teamTalkPanel() : ''}
       ${done ? '<div class="row"><button class="btn" data-a="lvClose" data-v="tabela">Ver tabela</button><span class="spacer"></span><button class="btn primary" data-a="lvClose" data-v="inicio">Continuar</button></div>' : ''}
     </div>`;
+    // disputa de pênaltis: o desenho continua vivo mesmo se a tela for redesenhada
+    if (L.shoot) {
+      const slot = document.getElementById('pen-slot');
+      if (L.pkEl) slot.replaceWith(L.pkEl);
+      else {
+        L.pkEl = slot;
+        const names = {}; (L.m.penSeq || []).forEach((k) => { const p = k.p && A.g.db.players[k.p]; if (p) names[k.p] = p.name; });
+        P.playShootout(slot, { seq: L.m.penSeq, clubs: [club(L.m.h), club(L.m.a)], names, onDone: () => { if (A.live === L) { L.shoot = false; L.pkEl = null; draw(); } } });
+      }
+    }
     // o campinho do lance é o mesmo nó a cada redesenho (a animação continua)
     const slot = el.querySelector('#hl-slot');
     if (slot && L.hlHost) slot.appendChild(L.hlHost);

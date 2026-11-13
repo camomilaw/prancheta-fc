@@ -1074,3 +1074,32 @@ table { font-family: var(--f-body); }
 .cmp-l.win-a { color: var(--accent); } .cmp-r.win-b { color: var(--info); }
 .cmp-radar { aspect-ratio: 220 / 210; height: auto; flex: none; }
 .cmp-row { grid-template-columns: 92px 1fr 92px; } .cmp-l, .cmp-r { white-space: nowrap; font-size: .85rem; }
+
+/* Modo torneio */
+.tour-cta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 1px dashed var(--ink); padding: 12px; }
+.tour-cta b { display: block; font-family: var(--f-display); font-weight: 900; font-size: 1.15rem; }
+.tour-cta small { font-style: italic; color: var(--muted); }
+.tour-fmt { display: grid; gap: 8px; }
+.tour-fmt button { text-align: left; border: 1px solid var(--line); background: transparent; padding: 10px 12px; font: inherit; color: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.tour-fmt button b { font-family: var(--f-display); font-weight: 900; font-size: 1.05rem; }
+.tour-fmt button small { font-style: italic; color: var(--muted); }
+.tour-fmt button.on { border: 2px solid var(--accent); background: var(--hi); }
+.tour-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tour-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--ink); padding: 2px 4px 2px 6px; font-family: var(--f-label); font-size: .78rem; letter-spacing: .04em; }
+.tour-chip button { border: 0; background: none; color: var(--bad); font-size: 1rem; line-height: 1; padding: 0 2px; cursor: pointer; }
+.tour-champ { display: flex; gap: 14px; align-items: center; border-top: 3px double var(--ink); border-bottom: 3px double var(--ink); padding: 12px 0; }
+.tour-champ b { display: block; font-family: var(--f-display); font-weight: 900; font-size: 1.6rem; line-height: 1.05; }
+.tour-champ small { font-style: italic; color: var(--muted); }
+.tm-imp { border-color: var(--accent); }
+
+/* Disputa de pênaltis */
+.pk-box { display: flex; flex-direction: column; gap: 8px; }
+.pk-score { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pk-team { display: flex; align-items: center; gap: 6px; }
+.pk-team b { font-family: var(--f-num); font-size: 1.4rem; }
+.pk-dots { display: inline-flex; gap: 3px; flex-wrap: wrap; max-width: 110px; }
+.pk-dots i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--ink); }
+.pk-dots i.g { background: var(--good); } .pk-dots i.x { background: var(--bad); }
+.pk-svg { width: 100%; aspect-ratio: 100 / 70; height: auto; display: block; border-radius: 2px; flex: none; }
+.pk-cap { text-align: center; font-family: var(--f-display); font-size: 1.1rem; min-height: 1.5em; }
+.pk-cap .pk-g { color: var(--good); } .pk-cap .pk-x { color: var(--bad); }

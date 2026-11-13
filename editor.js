@@ -82,6 +82,7 @@
         <p class="muted" style="margin:0;font-size:.85rem">A reputação define o nível dos jogadores gerados para o clube (novos jogadores e jovens da base).</p>
       </div>
       <div class="card"><div class="head"><span class="label">Elenco · ${ps.length} jogadores</span></div>
+        ${A.g ? `<div class="row" style="margin-bottom:10px;gap:8px"><button class="btn sm" data-a="edTeamFix" data-cid="${cid}" data-k="inj">Curar lesionados</button><button class="btn sm" data-a="edTeamFix" data-cid="${cid}" data-k="cond">Energia 100%</button><button class="btn sm" data-a="edTeamFix" data-cid="${cid}" data-k="mor">Moral máxima</button></div>` : ''}
         <div class="row" style="margin-bottom:10px">
           <select id="newpos" class="sel" aria-label="Posição do novo jogador">${P.POS.map((p) => `<option value="${p}">${p} · ${P.POS_NAME[p]}</option>`).join('')}</select>
           <button class="btn" data-a="edAddPlayer" data-cid="${cid}">Criar jogador</button>
@@ -117,6 +118,9 @@
           <div class="field"><label class="label" for="pf-club">Clube</label><select id="pf-club" data-c="pf" data-k="clubId">${clubOpts.map((x) => `<option value="${x.id}" ${p.clubId === x.id ? 'selected' : ''}>${x.div}ª · ${esc(x.name)}</option>`).join('')}</select></div>
           ${A.g ? `<div class="field"><label class="label" for="pf-wage">Salário mensal (R$)</label><input id="pf-wage" type="number" min="0" step="500" data-c="pf" data-k="wage" value="${p.wage || 0}"></div>
           <div class="field"><label class="label" for="pf-ctr">Contrato até</label><input id="pf-ctr" type="number" min="${A.g.season}" max="${A.g.season + 6}" data-c="pf" data-k="ctr" value="${p.ctr || A.g.season}"></div>` : ''}
+          ${A.g ? `<div class="field"><label class="label" for="pf-cond">Energia (condição, 0-100)</label><input id="pf-cond" type="number" min="0" max="100" data-c="pf" data-k="cond" value="${Math.round(p.cond)}"></div>
+          <div class="field"><label class="label" for="pf-mor">Moral (0-100)</label><input id="pf-mor" type="number" min="0" max="100" data-c="pf" data-k="mor" value="${Math.round(p.mor)}"></div>
+          <div class="field"><label class="label" for="pf-inj">Lesão (semanas fora)</label><input id="pf-inj" type="number" min="0" max="40" data-c="pf" data-k="inj" value="${p.inj || 0}"></div>` : ''}
           <div class="field"><label class="label" for="pf-pot">Potencial (1-20)</label><input id="pf-pot" type="number" min="1" max="20" step="0.5" data-c="pf" data-k="pot" value="${p.pot}"></div>
         </div>
         ${Object.entries(groups).map(([g, list]) => `<div><div class="label" style="margin-bottom:6px">${g}</div><div class="attr-edit">${list.map((at) => `<label for="pa-${at.k}"><span>${at.n}</span><input id="pa-${at.k}" type="number" min="1" max="20" inputmode="numeric" data-c="pa" data-k="${at.k}" value="${p.a[at.k]}"></label>`).join('')}</div></div>`).join('')}
@@ -188,6 +192,12 @@
       changed([cid]);
       A.st.confirm = null; A.st.ed = Object.assign({}, A.st.ed, { v: 'club', cid }); A.render(); A.toast('Jogador removido');
     },
+    edTeamFix(d) {
+      const ps = Object.values(db().players).filter((p) => p.clubId === d.cid);
+      if (d.k === 'inj') { let n = 0; ps.forEach((p) => { if (p.inj) n++; p.inj = 0; delete p.injN; }); changed([]); A.toast(n ? `${n} ${n === 1 ? 'jogador curado' : 'jogadores curados'}` : 'Ninguém estava lesionado'); return; }
+      if (d.k === 'cond') { ps.forEach((p) => { p.cond = 100; }); changed([]); A.toast('Elenco com energia total'); return; }
+      if (d.k === 'mor') { ps.forEach((p) => { p.mor = 100; p.unh = false; }); changed([]); A.toast('Moral do elenco no máximo'); }
+    },
     edHeal(d) { const p = db().players[d.id]; p.inj = 0; p.susp = 0; p.cond = 100; p.mor = Math.max(p.mor, 70); changed([]); A.toast(`${p.name} pronto para jogar`); },
     edExport() { A.st.edio = 'export'; A.render(); },
     edExportPatch() { A.st.edio = 'patch'; A.render(); },
@@ -235,6 +245,8 @@
       const p = db().players[A.st.ed.pid], k = el.dataset.k;
       if (k === 'name') { p.name = el.value.trim() || p.name; el.value = p.name; changed([]); return; }
       if (k === 'age') { p.age = P.clamp(Math.round(Number(el.value) || p.age), 15, 45); el.value = p.age; changed([]); return; }
+      if (k === 'cond' || k === 'mor') { p[k] = P.clamp(Math.round(Number(el.value) || 0), 0, 100); el.value = p[k]; changed([]); return; }
+      if (k === 'inj') { p.inj = P.clamp(Math.round(Number(el.value) || 0), 0, 40); if (!p.inj) delete p.injN; el.value = p.inj; changed([]); return; }
       if (k === 'xp') { p.xp = P.clamp(Math.round(Number(el.value) || P.xp(p)), 1, 20); el.value = p.xp; changed([]); return; }
       if (k === 'pot') { p.pot = P.clamp(Number(el.value) || p.pot, 1, 20); el.value = p.pot; changed([]); return; }
       if (k === 'nat') { p.nat = el.value; changed([]); return; }

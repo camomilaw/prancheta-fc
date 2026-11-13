@@ -611,19 +611,22 @@
       return first ? [first].concat(ks.filter((p) => p !== first)) : ks;
     });
     const gks = L.map((lu) => { const s = lu.on.find((x) => !x.off && x.pos === 'GOL'); return s ? s.p.a.ref + (hasT(s.p, 'pegapen') ? 3 : 0) : 6; });
-    const score = [0, 0];
+    const score = [0, 0], seq = [];
     const kick = (side, i) => {
       const ks = kickers[side];
       const p = ks.length ? ks[i % ks.length] : null;
       const q = p ? P.SP_SKILL.pen(p) : 8;
       const nerve = p && hasT(p, 'pressao') ? 0.06 : p && hasT(p, 'nervoso') ? -0.08 : 0;
       const prob = P.clamp(P.TUNING.penaltyBase + (q - gks[1 - side]) * 0.015 + nerve, 0.5, 0.93);
-      if (rnd() < prob) score[side]++;
+      const goal = rnd() < prob;
+      if (goal) score[side]++;
+      seq.push({ s: side, p: p ? p.id : null, goal, how: goal ? '' : (rnd() < 0.35 ? 'miss' : 'save') });
     };
     for (let i = 0; i < 5; i++) { kick(0, i); kick(1, i); }
     let i = 5;
     while (score[0] === score[1] && i < 40) { kick(0, i); kick(1, i); i++; }
-    if (score[0] === score[1]) score[rnd() < 0.5 ? 0 : 1]++;
+    if (score[0] === score[1]) { const s = rnd() < 0.5 ? 0 : 1; score[s]++; seq.push({ s, p: null, goal: true, how: '' }); }
+    score.seq = seq;
     return score;
   };
 
@@ -757,7 +760,7 @@
     const m = it.m;
     m.hg = r.hg; m.ag = r.ag; m.ev = r.ev; m.st = r.st; m.notes = r.notes; m.done = true;
     if (it.ko) {
-      if (r.hg === r.ag) m.pen = P.penalties(r.L);
+      if (r.hg === r.ag) { const pen = P.penalties(r.L); m.pen = [pen[0], pen[1]]; m.penSeq = pen.seq; }
       m.w = koWinner(m);
     }
     delete r.L;

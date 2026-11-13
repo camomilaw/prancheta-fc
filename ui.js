@@ -111,7 +111,7 @@
     A.reg = [];
     const root = document.getElementById('root');
     if (!A.g) {
-      root.innerHTML = A.setup.editing ? P.editor.page(true) : A.setup.creating ? renderCreate() : renderSetup();
+      root.innerHTML = A.setup.editing ? P.editor.page(true) : A.setup.creating ? renderCreate() : A.setup.touring && P.tourView ? P.tourView() : renderSetup();
       return;
     }
     const g = A.g, me = club(g.user);
@@ -164,6 +164,8 @@
         <div class="jr-tag">Monte o time. Suba a pirâmide. Escreva a sua história.</div>
       </header>
       ${P.slotsCard ? P.slotsCard() : ''}
+      ${P.teamImportPanel ? P.teamImportPanel() : ''}
+      ${P.tourEntry ? P.tourEntry() : ''}
       <section class="jr-classif" aria-labelledby="h-new">
         <div class="jr-classif-h"><h2 id="h-new">Procura-se técnico</h2><span>Classificados</span></div>
         <p>Clube da Ultraliga contrata. 160 clubes, 17 países, 8 divisões. Paga-se em glória. Interessados preencher abaixo.</p>
@@ -197,7 +199,7 @@
   }
   function importBox() {
     return `<div class="card" style="background:var(--surface-2);display:flex;flex-direction:column;gap:10px">
-      <b>Importar patch, banco de dados ou carreira</b>
+      <b>Importar time, patch, banco de dados ou carreira</b>
       <p class="muted" style="margin:0">Escolha um arquivo .json (como o patch de clubes reais) ou cole o texto abaixo.</p>
       <input type="file" id="impfile" accept=".json,.txt,application/json" data-c="impFile" aria-label="Arquivo para importar">
       <div class="field"><textarea id="imptext" placeholder="Cole aqui o JSON"></textarea></div>
@@ -863,6 +865,8 @@
         <div><button class="btn primary" data-a="go" data-v="editor">Abrir editor</button></div></div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Carreira</h2></div>
         <div class="muted">${esc(g.manager)} · ${esc(club(g.user).name)} · temporada ${g.season}</div>
+        <div class="row"><button class="btn" data-a="teamDownload">Baixar meu time (arquivo)</button></div>
+        <p class="muted" style="margin:0;font-size:.82rem">Mande o arquivo para outras pessoas: elas podem começar uma carreira com ele, enfrentá-lo ou usá-lo no Modo Torneio (Importar, na tela inicial).</p>
         ${g.hist.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>Div</th><th class="n">Pos</th><th>Resultado</th><th class="hide-sm">Campeão</th><th class="hide-sm">Copa</th></tr></thead><tbody>${g.hist.slice().reverse().map((h) => `<tr><td>${h.season}</td><td>${h.div}ª</td><td class="n">${ord(h.pos)}</td><td>${esc(h.result)}${h.cupMine ? ' · copa' : ''}</td><td class="hide-sm">${esc(h.champ)}</td><td class="hide-sm">${esc(h.cup)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty" style="padding:0">O histórico aparece ao fim da primeira temporada.</p>'}
       </div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Salvar e transferir</h2></div>
@@ -982,6 +986,13 @@
   // Reconhece patch, banco ou carreira e aplica
   A.importAny = function (text, inGame) {
     const obj = JSON.parse(text);
+    if (obj && obj.type === 'team' && Array.isArray(obj.players)) {
+      if (!obj.players.length) throw new Error('o arquivo não tem jogadores');
+      P.teamLibAdd(obj);
+      if (inGame) return `Time "${obj.name}" guardado. Use na tela inicial (nova carreira ou Modo Torneio).`;
+      A.setup.teamImp = obj; A.setup.teamDiv = null; A.setup.teamRep = null;
+      return `Time "${obj.name}" recebido`;
+    }
     if (obj && obj.type === 'patch') {
       const db = A.db();
       const n = P.applyPatch(db, obj, A.g);
