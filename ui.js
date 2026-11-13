@@ -493,7 +493,7 @@
         <div style="text-align:right"><div class="label">Força</div><div class="big-ovr">${P.ovr(p)}</div></div></div>
       <div class="kv">
         <div><span class="label">Valor</span><b>${P.money(P.value(p))}</b></div>
-        ${P.potOvr ? `<div><span class="label">Potencial</span><b>${p.age <= 24 ? P.potOvr(p) : '—'}${p.potT ? `<span class="pot-t ${p.potT > 0 ? 'up' : 'dn'}">${p.potT > 0 ? '▲' : '▼'}${Math.abs(p.potT)}</span>` : ''}</b></div>` : ''}
+        ${P.potOvr ? `<div><span class="label">Potencial</span><b>${p.age <= 24 ? (P.potBest ? (() => { const b = P.potBest(p); return b.v + (b.pos !== p.pos ? ` <small class="muted" style="font-size:.7rem">como ${b.pos}</small>` : ''); })() : P.potOvr(p)) : '—'}${p.potT ? `<span class="pot-t ${p.potT > 0 ? 'up' : 'dn'}">${p.potT > 0 ? '▲' : '▼'}${Math.abs(p.potT)}</span>` : ''}</b></div>` : ''}
         <div><span class="label">Salário</span><b>${P.money(p.wage || 0)}<span class="muted" style="font-size:.75rem">/mês</span></b></div>
         <div><span class="label">Contrato até</span><b class="${g && p.ctr <= g.season ? 'v2' : ''}">${p.ctr || '—'}</b></div>
         <div><span class="label">Condição</span><b class="${p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : ''}">${Math.round(p.cond)}%</b></div>

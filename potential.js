@@ -21,6 +21,13 @@
   };
   // Potencial na escala de força (1-99)
   P.potOvr = (p) => Math.max(P.ovr(p), Math.round(p.potO || (p.pot || 0) * 5));
+  // Potencial na melhor posição: quem rende mais em outra posição (ex.: lateral que joga de zagueiro)
+  // tem o teto deslocado pela mesma diferença, então nunca fica abaixo da força atual em lugar nenhum
+  P.potBest = function (p) {
+    let best = { pos: p.pos, v: P.ovr(p) };
+    for (const pos of P.POS) { const v = P.ovrAt(p, pos); if (v > best.v) best = { pos, v }; }
+    return { v: P.potOvr(p) + (best.v - P.ovr(p)), pos: best.pos };
+  };
 
   // Jogos disputados por cada clube até agora na temporada
   function clubGames(g) {
