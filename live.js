@@ -131,7 +131,7 @@
       const showP = s.p.id === L.sel.out && inSel ? inSel : p;
       const f = P.fitP(showP, s.pos);
       const mark = s.injured ? '<i class="mk inj">+</i>' : lu.yel[p.id] ? '<i class="mk yc"></i>' : '';
-      return `<button class="slot ${L.sel.out === p.id ? 'sel' : ''} ${showP !== p ? 'swap' : ''}" style="${pos}" data-a="lvOut" data-id="${p.id}" ${left <= 0 ? 'disabled' : ''} aria-label="${esc(p.name)}, ${s.pos}, ${Math.round(p.cond)}% físico${s.injured ? ', lesionado' : ''}">
+      return `<button class="slot ${L.sel.out === p.id ? 'sel' : ''} ${showP !== p ? 'swap' : ''}" style="${pos}" data-a="lvOut" data-id="${p.id}" ${left <= 0 && s.injured ? 'disabled' : ''} aria-label="${esc(p.name)}, ${s.pos}, ${Math.round(p.cond)}% físico${s.injured ? ', lesionado' : ''}">
           <span class="dot ${s.injured ? 'off' : f < 1 ? 'fit' : ''}" style="--c:${condC(showP.cond)}">${P.ovrAt(showP, s.pos)}${mark}</span>
           <span class="nm">${esc(short(showP.name))}</span><span class="ps">${s.pos}</span></button>`;
     }).join('');
@@ -144,11 +144,11 @@
         <span class="ovr ${f < 1 ? 'fit' : ''}">${P.ovrAt(p, pos)}</span></button>`;
     }).join('') || '<p class="empty">Banco vazio.</p>';
     let hint;
-    if (left <= 0) hint = 'Todas as substituições já foram feitas.';
+    if (left <= 0) hint = outSel ? `Toque em outro jogador em campo para trocar de posição com ${esc(outSel.p.name)}.` : 'Substituições esgotadas. Toque em dois jogadores em campo para trocá-los de posição.';
     else if (outSel && inSel) hint = `Sai <b>${esc(outSel.p.name)}</b>, entra <b>${esc(inSel.name)}</b> como ${outSel.pos}.`;
-    else if (outSel) hint = `Escolha no banco quem entra como ${outSel.pos}.`;
+    else if (outSel) hint = `Escolha no banco quem entra como ${outSel.pos}, ou toque em outro jogador em campo para trocar os dois de posição.`;
     else if (inSel) hint = `Toque no campo em quem sai para ${esc(inSel.name)} entrar.`;
-    else hint = 'Toque em quem sai no campo e em quem entra no banco.';
+    else hint = 'Toque em quem sai no campo e em quem entra no banco. Para trocar posições, toque em dois jogadores em campo.';
     return `<div class="card pause-card">
       <div class="row"><b style="flex:1">${esc(L.pause.reason)}</b><span class="muted" style="font-size:.85rem">Substituições: ${lu.subs}/5</span></div>
       ${L.pause.t === 'lesao' ? '<p class="muted" style="margin:0;font-size:.88rem">Se não trocar o lesionado, seu time segue com um a menos.</p>' : ''}
@@ -230,7 +230,16 @@
       L.T = L.st.end;
       finish();
     },
-    lvOut(d) { const L = A.live; L.sel.out = L.sel.out === d.id ? null : d.id; L.msg = ''; draw(); },
+    lvOut(d) {
+      const L = A.live;
+      // com um jogador de campo já escolhido (e nenhum reserva), tocar em outro troca os dois de posição
+      if (L.sel.out && L.sel.out !== d.id && !L.sel.in) {
+        const a = A.g.db.players[L.sel.out], b = A.g.db.players[d.id];
+        const err = P.simSwap(L.st, L.side, L.sel.out, d.id);
+        if (!err) { L.msg = `${a.name} e ${b.name} trocaram de posição.`; L.sel = {}; draw(); return; }
+      }
+      L.sel.out = L.sel.out === d.id ? null : d.id; L.msg = ''; draw();
+    },
     lvIn(d) { const L = A.live; L.sel.in = L.sel.in === d.id ? null : d.id; L.msg = ''; draw(); },
     lvSub() {
       const L = A.live, err = P.simSub(L.st, L.side, L.sel.out, L.sel.in);

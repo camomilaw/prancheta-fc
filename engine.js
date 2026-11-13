@@ -552,6 +552,15 @@
     st.recalc();
     return '';
   };
+  // Troca de posição entre dois jogadores em campo (não conta como substituição)
+  P.simSwap = function (st, side, idA, idB) {
+    const lu = st.L[side];
+    const a = lu.on.find((x) => x.p.id === idA && !x.off), b = lu.on.find((x) => x.p.id === idB && !x.off);
+    if (!a || !b || a === b) return 'Troca inválida.';
+    [a.i, b.i] = [b.i, a.i]; [a.pos, b.pos] = [b.pos, a.pos];
+    st.recalc();
+    return '';
+  };
   P.simFinish = function (st) {
     const rnd = Math.random;
     const { L, ev, goals, shots, posAcc, gls, ast } = st;

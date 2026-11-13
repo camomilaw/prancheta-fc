@@ -128,6 +128,8 @@
   P.tacticsView = function () {
     const g = A.g, t = g.tac[g.user];
     if (!t.ins) t.ins = P.insOf(t);
+    // posições livres antigas: encaixa cada jogador na posição centralizada mais próxima
+    if (t.xy && !t.snap) { const out = []; t.xy.forEach((c, i) => { out[i] = P.snapXY(c.x, c.y, out, i); }); t.xy = out; t.snap = true; }
     P.fixXI(g, g.user);
     const slots = P.slots(t);
     const s = P.teamPreview(g, g.user);
@@ -232,6 +234,18 @@
       <div class="row"><button class="btn" data-a="player" data-id="${p.id}">Ver ficha</button><span class="spacer"></span><button class="btn primary" data-a="tSwap" data-i="${i}">Trocar jogador</button></div>`);
   };
 
+  // Encaixe: o jogador solto no campo vai para o centro da posição mais próxima (grade fixa)
+  const ROWS = [24, 42, 52, 64, 82];          // zaga/laterais, volantes, meio, meias/pontas, ataque
+  const COLS = [14, 32, 50, 68, 86];
+  P.snapXY = function (x, y, xy, i) {
+    if (i === 0) return { x: 50, y: 6 };     // goleiro fica no gol
+    const spots = [];
+    for (const ry of ROWS) for (const cx of COLS) spots.push({ x: cx, y: ry });
+    const taken = (s) => xy.some((c, j) => j !== i && j !== 0 && c && Math.abs(c.x - s.x) < 9 && Math.abs(c.y - s.y) < 8);
+    spots.sort((a, b) => Math.hypot(a.x - x, (a.y - y) * 1.3) - Math.hypot(b.x - x, (b.y - y) * 1.3));
+    return Object.assign({}, spots.find((s) => !taken(s)) || spots[0]);
+  };
+
   // ---------- Arrastar no campo ----------
   let drag = null;
   document.addEventListener('pointerdown', (e) => {
@@ -257,8 +271,8 @@
     if (!d.moved) return; // toque simples vira clique (tSlot)
     A._noClick = Date.now();
     const g = A.g, t = g.tac[g.user];
-    if (!t.xy) t.xy = P.slots(t.f).map((s) => ({ x: s.x, y: s.y }));
-    t.xy[d.i] = { x: Math.round(d.x), y: Math.round(d.y) };
+    if (!t.xy) { const out = []; P.slots(t.f).forEach((sl, i) => { out[i] = P.snapXY(sl.x, sl.y, out, i); }); t.xy = out; }
+    t.xy[d.i] = P.snapXY(d.x, d.y, t.xy, d.i); t.snap = true;
     A.save(); A.render();
   });
 
