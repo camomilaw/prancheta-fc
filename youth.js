@@ -382,6 +382,7 @@
   }
   A.youthSheet = function (id) {
     const g = A.g, p = g.y.squad[id]; if (!p) return;
+    A.st.yb = A.st.yb || { tab: 'elenco' };
     const groups = {};
     P.ATTRS.forEach((at) => { if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') return; (groups[at.g] = groups[at.g] || []).push(at); });
     const vcls = (v) => (v <= 6 ? 'v1' : v <= 10 ? 'v2' : v <= 15 ? 'v3' : 'v4');
