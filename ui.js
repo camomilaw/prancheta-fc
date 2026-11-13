@@ -463,7 +463,7 @@
       ${P.adaptBlock ? P.adaptBlock(g, p) : ''}
       <div><div class="label" style="margin-bottom:6px">Rende em</div><div class="row">${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}" style="padding:4px 10px">${b.pos} ${b.v}</span>`).join('')}</div></div>
       ${action}
-      <div class="row">${mine && !mode && P.talkButton ? P.talkButton(p) : ''}${!mode && g ? P.marketButtons(p) : ''}${mine && !mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);
+      <div class="row">${mine && !mode && P.talkButton ? P.talkButton(p) : ''}${!mode && g ? P.marketButtons(p) : ''}${mine && !mode && P.canDemote && P.canDemote(g, p) ? `<button class="btn" data-a="yDemote" data-id="${p.id}">Devolver ao Sub-20</button>` : ''}${mine && !mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);
     if (mode) { const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sh.scrollHeight; }
   };
   function moraleWord(m) { return m >= 85 ? 'Ótima' : m >= 68 ? 'Boa' : m >= 50 ? 'Normal' : m >= 35 ? 'Baixa' : 'Péssima'; }

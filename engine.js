@@ -12,9 +12,9 @@
     longShotQ: 0.11,        // qualidade (xG) desses chutes em relação a uma chance clara
     homeBonus: 1.12,        // vantagem de jogar em casa
     yellowPerMin: 0.0175,   // por time (era 0.02)
-    redPerMin: 0.0003,      // vermelho direto
-    bookedCare: 1,          // abaixo de 1, quem já tem amarelo leva menos o segundo
-    injuryPerMin: 0.0012,
+    redPerMin: 0.0002,      // vermelho direto (era 0.0003)
+    bookedCare: 0.7,        // quem já tem amarelo se cuida: leva menos o segundo
+    injuryPerMin: 0.00084,  // era 0.0012 (-30%)
     condDrain: 30,          // desgaste de uma partida (reduzido pela resistência)
     condRecover: 10,        // recuperação por semana (aumentada pela resistência)
     penaltyBase: 0.75,      // conversão de pênalti (no jogo e na disputa)
@@ -806,10 +806,10 @@
           if (n >= 2) { p.s.cv++; p.susp = Math.max(p.susp, 1); }
           else {
             p.s.ca++; p.ylw++;
-            if (p.ylw >= 3) {
+            if (p.ylw >= 4) {
               p.ylw = 0; p.susp = Math.max(p.susp, 1);
               if (cid === g.user) {
-                P.news(g, `${p.name} levou o 3º amarelo e cumpre suspensão no próximo jogo.`, 'warn');
+                P.news(g, `${p.name} levou o 4º amarelo e cumpre suspensão no próximo jogo.`, 'warn');
                 if (P.mail) P.mail(g, { k: 'sus', pid: p.id, subj: `${p.name} suspenso por cartões`, body: `Chefe, o ${p.name} recebeu o 3º amarelo e está fora do próximo jogo. Vale definir quem entra no lugar dele.` });
               }
             }

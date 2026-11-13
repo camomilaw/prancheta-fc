@@ -33,6 +33,7 @@
     if (isStarter(g, p)) m *= 1.35;
     if (p.age <= 21) m *= 1.2;
     if (p.ctr <= g.season) m *= 0.6;
+    if (p.saleList) m *= 0.85;
     if (c.bal < 0) m *= 0.8;
     return Math.round(P.value(p) * m * (P.diffM ? P.diffM(g, 'ask') : 1) / 10000) * 10000;
   };
@@ -129,6 +130,16 @@
       const cands = sq.filter((p) => !isStarter(g, p) && (p.age <= 23 || sq.length >= 26))
         .sort((a, b) => (a.age <= 21 ? 0 : 1) - (b.age <= 21 ? 0 : 1) || P.ovr(b) - P.ovr(a));
       cands.slice(0, Math.min(3, spare)).forEach((p) => { p.loanList = true; });
+    }
+    // lista de transferência dos outros clubes: reservas que sobram, de preferência os mais velhos
+    for (const c of g.db.clubs) {
+      if (c.id === g.user) continue;
+      const sq = P.squad(g, c.id).filter((p) => !p.loan);
+      sq.forEach((p) => { p.saleList = false; });
+      const spare = sq.length - 20;
+      if (spare <= 0) continue;
+      const cands = sq.filter((p) => !isStarter(g, p) && !p.loanList && p.age >= 22).sort((a, b) => b.age - a.age || P.ovr(a) - P.ovr(b));
+      cands.slice(0, Math.min(c.bal < 0 ? 3 : 2, spare)).forEach((p) => { p.saleList = true; });
     }
   }
   P.refreshAiLoanList = refreshAiLoanList;
@@ -316,6 +327,7 @@
   P.marketView = function () {
     const g = A.g, st = A.st;
     if (!g.loanKey && P.windowOpen(g)) refreshAiLoanList(g);
+    if (!g.saleInit && P.windowOpen(g)) { g.loanKey = null; refreshAiLoanList(g); g.saleInit = true; }
     const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', min: 0, sort: 'ovr', div: 0, lst: 'any' }, st.mk || {});
     const offers = (g.offers || []).filter((o) => g.db.players[o.pid] && g.db.players[o.pid].clubId === g.user);
     const tabs = `<div class="seg tabs-x">${[['busca', 'Buscar'], ['prop', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'À venda'], ['emp', 'Empréstimos'], ['tx', 'Transferências'], ['func', 'Funcionários']].map(([k, n]) => `<button class="${f.tab === k ? 'on' : ''}" data-a="mkTab" data-k="${k}">${n}</button>`).join('')}</div>`;
@@ -332,6 +344,7 @@
       if (amax != null) list = list.filter((p) => p.age <= amax);
       if (f.div) list = list.filter((p) => p.clubId && club(p.clubId).div === Number(f.div));
       if (f.lst === 'emp') list = list.filter((p) => p.clubId && p.loanList && !p.loan);
+      if (f.lst === 'venda') list = list.filter((p) => p.clubId && p.saleList && !p.loan);
       if (f.ctr === 'free') list = list.filter((p) => !p.clubId);
       else if (f.ctr === '25') list = list.filter((p) => p.clubId && P.ctrMonths(g, p) > 24);
       else if (f.ctr !== 'any') list = list.filter((p) => p.clubId && P.ctrMonths(g, p) <= Number(f.ctr));
@@ -349,11 +362,11 @@
           <div class="field"><span class="label">Contrato</span>${opt('ctr', CTR_OPTS, f.ctr)}</div>
           <div class="field"><span class="label">Força mínima</span>${opt('min', [[0, 'Qualquer'], [50, '50+'], [60, '60+'], [70, '70+'], [80, '80+']], f.min)}</div>
           <div class="field"><span class="label">Divisão</span>${opt('div', [[0, 'Todas']].concat(Array.from({ length: P.DIVS }, (_, i) => [i + 1, (i + 1) + 'ª divisão'])), f.div)}</div>
-          <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer jogador'], ['emp', 'Na lista de empréstimo']], f.lst)}</div>
+          <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer jogador'], ['venda', 'À venda (lista de transferência)'], ['emp', 'Na lista de empréstimo']], f.lst)}</div>
           <div class="field"><span class="label">Ordenar</span>${opt('sort', [['ovr', 'Mais fortes'], ['val', 'Mais baratos'], ['age', 'Mais jovens'], ['ctr', 'Contrato acabando']], f.sort)}</div>
         </div>
         <div class="row" style="margin:6px 0 10px"><span class="muted" style="flex:1;font-size:.88rem">${withO.length} ${withO.length === 1 ? 'jogador encontrado' : 'jogadores encontrados'}${withO.length > 40 ? ' (mostrando 40)' : ''}</span><button class="btn sm ghost" data-a="mkClear">Limpar filtros</button></div>
-        <div class="plist">${res.map((p) => rowP(p, p.loanList && !p.loan ? `<span class="chip loan">Empréstimo · ${P.money(P.loanFeeOf(p))}</span>` : '')).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
+        <div class="plist">${res.map((p) => rowP(p, p.saleList && !p.loan ? '<span class="chip sus">À venda</span>' : p.loanList && !p.loan ? `<span class="chip loan">Empréstimo · ${P.money(P.loanFeeOf(p))}</span>` : '')).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
         <p class="muted" style="font-size:.85rem">Toque num jogador para ver a ficha e fazer proposta.</p>`;
     } else if (f.tab === 'prop') {
       body = offers.length ? `<div class="plist">${offers.map((o) => {

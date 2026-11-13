@@ -15,7 +15,7 @@
       des: { n: 'Descanso', cond: 12, dev: 0, mor: 1 },
       lev: { n: 'Leve', cond: 6, dev: 0.5 },
       nor: { n: 'Normal', cond: 0, dev: 1 },
-      int: { n: 'Intenso', cond: -6, dev: 1.6, inj: 0.008 }
+      int: { n: 'Intenso', cond: -6, dev: 1.6, inj: 0.0056 }
     },
     foco: {
       fis: { n: 'Físico', at: ['vel', 'res', 'for'] },

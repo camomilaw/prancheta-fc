@@ -295,6 +295,23 @@
     return '';
   };
 
+  // Devolver ao Sub-20 um jogador do profissional que ainda tem idade de base
+  P.canDemote = (g, p) => g.y && p.clubId === g.user && p.age <= P.YOUTH.maxAge && !p.loan;
+  P.demoteYouth = function (g, id) {
+    const p = g.db.players[id]; if (!p || !P.canDemote(g, p)) return 'Só jogadores do seu elenco com idade de Sub-20 podem voltar para a base.';
+    if (Object.keys(g.y.squad).length >= P.YOUTH.maxSquad) return `O Sub-20 já tem ${P.YOUTH.maxSquad} jogadores.`;
+    if (P.squad(g, g.user).length <= 16) return 'O elenco profissional ficaria curto demais.';
+    delete g.db.players[id];
+    g.offers = (g.offers || []).filter((o) => o.pid !== id);
+    p.potO = p.potO || Math.round((p.pot || P.ovr(p) / 5) * 5);
+    p.clubId = null; p.wage = P.YOUTH.wage; p.ctr = 0; p.listed = false; p.loanList = false;
+    p.s = P.blankStats();
+    g.y.squad[id] = p;
+    P.dirty(g); P.fixXI(g, g.user);
+    P.news(g, `${p.name} (${p.age} anos) voltou para o Sub-20.`, '');
+    return '';
+  };
+
   // ---------- Tela: Sub-20 e equipe técnica ----------
   const club = (cid) => A.g.db.clubs.find((c) => c.id === cid);
   const potTxt = (p) => (p.lo ? `${p.lo}-${p.hi}` : `${Math.max(P.ovr(p), p.potO - 4)}-${p.potO + 3}`) + (p.potT ? (p.potT > 0 ? ' ↑' : ' ↓') : '');
@@ -333,7 +350,7 @@
         <div class="plist">${rep.players.map((p) => `<div class="prow" style="grid-template-columns:44px 1fr auto"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
           <span class="nm"><b>${esc(p.name)}${p.gem ? '<span class="chip gem">Joia rara</span>' : ''}</b><small>${esc(P.countryName(p.nat))} · ${p.age} anos · atual ~${P.ovr(p)}</small></span>
           <span class="potbox"><span class="pot">${p.lo}-${p.hi}</span>${p.signed ? '<span class="chip xi">Contratado</span>' : `<button class="btn sm" data-a="ySign" data-r="${rep.id}" data-id="${p.id}">${P.money(p.fee)}</button>`}</span></div>`).join('')}</div></div>`).join('')
-        : '<p class="empty">Nenhum relatório ainda. Contrate um olheiro e envie-o numa missão: o primeiro relatório chega em ${P.YOUTH.reportEvery} semanas.</p>';
+        : `<p class="empty">Nenhum relatório ainda. Contrate um olheiro e envie-o numa missão: o primeiro relatório chega em ${P.YOUTH.reportEvery} semanas.</p>`;
     }
     return `<div class="card"><div class="head"><h2>Sub-20</h2><button class="btn sm ghost" data-a="go" data-v="elenco">‹ Elenco</button></div>
       <div style="margin-bottom:12px">${tabs}</div>${body}</div>`;
@@ -386,6 +403,11 @@
   });
   Object.assign(A.ACT, {
     yTab(d) { A.st.yb.tab = d.k; A.st.yb.edit = null; A.render(); },
+    yDemote(d) {
+      const msg = P.demoteYouth(A.g, d.id);
+      if (msg) { A.toast(msg); return; }
+      if (A.ACT.closeSheet) A.ACT.closeSheet(); A.save(); A.render(); A.toast('Jogador devolvido ao Sub-20');
+    },
     ySheet(d) { A.st.yb.confirm = null; A.youthSheet(d.id); },
     yReleaseAsk(d) { A.st.yb.confirm = d.id; A.youthSheet(d.id); },
     yRelease(d) { const g = A.g; const n = g.y.squad[d.id].name; delete g.y.squad[d.id]; g.y.xi = (g.y.xi || []).filter((x) => x !== d.id); A.save(); A.closeSheet(); A.render(); A.toast(`${n} dispensado`); },
