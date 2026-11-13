@@ -964,7 +964,7 @@
       const j = t.xi.indexOf(d.id);
       if (j >= 0) t.xi[j] = t.xi[i];
       t.xi[i] = d.id;
-      if (t.auto) { t.auto = false; A.toast('Escalação manual: escalação automática desligada'); }
+      if (t.auto) A.toast('Escalação automática ligada: antes do jogo entram os melhores. Desmarque a opção para manter sua escolha.');
       A.save(); A.closeSheet(); A.render();
     },
     tac(d) { const t = A.g.tac[A.g.user]; t[d.k] = d.v; A.save(); A.render(); },
