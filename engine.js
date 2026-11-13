@@ -400,6 +400,8 @@
     const { L, S, ev, goals, shots, posAcc, gls, ast, recalc } = st;
     if (!st.sot) Object.assign(st, { sot: [0, 0], xg: [0, 0], fouls: [0, 0], corners: [0, 0] });
     const { sot, xg, fouls, corners } = st;
+    const ps = st.ps || (st.ps = {});
+    const pst = (id) => ps[id] || (ps[id] = { sh: 0, sot: 0, xg: 0, tk: 0, sv: 0 });
     const active = (side) => L[side].on.filter((s) => !s.off);
     const mm = (min) => ({ m: Math.min(min, 90), x: min > 90 ? min - 90 : 0 });
     // pressão: fim de jogo apertado
@@ -413,8 +415,9 @@
     };
     const setShot = (side, min, p, pg, sp, asId, onT) => {
       shots[side]++; xg[side] += pg;
-      if (rnd() < pg) score(side, min, p, sp, asId);
-      else if (rnd() < onT) sot[side]++;
+      const q = pst(p.id); q.sh++; q.xg += pg;
+      if (rnd() < pg) { q.sot++; score(side, min, p, sp, asId); }
+      else if (rnd() < onT) { sot[side]++; q.sot++; const gk = gkOf(1 - side); if (gk) pst(gk.id).sv++; }
     };
     // escanteio: às vezes vira cabeceio do mais forte pelo alto
     const corner = (side, min) => {
@@ -475,8 +478,9 @@
             if (insS.pass === 'cur') pg *= 1.05;
             if (insS.build === 'pos') pg *= 1.05;
             xg[side] += pg; // xG: chance de gol desta finalização
+            const qs = pst(sh.p.id); qs.sh++; qs.xg += pg;
             if (rnd() < pg) {
-              goals[side]++; sot[side]++;
+              goals[side]++; sot[side]++; qs.sot++;
               gls[sh.p.id] = (gls[sh.p.id] || 0) + 1;
               let asId = null;
               const mates = pool.filter((s) => s !== sh);
@@ -486,12 +490,17 @@
               }
               ev.push(Object.assign(mm(min), { t: 'gol', s: side, p: sh.p.id, as: asId }));
             } else if (rnd() < (big ? 0.36 : 0.26)) {
-              sot[side]++; // no gol, defendido
+              sot[side]++; qs.sot++; { const gk = gkOf(o); if (gk) pst(gk.id).sv++; } // no gol, defendido
               if (rnd() < (big ? 0.7 : 0.15)) ev.push(Object.assign(mm(min), { t: 'chance', s: side, p: sh.p.id }));
               if (rnd() < 0.45) corner(side, min);
             } else if (rnd() < 0.45) corner(side, min); // bloqueada ou desviada para fora
           }
-        } else if (rnd() < 0.5) corner(side, min); // ataque cortado para escanteio
+        } else {
+          // ataque cortado: um defensor fica com o desarme
+          const dpool = active(o).filter((s) => s.pos !== 'GOL');
+          if (dpool.length) pst(P.weighted(rnd, dpool, (s) => (DEF_W[s.pos] + 0.05) * (s.p.a.des + s.p.a.mar + s.p.a.pos)).p.id).tk++;
+          if (rnd() < 0.5) corner(side, min); // ataque cortado para escanteio
+        }
       }
       // faltas (pressão alta faz mais faltas); cartões abaixo também contam como falta
       for (const side of [0, 1]) {
@@ -584,6 +593,8 @@
       hg: goals[0], ag: goals[1], ev,
       st: { pos: Math.round(posAcc[0] / tot * 100), sh: shots, sot: st.sot, xg: st.xg.map((v) => Math.round(v * 100) / 100), fo: st.fouls, co: st.corners },
       notes, played: [Array.from(L[0].played), Array.from(L[1].played)],
+      ps: Object.fromEntries(Object.entries(st.ps || {}).map(([k, v]) => [k, { sh: v.sh, sot: v.sot, xg: Math.round(v.xg * 100) / 100, tk: v.tk, sv: v.sv }])),
+      lu: L.map((lu) => { const sl = P.slots(lu.t); return { xy: sl.map((x) => [x.x, x.y]), on: lu.on.map((s) => [s.p.id, s.pos, s.i, s.replaced ? 1 : 0, s.off && !s.injured && !s.replaced ? 1 : 0, s.injured ? 1 : 0]) }; }),
       yel: [L[0].yel, L[1].yel], inj: L.map((lu) => lu.on.filter((s) => s.injured).map((s) => [s.p.id, s.injured, s.injN])),
       L
     };
@@ -879,6 +890,7 @@
     const mine = results.find(({ it }) => it.m.h === g.user || it.m.a === g.user);
     if (mine) {
       const m = mine.it.m, home = m.h === g.user;
+      if (mine.r.lu) { m.lu = mine.r.lu; m.ps = mine.r.ps; }
       const opp = P.club(g, home ? m.a : m.h);
       const gf = home ? m.hg : m.ag, ga = home ? m.ag : m.hg;
       const comp = mine.it.comp === 'lg' ? '' : ` (${P.stepLabel(step)})`;

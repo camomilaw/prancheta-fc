@@ -623,6 +623,7 @@
   }
   A.reportSheet = function (ri) {
     const it = A.reg[ri]; if (!it) return;
+    A._rtSheet = ri;
     const m = it.m;
     const H = club(m.h), Aw = club(m.a);
     const bestId = Object.entries(m.notes || {}).sort((x, y) => y[1] - x[1])[0];
@@ -631,6 +632,7 @@
     A.openSheet(`<div class="bar-top"><h2>${esc(it.label || 'Relatório')}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       ${boardHTML(m, m.hg, m.ag, clock, m.st)}
       ${m.st ? A.matchStatsHTML(A.statsFrom(m.st, m.ev)) : ''}
+      ${A.ratingsHTML(m)}
       <div class="kv">${best ? `<div><span class="label">Destaque</span><b>${esc(best.name)} ${String(bestId[1]).replace('.', ',')}</b><span class="muted" style="font-size:.8rem">${esc((club(best.clubId) || {}).short || '')}</span></div>` : ''}</div>
       <ul class="feed">${(m.ev || []).map((e) => evLine(e, m)).join('') || '<li><span></span><span></span><span class="muted">Jogo sem lances marcantes.</span></li>'}</ul>
       <p class="muted" style="margin:0;font-size:.85rem">${m.neutral ? 'Campo neutro' : esc(H.stadium) + ' · ' + esc(H.city)} · ${esc(H.name)} × ${esc(Aw.name)}</p>`);
@@ -648,6 +650,69 @@
 
   // ---------- Estatísticas da partida (ao vivo e no relatório) ----------
   // d: { pos, sh, sot, xg, fo, co } em pares [mandante, visitante]; os cartões vêm dos eventos
+  // ---------- Campinho de notas (fim de jogo) ----------
+  const noteCls = (n) => (n >= 7.5 ? 'n-top' : n >= 6.8 ? 'n-good' : n >= 6 ? 'n-mid' : 'n-low');
+  const fmtN = (n) => (n == null ? '–' : String(n.toFixed ? n.toFixed(1) : n).replace('.', ','));
+  function minutesOf(m, side, id) {
+    const lu = m.lu[side], idx = lu.on.findIndex((e) => e[0] === id);
+    const end = 90;
+    const evIn = (m.ev || []).find((e) => e.t === 'sub' && e.p === id);
+    const evOut = (m.ev || []).find((e) => (e.t === 'sub' && e.o === id) || ((e.t === 'vermelho' || e.t === 'lesao') && e.p === id));
+    const a = idx < 11 ? 0 : evIn ? evIn.m : 0;
+    const b = evOut ? evOut.m : end;
+    return { from: a, to: b, mins: Math.max(1, b - a), start: idx < 11, inM: evIn ? evIn.m : null, outM: evOut ? evOut.m : null };
+  }
+  A.ratingsHTML = function (m) {
+    if (!m || !m.lu || !m.notes) return '';
+    const g = A.g;
+    A._rtm = m;
+    const mineSide = m.a === g.user ? 1 : 0;
+    const side = A.st.rtSide != null && A.st.rtSide !== undefined && A.st.rtFor === (m.h + m.a) ? A.st.rtSide : mineSide;
+    const lu = m.lu[side], cid = side === 0 ? m.h : m.a, c = club(cid);
+    const cur = {}; lu.on.forEach((e) => { if (!e[3]) cur[e[2]] = e; });
+    const goalsOf = (id) => (m.ev || []).filter((e) => e.t === 'gol' && e.p === id).length;
+    const dots = Object.values(cur).map((e) => {
+      const [id, pos, i, , red, inj] = e; const p = pl(id); if (!p) return '';
+      const [x, y] = lu.xy[i] || [50, 50]; const n = m.notes[id];
+      const gl = goalsOf(id), sub = minutesOf(m, side, id).inM != null;
+      return `<button class="slot" style="left:${x}%;top:${96 - y}%" data-a="rtPl" data-id="${id}" data-s="${side}">
+        <span class="dot rt-dot ${noteCls(n)}">${fmtN(n)}${gl ? `<i class="rt-g">${gl > 1 ? gl : ''}⚽</i>` : ''}${red ? '<i class="rt-r"></i>' : ''}${inj ? '<i class="rt-i">+</i>' : ''}${sub ? '<i class="rt-in">▲</i>' : ''}</span>
+        <span class="nm">${esc(p.name.split(' ').slice(-1)[0])}</span><span class="ps">${pos}</span></button>`;
+    }).join('');
+    const outs = lu.on.filter((e) => e[3]).map((e) => { const p = pl(e[0]); const mi = minutesOf(m, side, e[0]); return p ? `<button class="rt-out" data-a="rtPl" data-id="${e[0]}" data-s="${side}"><span class="rt-n ${noteCls(m.notes[e[0]])}">${fmtN(m.notes[e[0]])}</span>${esc(p.name)} <small>${e[1]} · saiu aos ${mi.outM || '?'}'</small></button>` : ''; }).join('');
+    return `<div class="card rt-card"><div class="head"><span class="label">Notas da partida</span>
+        <div class="seg">${[0, 1].map((sd) => `<button class="${sd === side ? 'on' : ''}" data-a="rtSide" data-s="${sd}" data-k="${m.h + m.a}">${esc(club(sd === 0 ? m.h : m.a).short)}</button>`).join('')}</div></div>
+      <div class="pitch rt"><div class="ln mid"></div><div class="ln circ"></div><div class="ln box1"></div><div class="ln box2"></div>${dots}</div>
+      ${outs ? `<div class="rt-outs"><span class="label">Substituídos</span>${outs}</div>` : ''}
+      <p class="muted" style="margin:8px 0 0;font-size:.8rem">${esc(c.name)} · toque num jogador para ver os números dele no jogo.</p></div>`;
+  };
+  A.ratingSheet = function (m, side, id) {
+    const p = pl(id); if (!p || !m) return;
+    const c = club(side === 0 ? m.h : m.a), mi = minutesOf(m, side, id);
+    const q = (m.ps && m.ps[id]) || { sh: 0, sot: 0, xg: 0, tk: 0, sv: 0 };
+    const ev = m.ev || [];
+    const g = ev.filter((e) => e.t === 'gol' && e.p === id).length, as = ev.filter((e) => e.t === 'gol' && e.as === id).length;
+    const y = ev.filter((e) => e.t === 'amarelo' && e.p === id).length, r = ev.some((e) => e.t === 'vermelho' && e.p === id);
+    const inj = ev.find((e) => e.t === 'lesao' && e.p === id);
+    const entry = m.lu[side].on.find((e) => e[0] === id);
+    const kv = (l, v) => `<div><span class="label">${l}</span><b>${v}</b></div>`;
+    A.openSheet(`<div class="bar-top"><span class="pos-tag ${P.LINE[entry ? entry[1] : p.pos]}" style="padding:4px 8px">${entry ? entry[1] : p.pos}</span><h2>${esc(p.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
+      <div class="row">${P.badge(c, 28)}<div style="flex:1;min-width:0"><b>${esc(c.name)}</b><div class="muted" style="font-size:.85rem">${mi.start ? 'Titular' : `Entrou aos ${mi.inM}'`}${mi.outM != null ? ` · saiu aos ${mi.outM}'` : ''} · ${mi.mins} min</div></div>
+        <div style="text-align:right"><div class="label">Nota</div><div class="big-ovr rt-big ${noteCls(m.notes[id])}">${fmtN(m.notes[id])}</div></div></div>
+      <div class="kv">
+        ${kv('Gols', g)}${kv('Assistências', as)}
+        ${kv('Finalizações', `${q.sh} <small class="muted">(${q.sot} no gol)</small>`)}${kv('xG', String((q.xg || 0).toFixed(2)).replace('.', ','))}
+        ${kv('Desarmes', q.tk)}${entry && entry[1] === 'GOL' ? kv('Defesas', q.sv) : ''}
+        ${kv('Cartões', r ? (y ? 'Amarelo + vermelho' : 'Vermelho') : y ? 'Amarelo' : '—')}
+        ${inj ? kv('Lesão', `${esc(inj.n || 'Lesão')} (${inj.w} sem.)`) : ''}
+      </div>
+      <div class="row"><button class="btn" data-a="player" data-id="${id}">Ficha completa</button></div>`);
+  };
+  Object.assign(A.ACT, {
+    rtSide(d) { A.st.rtSide = Number(d.s); A.st.rtFor = d.k; if (A.live && A.live.done && A.redrawLive) A.redrawLive(); else if (A._rtSheet != null) A.reportSheet(A._rtSheet); else A.render(); },
+    rtPl(d) { A.ratingSheet(A._rtm, Number(d.s), d.id); }
+  });
+
   A.statsFrom = function (d, ev) {
     if (!d) return null;
     const cnt = (t, s) => (ev || []).filter((e) => e.s === s && (t === 'y' ? e.t === 'amarelo' : e.t === 'vermelho')).length;

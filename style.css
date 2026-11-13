@@ -1021,3 +1021,27 @@ table { font-family: var(--f-body); }
 .bar .tr.str::after { content: ""; position: absolute; left: 76.9%; top: -3px; bottom: -3px; width: 1px; background: var(--accent); }
 .str-note { margin: 10px 0 0; font-size: .8rem; font-style: italic; color: var(--muted); }
 .err-box { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-num); font-size: .74rem; background: var(--surface-2); border: 1px dashed var(--bad); padding: 8px; margin: 0 0 10px; }
+
+/* Campinho de notas */
+.rt-card .head { flex-wrap: wrap; }
+.pitch.rt { max-width: 360px; margin-top: 4px; }
+.pitch.rt .slot { cursor: pointer; }
+.rt-dot { font-family: var(--f-num); font-weight: 600; font-size: .9rem !important; }
+.rt-dot.n-top { background: #2d6a3e !important; color: #f1e9d8 !important; }
+.rt-dot.n-good { background: #cfe0c2 !important; }
+.rt-dot.n-mid { background: #f6f0e1 !important; }
+.rt-dot.n-low { background: #e9c4bd !important; }
+.rt-dot i { position: absolute; font-style: normal; font-size: .62rem; line-height: 1; }
+.rt-g { top: -7px; right: -10px; background: #f6f0e1; color: #1d1a16; border: 1px solid #1d1a16; padding: 1px 2px; }
+.rt-r { top: -5px; left: -6px; width: 8px; height: 11px; background: #c4453a; border: 1px solid #1d1a16; }
+.rt-i { bottom: -4px; left: -6px; background: #c4453a; color: #fff; padding: 0 2px; font-weight: 700; }
+.rt-in { bottom: -4px; right: -8px; color: #2d6a3e; background: #f6f0e1; padding: 0 2px; }
+.rt-outs { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+.rt-out { display: flex; align-items: center; gap: 8px; background: none; border: 0; border-bottom: 1px dotted var(--line); padding: 6px 2px; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.rt-out small { color: var(--muted); font-style: italic; }
+.rt-n { font-family: var(--f-num); font-weight: 600; min-width: 34px; text-align: center; border: 1px solid var(--ink); padding: 1px 4px; color: #1d1a16; }
+.rt-n.n-top { background: #2d6a3e; color: #f1e9d8; } .rt-n.n-good { background: #cfe0c2; } .rt-n.n-mid { background: #f6f0e1; } .rt-n.n-low { background: #e9c4bd; }
+.big-ovr.rt-big { font-family: var(--f-num); padding: 0 6px; }
+.big-ovr.rt-big.n-top { color: var(--good); } .big-ovr.rt-big.n-low { color: var(--bad); }
+.sheet-bg { z-index: 70; }
+.pitch.rt .dot::after { display: none; }

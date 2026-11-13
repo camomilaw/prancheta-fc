@@ -92,6 +92,7 @@
     revealAll(L);
     if (ctl) ctl.skip();
   }
+  A.redrawLive = () => draw();
   function finish() {
     const L = A.live; if (!L || L.done) return;
     clearTimeout(A._lvt);
@@ -199,6 +200,7 @@
       ${A.boardHTML(m, st.goals[0] - L.hide[0], st.goals[1] - L.hide[1], clock, { pos: poss })}
       ${L.hl ? `<div class="hl-wrap"><div class="row" style="gap:8px"><span class="label" style="flex:1">Melhores momentos · ${L.hl.x ? '90+' + L.hl.x : L.hl.m}'</span><button class="btn sm" data-a="lvHlSkip">Pular lance</button></div><div id="hl-slot"></div></div>` : ''}
       ${verdict}
+      ${done && A.ratingsHTML ? A.ratingsHTML(m) : ''}
       ${L.pause ? pausePanel(L) : ''}
       ${A.matchStatsHTML(A.statsFrom({ pos: poss, sh: st.shots, sot: st.sot, xg: st.xg, fo: st.fouls, co: st.corners }, st.ev))}
       <ul class="feed" aria-live="polite">${evs.map((e) => A.evLine(e, m)).join('')}</ul>
