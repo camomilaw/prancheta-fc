@@ -294,9 +294,9 @@
         const adj = P.adjName ? P.adjName(g) : 'Auxiliar';
         top += `<section class="jr-next"><div class="jr-next-h"><span>Próximo jogo</span><span>${esc(P.stepLabel(step))}</span></div>
           <div class="fixture">
-            <div class="side">${P.badge(h, 52)}<b>${esc(h.name)}</b><span class="sub">${h.div}ª div · ${ord(posOf(h.id))} · ${form(h.id)}</span></div>
+            <div class="side"><button class="badge-btn" data-a="clubInfo" data-id="${h.id}" aria-label="Resumo do ${esc(h.name)}">${P.badge(h, 52)}</button><b>${esc(h.name)}</b><span class="sub">${h.div}ª div · ${ord(posOf(h.id))} · ${form(h.id)}</span></div>
             <div class="vs">vs.</div>
-            <div class="side">${P.badge(a, 52)}<b>${esc(a.name)}</b><span class="sub">${a.div}ª div · ${ord(posOf(a.id))} · ${form(a.id)}</span></div>
+            <div class="side"><button class="badge-btn" data-a="clubInfo" data-id="${a.id}" aria-label="Resumo do ${esc(a.name)}">${P.badge(a, 52)}</button><b>${esc(a.name)}</b><span class="sub">${a.div}ª div · ${ord(posOf(a.id))} · ${form(a.id)}</span></div>
           </div>
           <p class="jr-venue">${um.m.neutral ? 'Campo neutro' : esc(h.stadium)}${um.ko ? ' · jogo único, empate vai para os pênaltis' : ''}</p>
           ${P.adjQuote ? `<blockquote class="jr-quote">“${esc(P.adjQuote(g, um))}”<cite>— ${esc(adj)}, auxiliar técnico</cite></blockquote>` : ''}
@@ -314,7 +314,7 @@
     [...idxs].sort((a, b) => a - b).forEach((i) => {
       if (last >= 0 && i > last + 1) mini += '<tr><td colspan="5" class="muted" style="text-align:center">···</td></tr>';
       const r = tb[i], c = club(r.cid);
-      mini += `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${zoneOf(me.div, i, tb.length)}">${i + 1}</span></td><td><span class="club">${P.badge(c, 20)}${esc(c.name)}</span></td><td class="n">${r.j}</td><td class="n">${r.gp - r.gc}</td><td class="n"><b>${r.pts}</b></td></tr>`;
+      mini += `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${zoneOf(me.div, i, tb.length)}">${i + 1}</span></td><td><button class="club club-btn" data-a="clubInfo" data-id="${c.id}">${P.badge(c, 20)}${esc(c.name)}</button></td><td class="n">${r.j}</td><td class="n">${r.gp - r.gc}</td><td class="n"><b>${r.pts}</b></td></tr>`;
       last = i;
     });
     const hist = userHistory(g).slice(-5).reverse();
@@ -420,6 +420,47 @@
   }
 
   // ---------- Ficha do jogador ----------
+  // ---------- Resumo de um clube ----------
+  A.clubSheet = function (cid) {
+    const g = A.g, c = club(cid); if (!g || !c) return;
+    const tb = P.table(g, c.div), idx = tb.findIndex((r) => r.cid === cid), row = tb[idx];
+    const sq = P.squad(g, cid).slice().sort((a, b) => LINE_ORDER[a.pos] - LINE_ORDER[b.pos] || P.ovr(b) - P.ovr(a));
+    const ovrs = P.clubOvrs(g.db), t = g.tac[cid] || {};
+    const val = sq.reduce((s, p) => s + P.value(p), 0);
+    const avgAge = sq.length ? (sq.reduce((s, p) => s + p.age, 0) / sq.length).toFixed(1).replace('.', ',') : '–';
+    const top = sq.filter((p) => p.s.g > 0).sort((a, b) => b.s.g - a.s.g)[0];
+    const best = sq.slice().sort((a, b) => P.ovr(b) - P.ovr(a)).slice(0, 3);
+    const xi = new Set(t.xi || []);
+    // últimos jogos do clube na liga
+    const recent = [];
+    (g.lg[c.div] || []).forEach((rd) => rd.forEach((m) => { if (m.done && (m.h === cid || m.a === cid)) recent.push(m); }));
+    const last = recent.slice(-5).reverse();
+    const lines = { GOL: 'Goleiros', DEF: 'Defensores', MEI: 'Meio-campistas', ATA: 'Atacantes' };
+    const groups = {}; sq.forEach((p) => (groups[P.LINE[p.pos]] = groups[P.LINE[p.pos]] || []).push(p));
+    const mine = cid === g.user;
+    A.openSheet(`<div class="bar-top"><h2>${esc(c.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
+      <div class="cs-head">${P.badge(c, 72)}<div style="flex:1;min-width:0">
+        <div class="jr-kick">${c.div}ª divisão · ${esc(P.countryName(c.country))}</div>
+        <div class="cs-sub">${esc(c.city || '')}${c.stadium ? ' · ' + esc(c.stadium) : ''}${c.cap ? ` (${c.cap.toLocaleString('pt-BR')} lugares)` : ''}</div>
+        <div class="cs-sub">${mine ? 'Seu clube' : 'Meta: ' + esc(P.expectation(g, cid))}</div></div></div>
+      <div class="kv">
+        <div><span class="label">Posição</span><b>${row && row.j ? idx + 1 + 'º' : '–'}</b></div>
+        <div><span class="label">Pontos</span><b>${row ? row.pts : 0}</b></div>
+        <div><span class="label">Campanha</span><b>${row ? `${row.v}-${row.e}-${row.d}` : '–'}</b></div>
+        <div><span class="label">Saldo de gols</span><b>${row ? (row.gp - row.gc > 0 ? '+' : '') + (row.gp - row.gc) : 0}</b></div>
+        <div><span class="label">Força</span><b>${ovrs[cid]}</b></div>
+        <div><span class="label">Elenco</span><b>${sq.length} · ${avgAge} anos</b></div>
+        <div><span class="label">Valor do elenco</span><b>${P.money(val)}</b></div>
+        <div><span class="label">Esquema</span><b>${esc(t.xy ? 'Personalizado' : t.f || '–')}</b></div>
+        ${top ? `<div><span class="label">Artilheiro</span><b>${esc(top.name)} <small class="muted">${top.s.g}</small></b></div>` : ''}
+      </div>
+      ${row && row.form.length ? `<div class="row" style="gap:8px"><span class="label">Forma</span><span class="form">${row.form.slice(-5).map((f) => `<i class="${f}">${f}</i>`).join('')}</span></div>` : ''}
+      ${best.length ? `<div><div class="label" style="margin-bottom:6px">Destaques</div><div class="row">${best.map((p) => `<button class="pos-tag ${P.LINE[p.pos]} cs-star" data-a="player" data-id="${p.id}">${esc(p.name)} · ${P.ovr(p)}</button>`).join('')}</div></div>` : ''}
+      ${last.length ? `<div><div class="label" style="margin-bottom:6px">Últimos jogos na liga</div><div class="others" style="grid-template-columns:1fr">${last.map((m) => ogRow(m, m.hg, m.ag)).join('')}</div></div>` : ''}
+      ${Object.keys(lines).filter((k) => groups[k]).map((k) => `<div><div class="label" style="margin:4px 0 2px">${lines[k]} (${groups[k].length})</div><div class="plist">${groups[k].map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span><span class="nm"><b>${esc(p.name)}${xi.has(p.id) ? '<span class="chip xi">Titular</span>' : ''}</b><small>${p.age} anos · ${esc(P.countryName(p.nat))} · ${p.s.j} J · ${p.s.g} G</small></span><span></span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div></div>`).join('')}`);
+  };
+  A.ACT.clubInfo = (d) => A.clubSheet(d.id);
+
   A.playerSheet = function (id, mode, years) {
     const p = pl(id); if (!p) return;
     const g = A.g, mine = g && p.clubId === g.user;
@@ -563,7 +604,7 @@
         ${tb.map((r, i) => {
           const c = club(r.cid);
           return `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${zoneOf(d, i, n)}">${i + 1}</span></td>
-            <td><span class="club">${P.badge(c, 20)}<span class="show-sm">${esc(c.short)}</span><span class="nm-long">${esc(c.name)}</span></span></td>
+            <td><button class="club club-btn" data-a="clubInfo" data-id="${c.id}">${P.badge(c, 20)}<span class="show-sm">${esc(c.short)}</span><span class="nm-long">${esc(c.name)}</span></button></td>
             <td class="n"><b>${r.pts}</b></td><td class="n">${r.j}</td><td class="n">${r.v}</td><td class="n">${r.e}</td><td class="n">${r.d}</td>
             <td class="n hide-sm">${r.gp}</td><td class="n hide-sm">${r.gc}</td><td class="n">${r.gp - r.gc}</td>
             <td class="hide-sm"><span class="form">${r.form.slice(-5).map((f) => `<i class="${f}">${f}</i>`).join('')}</span></td></tr>`;

@@ -1046,3 +1046,12 @@ table { font-family: var(--f-body); }
 .sheet-bg { z-index: 70; }
 .pitch.rt .dot::after { display: none; }
 .mk-q { margin-bottom: 10px; } .mk-q .search { width: 100%; min-height: 42px; }
+
+/* Resumo de clube */
+.club-btn, .badge-btn { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.club-btn:hover .nm-long, .club-btn:hover { text-decoration: underline; text-decoration-color: var(--line); }
+.badge-btn { display: inline-flex; border-radius: 4px; transition: transform .12s; }
+.badge-btn:hover { transform: scale(1.05); }
+.cs-head { display: flex; gap: 14px; align-items: center; }
+.cs-sub { font-size: .88rem; font-style: italic; color: var(--muted); }
+.cs-star { padding: 4px 8px; cursor: pointer; font-family: var(--f-body); font-weight: 600; letter-spacing: 0; }
