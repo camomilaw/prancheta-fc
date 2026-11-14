@@ -1145,6 +1145,8 @@
       for (const at of P.ATTRS) {
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         let d = base + P.gauss(r) * 0.6;
+        // no auge (até 31 anos), atributo no máximo não cai por oscilação: antes ele só podia descer, nunca subir
+        if (base >= 0 && p.a[at.k] >= 20 && d < 0) d = 0;
         if (p.age >= 32 && P.PHYS_ATTRS.includes(at.k)) d -= p.age >= 35 ? 0.4 : p.age >= 33 ? 0.3 : 0.2;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, d), 1, 20);
       }
