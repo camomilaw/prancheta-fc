@@ -1132,3 +1132,30 @@ table { font-family: var(--f-body); }
 .nc-dot { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--line); font-family: var(--f-num); font-size: .8rem; color: var(--muted); }
 .nc-dot.on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
 .nc-dot.done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* Ficha do jogador (almanaque) */
+.ps-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.ps-id { font-size: .95rem; line-height: 1.35; }
+.ps-ovr { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+.ps-ovr .big-ovr { line-height: 1; }
+.ps-pot { font-size: .78rem; color: var(--muted); font-style: italic; white-space: nowrap; }
+.ps-pot b { font-family: var(--f-num); font-style: normal; color: var(--ink); }
+.ps-rende { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 0; border-top: 1px solid var(--ink); border-bottom: 1px dotted var(--line); }
+.ps-rende .label { margin-right: 4px; }
+.ps-rende .pos-tag { padding: 2px 8px; }
+.ps-blocks { display: grid; gap: 10px; }
+.ps-b h4 { margin: 0 0 4px; color: var(--accent); }
+.ps-b .kv { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+.ps-b .kv b { font-size: 1.02rem; white-space: nowrap; }
+.ps-b .kv small { font-size: .68rem; color: var(--muted); font-family: var(--f-body); font-style: italic; font-weight: 400; }
+.ps-attrs { grid-template-columns: 1fr 1fr; gap: 18px; }
+.ps-attrs > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.role-pill.uso { background: var(--hi); padding-left: 6px; padding-right: 6px; }
+.role-pill em { color: var(--accent); font-size: .8rem; }
+.ps-note { margin: 6px 0 0; font-size: .85rem; font-style: italic; color: var(--ink-2); }
+.ps-act:empty { display: none; }
+.ps-more summary { cursor: pointer; font-family: var(--f-label); text-transform: uppercase; letter-spacing: .06em; font-size: .8rem; color: var(--muted); padding: 6px 0; list-style: none; }
+.ps-more summary::-webkit-details-marker { display: none; }
+.ps-more[open] summary { color: var(--ink); }
+.ps-more .row { gap: 8px; }
+.ps-more .btn.danger { margin-left: auto; }

@@ -494,31 +494,39 @@
     const groups = {};
     P.ATTRS.forEach((at) => { if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') return; (groups[at.g] = groups[at.g] || []).push(at); });
     const best = P.POS.map((pos) => ({ pos, v: P.ovrAt(p, pos) })).sort((a, b) => b.v - a.v).slice(0, 4);
+    const grp = (gname, list) => `<div class="grp"><h4 class="label">${gname}</h4>${list.map((at) => `<div class="attr"><span>${at.n}</span><b class="${vcls(p.a[at.k])}">${p.a[at.k]}</b></div>`).join('')}</div>`;
+    const gEntries = Object.entries(groups);
+    const left = gEntries.filter(([n]) => n === 'Técnicos' || (p.pos === 'GOL' && n === 'Goleiro'));
+    const right = gEntries.filter((e) => !left.includes(e));
+    // função que ele usa hoje na tática (se for titular do seu time)
+    let usoPos = null, usoKey = null;
+    if (mine && g.tac[g.user]) { const t = g.tac[g.user], i = t.xi.indexOf(p.id); if (i >= 0) { usoPos = P.slots(t)[i].pos; usoKey = P.roleKey ? P.roleKey(t, i, usoPos) : null; } }
+    const pot = P.potOvr && p.age <= 24 ? (P.potBest ? P.potBest(p) : { v: P.potOvr(p), pos: p.pos }) : null;
+    const kv = (lbl, v, cls) => `<div><span class="label">${lbl}</span><b class="${cls || ''}">${v}</b></div>`;
+    const roleList = P.ROLES && P.ROLES[p.pos] && P.roleMastery ? Object.entries(P.ROLES[p.pos]).map(([k, r]) => ({ k, r, v: P.roleMastery(p, p.pos, k) })).sort((x, y) => y.v - x.v) : [];
+    const usoOther = usoPos && usoPos !== p.pos && P.ROLES[usoPos] && usoKey ? `<p class="ps-note">Na tática joga como <b>${usoPos}</b>: ${esc(P.ROLES[usoPos][usoKey].n)} ${P.starsHTML(P.roleMastery(p, usoPos, usoKey))}</p>` : '';
+    // ações: as mais usadas à vista, o resto em "Mais ações", dispensar separado no fim
+    const primary = mine
+      ? `${!mode && P.talkButton ? P.talkButton(p) : ''}${!mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button>` : ''}`
+      : `${!mode && g ? P.marketButtons(p) : ''}`;
+    const more = `${mine && !mode && g ? P.marketButtons(p) : ''}${mine && !mode && P.canDemote && P.canDemote(g, p) ? `<button class="btn" data-a="yDemote" data-id="${p.id}">Devolver ao Sub-20</button>` : ''}<button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button>${mine && !mode && !p.loan ? `<button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}`;
     A.openSheet(`<div class="bar-top"><span class="pos-tag ${P.LINE[p.pos]}" style="padding:4px 8px">${p.pos}</span>
         <h2>${esc(p.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
-      <div class="row">${P.badge(c, 30)}<div style="flex:1;min-width:0"><div>${esc(P.POS_NAME[p.pos])} · ${p.age} anos · ${esc(P.countryName(p.nat))}</div><div class="muted">${c ? esc(c.name) + ' · ' + c.div + 'ª div' : 'Sem clube'} ${status(p)}</div></div>
-        <div style="text-align:right"><div class="label">Força</div><div class="big-ovr">${P.ovr(p)}</div></div></div>
-      <div class="kv">
-        <div><span class="label">Valor</span><b>${P.money(P.value(p))}</b></div>
-        ${P.potOvr ? `<div><span class="label">Potencial</span><b>${p.age <= 24 ? (P.potBest ? (() => { const b = P.potBest(p); return b.v + (b.pos !== p.pos ? ` <small class="muted" style="font-size:.7rem">como ${b.pos}</small>` : ''); })() : P.potOvr(p)) : '—'}${p.potT ? `<span class="pot-t ${p.potT > 0 ? 'up' : 'dn'}">${p.potT > 0 ? '▲' : '▼'}${Math.abs(p.potT)}</span>` : ''}</b></div>` : ''}
-        <div><span class="label">Salário</span><b>${P.money(p.wage || 0)}<span class="muted" style="font-size:.75rem">/mês</span></b></div>
-        <div><span class="label">Contrato até</span><b class="${g && p.ctr <= g.season ? 'v2' : ''}">${p.ctr || '—'}</b></div>
-        <div><span class="label">Condição</span><b class="${p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : ''}">${Math.round(p.cond)}%</b></div>
-        <div><span class="label">Moral</span><b>${moraleWord(p.mor)}</b></div>
-        ${P.xp ? `<div><span class="label">Experiência</span><b>${Math.round(P.xp(p))} <small class="muted" style="font-size:.7rem">${P.xpWord(P.xp(p))}</small></b></div>` : ''}
-        <div><span class="label">Jogos</span><b>${p.s.j}</b></div>
-        <div><span class="label">Gols liga</span><b>${p.s.g}</b></div>
-        <div><span class="label">Gols copa</span><b>${p.s.cg}</b></div>
-        <div><span class="label">Assist.</span><b>${p.s.as}</b></div>
-        <div><span class="label">Nota</span><b>${avgNote(p)}</b></div>
+      <div class="ps-head">${P.badge(c, 34)}<div class="ps-id"><div>${p.age} anos · ${esc(P.countryName(p.nat))}</div><div class="muted">${c ? esc(c.name) + ' · ' + c.div + 'ª div' : 'Sem clube'}</div><div>${status(p)}</div></div>
+        <div class="ps-ovr"><span class="label">Força</span><div class="big-ovr">${P.ovr(p)}</div>${pot ? `<span class="ps-pot">potencial <b>${pot.v}</b>${pot.pos !== p.pos ? ` como ${pot.pos}` : ''}${p.potT ? ` <span class="pot-t ${p.potT > 0 ? 'up' : 'dn'}">${p.potT > 0 ? '▲' : '▼'}${Math.abs(p.potT)}</span>` : ''}</span>` : ''}</div></div>
+      <div class="ps-rende"><span class="label">Rende em</span>${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}">${b.pos} ${b.v}</span>`).join('')}</div>
+      <div class="ps-blocks">
+        <div class="ps-b"><h4 class="label">Contrato</h4><div class="kv">${kv('Valor', P.money(P.value(p)))}${kv('Salário', P.money(p.wage || 0) + '<small>/mês</small>')}${kv('Até', p.ctr || '—', g && p.ctr <= g.season ? 'v2' : '')}</div></div>
+        <div class="ps-b"><h4 class="label">Momento</h4><div class="kv">${kv('Condição', Math.round(p.cond) + '%', p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : '')}${kv('Moral', moraleWord(p.mor))}${P.xp ? kv('Experiência', `${Math.round(P.xp(p))} <small>${P.xpWord(P.xp(p))}</small>`) : ''}</div></div>
+        <div class="ps-b"><h4 class="label">Temporada</h4><div class="kv">${kv('Jogos', p.s.j)}${kv('Gols', p.s.g + p.s.cg + (p.s.cg ? ` <small>${p.s.cg} na copa</small>` : ''))}${kv('Assist.', p.s.as)}${kv('Nota', avgNote(p))}</div></div>
       </div>
-      <div class="attrs">${Object.entries(groups).map(([gname, list]) => `<div class="grp"><h4 class="label">${gname}</h4>${list.map((at) => `<div class="attr"><span>${at.n}</span><b class="${vcls(p.a[at.k])}">${p.a[at.k]}</b></div>`).join('')}</div>`).join('')}</div>
+      <div class="attrs ps-attrs"><div>${left.map(([n, l]) => grp(n, l)).join('')}</div><div>${right.map(([n, l]) => grp(n, l)).join('')}</div></div>
       ${P.traitsBlock ? P.traitsBlock(p) : ''}
       ${P.adaptBlock ? P.adaptBlock(g, p) : ''}
-      ${P.ROLES && P.ROLES[p.pos] && P.roleMastery ? `<div><div class="label" style="margin-bottom:6px">Funções como ${p.pos}</div><div class="role-list">${Object.entries(P.ROLES[p.pos]).map(([k, r]) => ({ k, r, v: P.roleMastery(p, p.pos, k) })).sort((a, b) => b.v - a.v).map((x) => `<span class="role-pill"><span>${esc(x.r.n)}</span>${P.starsHTML(x.v)}</span>`).join('')}</div></div>` : ''}
-      <div><div class="label" style="margin-bottom:6px">Rende em</div><div class="row">${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}" style="padding:4px 10px">${b.pos} ${b.v}</span>`).join('')}</div></div>
+      ${roleList.length ? `<div><div class="label" style="margin-bottom:6px">Funções como ${p.pos}</div><div class="role-list">${roleList.map((x) => `<span class="role-pill ${usoPos === p.pos && usoKey === x.k ? 'uso' : ''}"><span>${esc(x.r.n)}${usoPos === p.pos && usoKey === x.k ? ' <em>· em uso</em>' : ''}</span>${P.starsHTML(x.v)}</span>`).join('')}</div>${usoOther}</div>` : ''}
       ${action}
-      <div class="row">${mine && !mode && P.talkButton ? P.talkButton(p) : ''}${!mode && g ? P.marketButtons(p) : ''}${mine && !mode && P.canDemote && P.canDemote(g, p) ? `<button class="btn" data-a="yDemote" data-id="${p.id}">Devolver ao Sub-20</button>` : ''}${mine && !mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button><button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}<span class="spacer"></span><button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button></div>`);
+      <div class="row ps-act">${primary}</div>
+      <details class="ps-more"><summary>Mais ações…</summary><div class="row">${more}</div></details>`);
     if (mode) { const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sh.scrollHeight; }
   };
   function moraleWord(m) { return m >= 85 ? 'Ótima' : m >= 68 ? 'Boa' : m >= 50 ? 'Normal' : m >= 35 ? 'Baixa' : 'Péssima'; }
