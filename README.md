@@ -80,3 +80,10 @@ const g = P.newGame(P.generateDatabase(2027), 'c1', 'Teste');
 while (!g.over) P.playWeek(g);
 console.log(P.table(g, 1).slice(0, 5).map((r) => P.club(g, r.cid).name + ' ' + r.pts));
 ```
+
+## Ideias guardadas
+
+- **Economia um pouco mais apertada** (simulação de nov/2026: sem contratar ninguém, o clube do jogador vai de 0,9 mi para ~27 mi em 5 temporadas; a IA se equilibra sozinha):
+  1. Custo de manutenção por temporada para estádio, CT, base e sede, maior quanto maior o nível.
+  2. Público que reage à campanha (time bem enche, sequência ruim esvazia), com bilheteria média um pouco menor.
+  - Meta: no mesmo teste, o caixa do jogador terminar perto de 10–15 mi; a IA quase não mudar.
