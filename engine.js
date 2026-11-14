@@ -217,18 +217,44 @@
   P.divClubs = (db, d) => db.clubs.filter((c) => c.div === d);
 
   // ---------- Escalação ----------
+  // Melhor escalação possível: atribuição ótima (algoritmo húngaro) entre posições e jogadores,
+  // maximizando a soma da força de cada um na posição em que joga (com a condição física).
+  // Assim um zagueiro que rende bem de lateral pode ir para a lateral se isso deixar o time mais forte.
+  function assignBest(score, n, m) {
+    // minimiza custo = -score; n linhas (posições) <= m colunas (jogadores)
+    const INF = 1e18, u = new Array(n + 1).fill(0), v = new Array(m + 1).fill(0), pj = new Array(m + 1).fill(0), way = new Array(m + 1).fill(0);
+    for (let i = 1; i <= n; i++) {
+      pj[0] = i; let j0 = 0;
+      const minv = new Array(m + 1).fill(INF), usedC = new Array(m + 1).fill(false);
+      do {
+        usedC[j0] = true;
+        const i0 = pj[j0]; let delta = INF, j1 = 0;
+        for (let j = 1; j <= m; j++) if (!usedC[j]) {
+          const cur = -score[i0 - 1][j - 1] - u[i0] - v[j];
+          if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+          if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+        }
+        for (let j = 0; j <= m; j++) { if (usedC[j]) { u[pj[j]] += delta; v[j] -= delta; } else minv[j] -= delta; }
+        j0 = j1;
+      } while (pj[j0] !== 0);
+      do { const j1 = way[j0]; pj[j0] = pj[j1]; j0 = j1; } while (j0);
+    }
+    const res = new Array(n).fill(-1);
+    for (let j = 1; j <= m; j++) if (pj[j]) res[pj[j] - 1] = j - 1;
+    return res;
+  }
   P.autoXI = function (g, cid, formation) {
     const tt = g.tac[cid];
     const slots = tt && tt.xy ? P.slots(tt) : P.slots(formation);
     const avail = P.squad(g, cid).filter(P.available);
-    const pairs = [];
-    slots.forEach((s, i) => avail.forEach((p) => pairs.push({ i, p, sc: P.ovrAt(p, s.pos) * P.condF(p) })));
-    pairs.sort((a, b) => b.sc - a.sc);
-    const xi = new Array(slots.length).fill(null), used = new Set();
-    for (const pr of pairs) {
-      if (xi[pr.i] || used.has(pr.p.id)) continue;
-      xi[pr.i] = pr.p.id; used.add(pr.p.id);
-    }
+    const n = slots.length;
+    const xi = new Array(n).fill(null);
+    if (!avail.length) return xi;
+    // jogadores fictícios (vazio) quando faltar gente, para a conta fechar
+    const cols = avail.concat(new Array(Math.max(0, n - avail.length)).fill(null));
+    const score = slots.map((s) => cols.map((p) => (p ? P.ovrAt(p, s.pos) * P.condF(p) : 0)));
+    const res = assignBest(score, n, cols.length);
+    res.forEach((j, i) => { if (j >= 0 && cols[j]) xi[i] = cols[j].id; });
     return xi;
   };
 
