@@ -513,11 +513,11 @@
     A.openSheet(`<div class="bar-top"><span class="pos-tag ${P.LINE[p.pos]}" style="padding:4px 8px">${p.pos}</span>
         <h2>${esc(p.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       <div class="ps-head">${P.badge(c, 34)}<div class="ps-id"><div>${p.age} anos · ${esc(P.countryName(p.nat))}</div><div class="muted">${c ? esc(c.name) + ' · ' + c.div + 'ª div' : 'Sem clube'}</div><div>${status(p)}</div></div>
-        <div class="ps-ovr"><span class="label">Força</span><div class="big-ovr">${P.ovr(p)}</div>${pot ? `<span class="ps-pot">potencial <b>${pot.v}</b>${pot.pos !== p.pos ? ` como ${pot.pos}` : ''}${p.potT ? ` <span class="pot-t ${p.potT > 0 ? 'up' : 'dn'}">${p.potT > 0 ? '▲' : '▼'}${Math.abs(p.potT)}</span>` : ''}</span>` : ''}</div></div>
+        <div class="ps-ovr"><span class="label">Força</span><div class="big-ovr">${P.ovr(p)}</div></div></div>
       <div class="ps-rende"><span class="label">Rende em</span>${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}">${b.pos} ${b.v}</span>`).join('')}</div>
       <div class="ps-blocks">
         <div class="ps-b"><h4 class="label">Contrato</h4><div class="kv">${kv('Valor', P.money(P.value(p)))}${kv('Salário', P.money(p.wage || 0) + '<small>/mês</small>')}${kv('Até', p.ctr || '—', g && p.ctr <= g.season ? 'v2' : '')}</div></div>
-        <div class="ps-b"><h4 class="label">Momento</h4><div class="kv">${kv('Condição', Math.round(p.cond) + '%', p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : '')}${kv('Moral', moraleWord(p.mor))}${P.xp ? kv('Experiência', `${Math.round(P.xp(p))} <small>${P.xpWord(P.xp(p))}</small>`) : ''}</div></div>
+        <div class="ps-b"><h4 class="label">Momento</h4><div class="kv">${pot ? kv('Potencial', `${pot.v}${pot.pos !== p.pos ? ` <small>como ${pot.pos}</small>` : ''}${p.potT ? ` <span class="pot-t ${p.potT > 0 ? 'up' : 'dn'}">${p.potT > 0 ? '▲' : '▼'}${Math.abs(p.potT)}</span>` : ''}`) : ''}${kv('Condição', Math.round(p.cond) + '%', p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : '')}${kv('Moral', moraleWord(p.mor))}${P.xp ? kv('Experiência', `${Math.round(P.xp(p))} <small>${P.xpWord(P.xp(p))}</small>`) : ''}</div></div>
         <div class="ps-b"><h4 class="label">Temporada</h4><div class="kv">${kv('Jogos', p.s.j)}${kv('Gols', p.s.g + p.s.cg + (p.s.cg ? ` <small>${p.s.cg} na copa</small>` : ''))}${kv('Assist.', p.s.as)}${kv('Nota', avgNote(p))}</div></div>
       </div>
       <div class="attrs ps-attrs"><div>${left.map(([n, l]) => grp(n, l)).join('')}</div><div>${right.map(([n, l]) => grp(n, l)).join('')}</div></div>
