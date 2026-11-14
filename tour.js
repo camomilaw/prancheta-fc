@@ -53,6 +53,13 @@
         <div class="tour-fmt">${Object.entries(FORMATS).map(([k, f]) => `<button class="${t.format === k ? 'on' : ''}" data-a="tourFmt" data-k="${k}"><b>${f.n}</b><small>${f.d}${f.sizes ? ` · ${f.sizes.join('/')} times` : ` · ${f.min} a ${f.max} times`}</small></button>`).join('')}</div>
         ${t.format !== 'ko' ? `<div class="seg" style="margin-top:8px"><button class="${t.legs === 1 ? 'on' : ''}" data-a="tourLegs" data-k="1">Turno único</button><button class="${t.legs === 2 ? 'on' : ''}" data-a="tourLegs" data-k="2">Ida e volta</button></div>` : ''}
       </section>
+      <section class="jr-sec"><div class="jr-h jr-h-row"><h2>Importar patch ou time</h2><button class="jr-link" data-a="tourImpToggle">${t.imp ? 'fechar' : 'abrir'}</button></div>
+        ${t.patches && t.patches.length ? `<p class="jr-note">Aplicado: ${t.patches.map(esc).join(' · ')}</p>` : ''}
+        ${t.imp ? `<p class="jr-note" style="font-style:normal">Patch com clubes da Ultraliga editados (como o de clubes reais), banco de dados completo ou arquivo de time recebido. O patch vale para o torneio e também para a próxima carreira que você começar.</p>
+          <input type="file" accept=".json,.txt,application/json" data-c="tourFile" aria-label="Arquivo para importar no torneio">
+          <div class="field"><textarea id="tour-imp" placeholder="…ou cole aqui o texto do patch/time"></textarea></div>
+          <div class="row"><span class="spacer"></span><button class="btn primary" data-a="tourImport">Importar</button></div>` : ''}
+      </section>
       <section class="jr-sec"><h2 class="jr-h">2 · Times escolhidos (${t.picks.length})</h2>
         <div class="tour-chips">${t.picks.map(chip).join('') || '<span class="jr-note">Nenhum ainda. Escolha abaixo.</span>'}</div>
         <div class="row"><button class="btn sm" data-a="tourFill">Completar com sorteio</button><button class="btn sm ghost" data-a="tourClear">Limpar</button></div>
@@ -188,9 +195,35 @@
     </div>`;
   }
 
+  // Importar dentro do torneio: patch/banco mexem no banco da tela inicial; time vai para a biblioteca
+  function tourImport(text) {
+    const t = st();
+    let obj; try { obj = JSON.parse(text); } catch (e) { A.toast('Esse texto não é um arquivo válido do Prancheta FC.'); return; }
+    let msg;
+    if (obj && obj.type === 'team' && Array.isArray(obj.players)) {
+      if (!obj.players.length) { A.toast('O time não tem jogadores.'); return; }
+      const tm = P.teamLibAdd(obj); t.picks.push({ src: 'lib', id: tm.libId });
+      msg = `Time "${obj.name}" importado e colocado no torneio`;
+    } else if (obj && obj.type === 'patch') {
+      let n; try { n = P.applyPatch(A.setup.db, obj, null); } catch (e) { A.toast('Não deu para aplicar o patch: ' + e.message); return; }
+      (t.patches = t.patches || []).push(obj.name || 'patch sem nome');
+      msg = `Patch "${obj.name || 'sem nome'}" aplicado${typeof n === 'number' ? `: ${n} clubes` : ''}`;
+    } else if (obj && obj.cal && obj.db) { A.toast('Isso é uma carreira salva. Para o torneio, use um patch ou um arquivo de time.'); return; }
+    else if (obj && Array.isArray(obj.clubs)) {
+      A.setup.db = P.normalizeDb(obj); A.setup.club = null;
+      (t.patches = t.patches || []).push('banco de dados importado');
+      msg = 'Banco de dados importado';
+    } else { A.toast('Não reconheci esse arquivo.'); return; }
+    // tira escolhas que deixaram de existir
+    t.picks = t.picks.filter((pk) => pk.src === 'lib' ? P.teamLib().some((x) => x.libId === pk.id) : A.setup.db.clubs.some((c) => c.id === pk.id));
+    t.imp = false; A.render(); A.toast(msg);
+  }
+
   P.tourView = function () { const t = st(); return t.T ? runView() : pickView(); };
 
   Object.assign(A.ACT, {
+    tourImpToggle() { st().imp = !st().imp; A.render(); },
+    tourImport() { const ta = document.getElementById('tour-imp'); if (!ta || !ta.value.trim()) { A.toast('Escolha um arquivo ou cole o texto.'); return; } tourImport(ta.value); },
     tourOpen() { st(); A.setup.touring = true; A.render(); window.scrollTo(0, 0); },
     tourClose() { A.setup.touring = false; if (A.setup.tour) A.setup.tour.T = null; A.render(); window.scrollTo(0, 0); },
     tourBack() { st().T = null; A.render(); window.scrollTo(0, 0); },
@@ -216,6 +249,12 @@
     tourAll() { const t = st(); let k = 0; while (t.T && !t.T.done && k++ < 200) stepRound(t.T); A.render(); }
   });
   Object.assign(A.CHG, {
+    tourFile(el) {
+      const f = el.files && el.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => tourImport(String(rd.result || ''));
+      rd.readAsText(f);
+    },
     tourDiv(el) { st().divF = Number(el.value); st().q = ''; A.render(); },
     tourQ(el) { st().q = el.value; A.render(); }
   });
