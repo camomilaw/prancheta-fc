@@ -303,11 +303,15 @@
       const post = (P.POSTURE && P.POSTURE[pc]) || { a: 1, m: 1, d: 1 };
       const ra = role && role.att ? role.att(p, r) : r.att;
       const rm = role && role.cre ? role.cre(p, r) : r.cre;
-      const ca = ATT_W[s.pos] * ra * f * (role ? role.a : 1) * post.a;
+      // maestria na função: 3 estrelas é neutro; cada estrela vale ~3% no que a função pede
+      const mast = role && P.roleMastery ? P.roleMastery(p, s.pos, P.roleKey(tac, s.i, s.pos)) : 3;
+      const mf = 1 + 0.03 * (mast - 3);
+      let ca = ATT_W[s.pos] * ra * f * (role ? role.a : 1) * post.a * mf;
+      if (role && role.vsHigh && opp.line === 'alt') ca *= 1.15; // velocista contra linha alta
       if (['ATA', 'PD', 'PE', 'MEI'].includes(s.pos)) atk.push(ca); else att += ca;
-      mid += MID_W[s.pos] * (rm * 0.8 + r.phys * 0.2) * f * (role ? role.m : 1) * post.m;
-      def += DEF_W[s.pos] * r.def * f * (role ? role.d : 1) * post.d;
-      if (s.pos === 'GOL') gk = r.gk * f;
+      mid += MID_W[s.pos] * (rm * 0.8 + r.phys * 0.2) * f * (role ? role.m : 1) * post.m * mf;
+      def += DEF_W[s.pos] * r.def * f * (role ? role.d : 1) * post.d * mf * (role && role.press && tac.pre === 'alt' ? 1.1 : 1);
+      if (s.pos === 'GOL') gk = r.gk * f * mf * (role && role.gk ? role.gk : 1);
       if (['ZAG', 'LD', 'LE'].includes(s.pos)) cnt.d++;
       if (s.pos === 'ZAG') cnt.z++;
       if (['VOL', 'MC', 'MEI'].includes(s.pos)) cnt.m++;
@@ -433,6 +437,7 @@
     // pressão: fim de jogo apertado
     const press = (p, min) => (min >= 70 && Math.abs(goals[0] - goals[1]) <= 1 ? (hasT(p, 'pressao') ? 1.1 : hasT(p, 'nervoso') ? 0.9 : 1) : 1);
     const gkOf = (side) => { const s = active(side).find((x) => x.pos === 'GOL'); return s ? s.p : null; };
+    const rfx = (side, s, k) => { const ro = P.roleOf ? P.roleOf(L[side].t, s.i, s.pos) : null; return ro && ro.fx && ro.fx[k] ? ro.fx[k] : 1; };
     const score = (side, min, p, sp, asId) => {
       goals[side]++; sot[side]++;
       gls[p.id] = (gls[p.id] || 0) + 1;
@@ -451,10 +456,11 @@
       if (rnd() >= T.cornerShot) return;
       const tk = P.spTaker(L[side], 'co'); if (!tk) return;
       const pool = active(side).filter((s) => s.pos !== 'GOL' && s.p !== tk); if (!pool.length) return;
-      const hd = P.weighted(rnd, pool, (s) => ({ ZAG: 1.4, ATA: 1.4, VOL: 0.8 }[s.pos] || 0.5) * (s.p.a.cab + s.p.a.for * 0.3) * (hasT(s.p, 'cabeca') ? 1.6 : 1));
+      const hd = P.weighted(rnd, pool, (s) => ({ ZAG: 1.4, ATA: 1.4, VOL: 0.8 }[s.pos] || 0.5) * (s.p.a.cab + s.p.a.for * 0.3) * (hasT(s.p, 'cabeca') ? 1.6 : 1) * rfx(side, s, 'header'));
+      const gkS = active(1 - side).find((x) => x.pos === 'GOL'), areaF = gkS ? rfx(1 - side, gkS, 'area') : 1;
       const gk = gkOf(1 - side);
       const q = (P.SP_SKILL.co(tk) / 12) * (hd.p.a.cab * (hasT(hd.p, 'cabeca') ? 1.25 : 1) / 12);
-      setShot(side, min, hd.p, P.clamp(T.cornerXG * q * (12 / Math.max(4, gk ? gk.a.aer : 8)) * press(hd.p, min), 0.01, 0.4), 'esc', tk.id, 0.35);
+      setShot(side, min, hd.p, P.clamp(T.cornerXG * q * areaF * (12 / Math.max(4, gk ? gk.a.aer : 8)) * press(hd.p, min), 0.01, 0.4), 'esc', tk.id, 0.35);
     };
     // falta cometida por side; perto da área vira pênalti ou cobrança direta do adversário
     const foul = (side, min) => {
@@ -488,6 +494,7 @@
         const insS = P.insOf(L[side].t);
         if (insS.pass === 'dir') cp *= 1.08;
         if (insS.pass === 'cur') cp *= 0.95;
+        cp *= active(side).reduce((m, x) => m * rfx(side, x, 'chance'), 1); // dribladores e carregadores criam mais
         cp = P.clamp(cp, 0.12, 0.8);
         // big = chance clara; senão, muitas vezes o time arrisca de longe (xG baixo)
         const big = rnd() < cp;
@@ -495,7 +502,7 @@
           shots[side]++;
           const pool = active(side).filter((s) => s.pos !== 'GOL');
           if (pool.length) {
-            const sh = P.weighted(rnd, pool, (s) => { const ro = P.roleOf ? P.roleOf(L[side].t, s.i, s.pos) : null; return ATT_W[s.pos] * (s.p.a.fin + s.p.a.cab * (ro && ro.aerial ? 0.8 : 0.4)) * (ro ? ro.a : 1) * (!big && hasT(s.p, 'longe') ? 2.2 : 1); });
+            const sh = P.weighted(rnd, pool, (s) => { const ro = P.roleOf ? P.roleOf(L[side].t, s.i, s.pos) : null; return ATT_W[s.pos] * (s.p.a.fin + s.p.a.cab * (ro && ro.aerial ? 0.8 : 0.4)) * (ro ? ro.a : 1) * (!big && hasT(s.p, 'longe') ? 2.2 : 1) * rfx(side, s, 'shot'); });
             const a = sh.p.a;
             const q = ((a.fin * 2 + a.com + a.cab * 0.5) / 3.5) * P.fitP(sh.p, sh.pos) * P.condF(sh.p) * P.morF(sh.p)
               * press(sh.p, min) * (min >= 75 && hasT(sh.p, 'decisivo') ? 1.12 : 1) * (!big && hasT(sh.p, 'longe') ? 1.4 : 1);
@@ -511,7 +518,7 @@
               let asId = null;
               const mates = pool.filter((s) => s !== sh);
               if (mates.length && rnd() < (big ? 0.75 : 0.45)) {
-                const as = P.weighted(rnd, mates, (s) => (MID_W[s.pos] + ATT_W[s.pos]) * (s.p.a.pas + s.p.a.vis + s.p.a.cru * 0.5) * (hasT(s.p, 'garcom') ? 1.7 : 1));
+                const as = P.weighted(rnd, mates, (s) => (MID_W[s.pos] + ATT_W[s.pos]) * (s.p.a.pas + s.p.a.vis + s.p.a.cru * 0.5) * (hasT(s.p, 'garcom') ? 1.7 : 1) * rfx(side, s, 'assist'));
                 asId = as.p.id; ast[asId] = (ast[asId] || 0) + 1;
               }
               ev.push(Object.assign(mm(min), { t: 'gol', s: side, p: sh.p.id, as: asId }));
@@ -524,14 +531,15 @@
         } else {
           // ataque cortado: um defensor fica com o desarme
           const dpool = active(o).filter((s) => s.pos !== 'GOL');
-          if (dpool.length) pst(P.weighted(rnd, dpool, (s) => (DEF_W[s.pos] + 0.05) * (s.p.a.des + s.p.a.mar + s.p.a.pos)).p.id).tk++;
+          if (dpool.length) pst(P.weighted(rnd, dpool, (s) => (DEF_W[s.pos] + 0.05) * (s.p.a.des + s.p.a.mar + s.p.a.pos) * rfx(o, s, 'tackle')).p.id).tk++;
           if (rnd() < 0.5) corner(side, min); // ataque cortado para escanteio
         }
       }
       // faltas (pressão alta faz mais faltas); cartões abaixo também contam como falta
       for (const side of [0, 1]) {
         const pre = L[side].t.pre;
-        if (rnd() < 0.115 * (pre === 'alt' ? 1.25 : pre === 'bai' ? 0.85 : 1)) foul(side, min);
+        const pitF = active(side).reduce((m, x) => m * (rfx(side, x, 'foul') > 1 ? 1.1 : 1), 1); // pitbulls fazem mais faltas
+        if (rnd() < 0.115 * (pre === 'alt' ? 1.25 : pre === 'bai' ? 0.85 : 1) * pitF) foul(side, min);
       }
 
       for (const side of [0, 1]) {
@@ -539,7 +547,7 @@
         if (!act.length) continue;
         if (rnd() < T.yellowPerMin * (L[side].t.pre === 'alt' ? 1.2 : 1)) {
           // quem já tem amarelo joga com mais cuidado (menos segundos amarelos)
-          const s = P.weighted(rnd, act, (x) => (DEF_W[x.pos] + 0.2) * (L[side].yel[x.p.id] ? T.bookedCare : 1) * cardT(x.p));
+          const s = P.weighted(rnd, act, (x) => (DEF_W[x.pos] + 0.2) * (L[side].yel[x.p.id] ? T.bookedCare : 1) * cardT(x.p) * rfx(side, x, 'foul'));
           const id = s.p.id;
           L[side].yel[id] = (L[side].yel[id] || 0) + 1;
           foul(side, min);

@@ -1103,3 +1103,12 @@ table { font-family: var(--f-body); }
 .pk-svg { width: 100%; aspect-ratio: 100 / 70; height: auto; display: block; border-radius: 2px; flex: none; }
 .pk-cap { text-align: center; font-family: var(--f-display); font-size: 1.1rem; min-height: 1.5em; }
 .pk-cap .pk-g { color: var(--good); } .pk-cap .pk-x { color: var(--bad); }
+
+/* Maestria nas funções */
+.stars.rm { white-space: nowrap; font-size: .8rem; }
+.stars .half { background: linear-gradient(90deg, var(--warn) 50%, var(--line) 50%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.role b { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.role-k { color: var(--muted); font-style: italic; font-size: .75rem; }
+.role-list { display: flex; flex-direction: column; gap: 2px; }
+.role-pill { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dotted var(--line); font-size: .9rem; }
+.role .stars.rm { color: var(--warn); font-weight: 400; } .role .stars .off { color: var(--line); }

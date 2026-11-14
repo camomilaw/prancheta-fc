@@ -12,49 +12,80 @@
     equ: { n: 'Equilibrada', a: 1, m: 1, d: 1 },
     ofe: { n: 'Ofensiva', a: 1.25, m: 1.03, d: 0.75 }
   };
-  const R = (n, desc, a, m, d, extra) => Object.assign({ n, desc, a, m, d }, extra || {});
+  // Funções: n/desc, multiplicadores de ataque (a), criação (m) e defesa (d), atributos-chave (k)
+  // que definem a maestria (1 a 5 estrelas) e efeitos nos lances (fx). A 1ª de cada posição é a padrão.
+  const R = (n, desc, a, m, d, k, extra) => Object.assign({ n, desc, a, m, d, k }, extra || {});
   const mix = (base, v) => base * 0.5 + v * 0.5;
   const lat = {
-    lat: R('Lateral equilibrado', 'Apoia e volta na medida certa.', 1, 1, 1),
-    cru: R('Apoia e cruza', 'Vai até a linha de fundo e cruza na área.', 1.25, 1, 0.85, { cross: true, att: (p, r) => mix(r.att, p.a.cru) }),
-    inv: R('Cria por dentro', 'Fecha para o meio e ajuda a construir.', 1.05, 1.2, 0.9, { cre: (p, r) => mix(r.cre, (p.a.pas + p.a.vis) / 2) }),
-    fix: R('Lateral fixo', 'Quase não sobe; protege o lado.', 0.6, 0.95, 1.15)
+    lat: R('Lateral equilibrado', 'Apoia e volta na medida certa.', 1, 1, 1, ['des', 'mar', 'vel', 'cru', 'res']),
+    cru: R('Apoia e cruza', 'Vai até a linha de fundo e cruza na área.', 1.25, 1, 0.85, ['cru', 'vel', 'res', 'dri'], { cross: true, att: (p, r) => mix(r.att, p.a.cru) }),
+    inv: R('Cria por dentro', 'Fecha para o meio e ajuda a construir.', 1.05, 1.2, 0.9, ['pas', 'vis', 'dec', 'com'], { cre: (p, r) => mix(r.cre, (p.a.pas + p.a.vis) / 2), fx: { assist: 1.3 } }),
+    fix: R('Lateral fixo', 'Quase não sobe; protege o lado.', 0.6, 0.95, 1.15, ['des', 'mar', 'pos', 'for'], { fx: { tackle: 1.3 } }),
+    ala: R('Ala ofensivo', 'Joga quase como ponta; deixa espaço atrás.', 1.35, 1.02, 0.75, ['vel', 'dri', 'res', 'cru', 'fin'], { cross: true, att: (p, r) => mix(r.att, (p.a.dri + p.a.cru) / 2) })
   };
   const wing = {
-    abe: R('Ponta aberto', 'Joga na linha e cruza para a área.', 1, 1, 1, { cross: true, att: (p, r) => mix(r.att, p.a.cru) }),
-    inv: R('Ponta invertido', 'Corta para o meio e finaliza.', 1.08, 1, 1, { att: (p, r) => mix(r.att, (p.a.fin + p.a.dri) / 2) }),
-    rec: R('Ponta que recompõe', 'Ajuda a marcar o lateral adversário.', 0.85, 1.05, 1.4)
+    abe: R('Ponta aberto', 'Joga na linha e cruza para a área.', 1, 1, 1, ['cru', 'vel', 'dri', 'res'], { cross: true, att: (p, r) => mix(r.att, p.a.cru) }),
+    inv: R('Ponta invertido', 'Corta para o meio e finaliza.', 1.08, 1, 1, ['fin', 'dri', 'vel', 'com'], { att: (p, r) => mix(r.att, (p.a.fin + p.a.dri) / 2) }),
+    drb: R('Driblador', 'Parte para cima e cria superioridade no um contra um.', 1.15, 1.02, 0.85, ['dri', 'vel', 'com', 'dec'], { att: (p, r) => mix(r.att, p.a.dri), fx: { chance: 1.06 } }),
+    ext: R('Atacante pelo lado', 'Pisa na área como segundo atacante.', 1.2, 0.92, 0.85, ['fin', 'vel', 'dec', 'cab'], { att: (p, r) => mix(r.att, p.a.fin), fx: { shot: 1.3 } }),
+    rec: R('Ponta que recompõe', 'Ajuda a marcar o lateral adversário.', 0.85, 1.05, 1.4, ['res', 'des', 'mar', 'vel'], { fx: { tackle: 1.3 } })
   };
   P.ROLES = {
-    GOL: { gk: R('Goleiro tradicional', 'Fica no gol e foca em defender.', 1, 1, 1), lib: R('Goleiro líbero', 'Sai jogando com os pés e adianta a defesa.', 1, 1.05, 0.97) },
+    GOL: {
+      gk: R('Goleiro tradicional', 'Fica no gol e foca em defender.', 1, 1, 1, ['ref', 'um1', 'aer', 'pos']),
+      lib: R('Goleiro líbero', 'Sai jogando com os pés e adianta a defesa.', 1, 1.05, 0.97, ['pas', 'vel', 'dec', 'um1']),
+      refl: R('Goleiro de reflexos', 'Vive embaixo das traves; defesas difíceis.', 1, 0.97, 1, ['ref', 'um1', 'com'], { gk: 1.04 }),
+      are: R('Dono da área', 'Sai nos cruzamentos e manda na pequena área.', 1, 1, 1, ['aer', 'for', 'pos', 'com'], { fx: { area: 0.75 } })
+    },
     ZAG: {
-      zag: R('Zagueiro', 'Equilibrado entre marcar e sair jogando.', 1, 1, 1),
-      con: R('Zagueiro construtor', 'Inicia as jogadas com passes.', 1, 1.15, 0.95, { cre: (p, r) => mix(r.cre, p.a.pas) }),
-      xer: R('Xerife', 'Só marca, sem arriscar com a bola.', 1, 0.9, 1.08)
+      zag: R('Zagueiro', 'Equilibrado entre marcar e sair jogando.', 1, 1, 1, ['des', 'mar', 'pos', 'cab']),
+      con: R('Zagueiro construtor', 'Inicia as jogadas com passes.', 1, 1.15, 0.95, ['pas', 'vis', 'com', 'des'], { cre: (p, r) => mix(r.cre, p.a.pas) }),
+      xer: R('Xerife', 'Só marca, sem arriscar com a bola.', 1, 0.9, 1.08, ['des', 'mar', 'for', 'cab'], { fx: { tackle: 1.3 } }),
+      lib: R('Líbero', 'Sobra atrás da linha, lê o jogo e sai com a bola.', 1, 1.08, 1.02, ['pos', 'dec', 'pas', 'vel']),
+      ofz: R('Zagueiro que sobe', 'Aparece na área nas bolas paradas.', 1.15, 1, 0.95, ['cab', 'for', 'fin'], { fx: { header: 1.8 } })
     },
     LD: lat, LE: lat,
     VOL: {
-      mar: R('Volante marcador', 'Protege a defesa e desarma.', 0.8, 0.95, 1.15),
-      arm: R('Volante construtor', 'Organiza o jogo desde trás.', 1, 1.15, 0.92, { cre: (p, r) => mix(r.cre, p.a.pas) }),
-      b2b: R('Box-to-box', 'Vai e volta o jogo todo.', 1.3, 1.03, 0.95)
+      mar: R('Volante marcador', 'Protege a defesa e desarma.', 0.8, 0.95, 1.15, ['pos', 'mar', 'des', 'dec'], { fx: { tackle: 1.2 } }),
+      pit: R('Volante pitbull', 'Morde o adversário o jogo todo; faz falta.', 0.75, 0.9, 1.22, ['des', 'res', 'for', 'mar'], { fx: { tackle: 1.6, foul: 1.5 } }),
+      arm: R('Volante construtor', 'Organiza o jogo desde trás.', 1, 1.15, 0.92, ['pas', 'vis', 'com', 'dec'], { cre: (p, r) => mix(r.cre, p.a.pas), fx: { assist: 1.2 } }),
+      reg: R('Regista', 'Lança de trás e dita o ritmo; marca pouco.', 0.95, 1.25, 0.85, ['pas', 'vis', 'com', 'dec'], { cre: (p, r) => mix(r.cre, (p.a.pas + p.a.vis) / 2), fx: { assist: 1.5 } }),
+      b2b: R('Box-to-box', 'Vai e volta o jogo todo.', 1.3, 1.03, 0.95, ['res', 'vel', 'des', 'pas', 'fin'])
     },
     MC: {
-      arm: R('Armador', 'Dita o ritmo com passes.', 0.95, 1.12, 1),
-      b2b: R('Box-to-box', 'Ataca e defende com a mesma intensidade.', 1.1, 1.02, 1.05),
-      che: R('Chega na área', 'Infiltra e finaliza.', 1.25, 0.92, 0.9, { att: (p, r) => mix(r.att, p.a.fin) })
+      arm: R('Armador', 'Dita o ritmo com passes.', 0.95, 1.12, 1, ['pas', 'vis', 'dec', 'com'], { fx: { assist: 1.3 } }),
+      b2b: R('Box-to-box', 'Ataca e defende com a mesma intensidade.', 1.1, 1.02, 1.05, ['res', 'des', 'pas', 'fin']),
+      che: R('Chega na área', 'Infiltra e finaliza.', 1.25, 0.92, 0.9, ['fin', 'dri', 'vel', 'dec'], { att: (p, r) => mix(r.att, p.a.fin), fx: { shot: 1.3 } }),
+      car: R('Carregador', 'Conduz a bola do meio até o ataque.', 1.1, 1.08, 0.9, ['dri', 'vel', 'res', 'pas'], { fx: { chance: 1.04 } }),
+      con: R('Meia de contenção', 'Fecha os espaços na frente da zaga.', 0.8, 0.98, 1.15, ['des', 'mar', 'pos', 'res'], { fx: { tackle: 1.3 } })
     },
     MEI: {
-      arm: R('Meia armador', 'Último passe e visão de jogo.', 0.95, 1.15, 1),
-      che: R('Meia que chega na área', 'Aparece como um segundo atacante.', 1.2, 0.9, 1, { att: (p, r) => mix(r.att, p.a.fin) }),
-      liv: R('Meia livre', 'Flutua pelo campo procurando espaço.', 1.05, 1.05, 0.9)
+      arm: R('Meia armador', 'Último passe e visão de jogo.', 0.95, 1.15, 1, ['pas', 'vis', 'dec', 'com'], { fx: { assist: 1.4 } }),
+      che: R('Meia que chega na área', 'Aparece como um segundo atacante.', 1.2, 0.9, 1, ['fin', 'dri', 'dec', 'com'], { att: (p, r) => mix(r.att, p.a.fin), fx: { shot: 1.3 } }),
+      liv: R('Meia livre', 'Flutua pelo campo procurando espaço.', 1.05, 1.05, 0.9, ['dri', 'vis', 'dec', 'vel']),
+      enc: R('Enganche', 'Clássico camisa 10: toca, pensa e decide.', 1, 1.25, 0.8, ['vis', 'pas', 'com', 'dri'], { cre: (p, r) => mix(r.cre, p.a.vis), fx: { assist: 1.6 } }),
+      pre: R('Meia que pressiona', 'Persegue a saída de bola adversária.', 0.95, 1.02, 1.15, ['res', 'des', 'vel', 'dec'], { press: true, fx: { tackle: 1.3 } })
     },
     PD: wing, PE: wing,
     ATA: {
-      ref: R('Centroavante de referência', 'Segura a bola e cabeceia os cruzamentos.', 1, 1, 1, { aerial: true, att: (p, r) => mix(r.att, (p.a.cab + p.a.for) / 2) }),
-      fin: R('Finalizador', 'Vive na área esperando a chance.', 1.05, 0.95, 1, { att: (p, r) => mix(r.att, p.a.fin) }),
-      f9: R('Falso 9', 'Recua para criar e abre espaço.', 0.85, 1.35, 1, { cre: (p, r) => r.cre })
+      ref: R('Centroavante de referência', 'Segura a bola e cabeceia os cruzamentos.', 1, 1, 1, ['cab', 'for', 'fin', 'com'], { aerial: true, att: (p, r) => mix(r.att, (p.a.cab + p.a.for) / 2) }),
+      fin: R('Finalizador', 'Vive na área esperando a chance.', 1.05, 0.95, 1, ['fin', 'com', 'dec', 'vel'], { att: (p, r) => mix(r.att, p.a.fin), fx: { shot: 1.4 } }),
+      vel: R('Atacante de velocidade', 'Ataca o espaço às costas da defesa.', 1.08, 0.95, 1, ['vel', 'fin', 'dri'], { vsHigh: true, att: (p, r) => mix(r.att, (p.a.vel + p.a.fin) / 2) }),
+      f9: R('Falso 9', 'Recua para criar e abre espaço.', 0.85, 1.35, 1, ['pas', 'vis', 'dri', 'dec'], { cre: (p, r) => r.cre, fx: { assist: 1.4 } }),
+      pre: R('Atacante que pressiona', 'Primeiro defensor do time; incomoda a saída.', 0.95, 1.03, 1.3, ['res', 'des', 'vel', 'dec'], { press: true })
     }
   };
+  // Maestria na função: média dos atributos-chave virando estrelas (1 a 5, de meia em meia)
+  P.roleMastery = function (p, pos, key) {
+    const map = P.ROLES[pos], r = map && map[key];
+    if (!p || !r || !r.k) return 3;
+    const avg = (ks) => ks.reduce((s, k) => s + (p.a[k] || 0), 0) / ks.length;
+    const all = Array.from(new Set(Object.values(map).flatMap((x) => x.k || [])));
+    // quanto os atributos da função se destacam no próprio jogador, mais um pouco do nível absoluto
+    const v = 2.7 + (avg(r.k) - avg(all)) / 1.4 + (avg(r.k) - 13) / 6;
+    return Math.max(1, Math.min(5, Math.round(v * 2) / 2));
+  };
+  P.starsHTML = (v) => { let h = ''; for (let i = 1; i <= 5; i++) h += v >= i ? '★' : v >= i - 0.5 ? '<span class="half">★</span>' : '<span class="off">★</span>'; return `<span class="stars rm" aria-label="${String(v).replace('.', ',')} de 5 estrelas">${h}</span>`; };
   P.roleKey = function (tac, i, pos) {
     const map = P.ROLES[pos], keys = Object.keys(map);
     const k = tac.roles && tac.roles[i] && tac.roles[i].fn;
@@ -254,7 +285,7 @@
     A.openSheet(`<div class="bar-top"><span class="pos-tag ${P.LINE[sl.pos]}" style="padding:4px 8px">${sl.pos}</span><h2>${esc(p.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       <div class="muted">Jogando como ${esc(P.POS_NAME[sl.pos].toLowerCase())} · força ${P.ovrAt(p, sl.pos)}${p.pos !== sl.pos ? ` (posição de origem: ${p.pos})` : ''}</div>
       <div><div class="label" style="margin-bottom:6px">Função</div>
-        <div class="roles">${Object.entries(P.ROLES[sl.pos]).map(([k, r]) => `<button class="role ${k === rk ? 'on' : ''}" data-a="tRole" data-i="${i}" data-k="${k}"><b>${esc(r.n)}</b><span>${esc(r.desc)}</span></button>`).join('')}</div></div>
+        <div class="roles">${Object.entries(P.ROLES[sl.pos]).map(([k, r]) => `<button class="role ${k === rk ? 'on' : ''}" data-a="tRole" data-i="${i}" data-k="${k}"><b>${esc(r.n)} ${P.starsHTML(P.roleMastery(p, sl.pos, k))}</b><span>${esc(r.desc)}</span>${r.k ? `<small class="role-k">Pede: ${r.k.map((a) => esc((P.ATTRS.find((x) => x.k === a) || {}).n || a)).join(', ')}</small>` : ''}</button>`).join('')}</div></div>
       ${i ? `<div><div class="label" style="margin-bottom:6px">Postura</div><div class="seg">${Object.entries(P.POSTURE).map(([k, o]) => `<button class="${k === post ? 'on' : ''}" data-a="tPost" data-i="${i}" data-k="${k}">${o.n}</button>`).join('')}</div></div>` : ''}
       <div><div class="label" style="margin-bottom:6px">Entrosamento com quem está perto</div>
         ${nb.length ? nb.map((x) => `<div class="chem-row"><span>${esc(x.p.name)}</span><span class="tr"><i style="width:${x.v}%;background:${x.v >= 70 ? 'var(--good)' : x.v >= 40 ? 'var(--warn)' : 'var(--bad)'}"></i></span><b class="num">${Math.round(x.v)}</b></div>`).join('') : '<p class="muted" style="margin:0">Ninguém perto dele no campo.</p>'}
