@@ -66,14 +66,42 @@
 
   // ---------- Entrosamento ----------
   const key = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
+  // Quem se entrosa com quem: duplas que se encontram no jogo (não só quem está perto no desenho).
+  // Zagueiros entre si e com o goleiro, lateral com o zagueiro do lado e com o ponta do mesmo lado,
+  // volantes com zagueiros e com o meio, meio com pontas e atacantes, atacantes entre si.
   P.neighbors = function (t) {
-    const sl = P.slots(t), out = [];
-    for (let i = 0; i < sl.length; i++) for (let j = i + 1; j < sl.length; j++) {
-      const dx = (sl[i].x - sl[j].x) * 0.68, dy = sl[i].y - sl[j].y;
-      if (Math.sqrt(dx * dx + dy * dy) < 22) out.push([i, j]);
-    }
+    const sl = P.slots(t), set = new Set(), out = [];
+    const add = (i, j) => { if (i == null || j == null || i === j) return; const k = i < j ? i + ':' + j : j + ':' + i; if (!set.has(k)) { set.add(k); out.push(i < j ? [i, j] : [j, i]); } };
+    const idx = (list) => sl.map((s, i) => (list.includes(s.pos) ? i : -1)).filter((i) => i >= 0);
+    const dist = (i, j) => Math.hypot((sl[i].x - sl[j].x) * 0.68, sl[i].y - sl[j].y);
+    const nearest = (i, cands, k) => cands.filter((j) => j !== i).sort((a, b) => dist(i, a) - dist(i, b)).slice(0, k || 1);
+    const sideOf = (i) => (sl[i].x < 45 ? 'L' : sl[i].x > 55 ? 'R' : 'C');
+    const sameSide = (i, cands) => { const s = sideOf(i); const c = cands.filter((j) => sideOf(j) === s); return c.length ? c : cands; };
+    const GOL = idx(['GOL']), ZAG = idx(['ZAG']), LAT = idx(['LD', 'LE']), VOL = idx(['VOL']), MID = idx(['MC', 'MEI']), PON = idx(['PD', 'PE']), ATA = idx(['ATA']);
+    const each = (a, f) => a.forEach(f);
+    // defesa
+    each(GOL, (g) => (ZAG.length ? ZAG : LAT).forEach((z) => add(g, z)));
+    each(ZAG, (a) => ZAG.forEach((b) => add(a, b)));
+    each(LAT, (l) => { nearest(l, ZAG.length ? ZAG : VOL.concat(MID)).forEach((z) => add(l, z)); nearest(l, sameSide(l, PON.length ? PON : MID)).forEach((p) => add(l, p)); });
+    // volantes (ou, sem volante, o meio mais recuado) com a zaga
+    const anchors = VOL.length ? VOL : MID.slice().sort((a, b) => sl[a].y - sl[b].y).slice(0, 1);
+    each(anchors, (v) => nearest(v, ZAG.length ? ZAG : LAT, 2).forEach((z) => add(v, z)));
+    // meio-campo
+    each(VOL, (a) => VOL.forEach((b) => add(a, b)));
+    each(VOL, (v) => nearest(v, MID, 2).forEach((m) => add(v, m)));
+    each(MID, (a) => nearest(a, MID, 2).forEach((b) => add(a, b)));
+    each(PON, (p) => nearest(p, sameSide(p, MID.length ? MID : VOL)).forEach((m) => add(p, m)));
+    // ataque
+    each(ATA, (a) => ATA.forEach((b) => add(a, b)));
+    each(PON, (p) => nearest(p, ATA).forEach((a) => add(p, a)));
+    each(MID, (m) => { if (sl[m].pos === 'MEI' || !VOL.length) nearest(m, ATA).forEach((a) => add(m, a)); });
+    if (!PON.length) each(MID, (m) => nearest(m, ATA).forEach((a) => add(m, a)));
+    // e quem está colado no desenho também conversa
+    for (let i = 1; i < sl.length; i++) for (let j = i + 1; j < sl.length; j++) if (dist(i, j) < 14) add(i, j);
     return out;
   };
+  // Postura no desenho: ofensivo sobe um pouco, defensivo recua um pouco (só no campinho)
+  P.postShift = (t, i) => { const p = t.roles && t.roles[i] && t.roles[i].post; return i === 0 ? 0 : p === 'ofe' ? 5 : p === 'def' ? -5 : 0; };
   P.chemVal = function (g, a, b) {
     g.chem = g.chem || {};
     const k = key(a, b);
@@ -140,7 +168,7 @@
       const a = t.xi[i], b = t.xi[j]; if (!a || !b) return '';
       const v = P.chemVal(g, a, b);
       if (v < 70) return '';
-      return `<line x1="${slots[i].x}" y1="${100 - slots[i].y}" x2="${slots[j].x}" y2="${100 - slots[j].y}" class="chem-line" />`;
+      return `<line x1="${slots[i].x}" y1="${100 - slots[i].y - P.postShift(t, i)}" x2="${slots[j].x}" y2="${100 - slots[j].y - P.postShift(t, j)}" class="chem-line" />`;
     }).join('');
     const warn = warnings(s);
     const ins = t.ins;
@@ -161,7 +189,7 @@
             const f = p ? P.fitP(p, sl.pos) : 1;
             const rk = p ? P.ROLES[sl.pos][P.roleKey(t, i, sl.pos)].n : '';
             const post = (t.roles && t.roles[i] && t.roles[i].post) || 'equ';
-            return `<button class="slot" style="left:${sl.x}%;top:${100 - sl.y}%" data-a="tSlot" data-i="${i}" ${i ? 'data-drag="1"' : ''} aria-label="${p ? esc(p.name) + ', ' + sl.pos + ', ' + esc(rk) : 'vazio'}">
+            return `<button class="slot ${P.postShift(t, i) ? 'shifted' : ''}" style="left:${sl.x}%;top:${100 - sl.y - P.postShift(t, i)}%" data-a="tSlot" data-i="${i}" ${i ? 'data-drag="1"' : ''} aria-label="${p ? esc(p.name) + ', ' + sl.pos + ', ' + esc(rk) : 'vazio'}">
               <span class="dot ${!p || !P.available(p) ? 'off' : f < 1 ? 'fit' : ''}" style="--c:${cc}">${p ? P.ovrAt(p, sl.pos) : '?'}${post !== 'equ' ? `<i class="post ${post}">${post === 'ofe' ? '▲' : '▼'}</i>` : ''}${p && p.id === capId ? '<i class="cap-mark" title="Capitão">C</i>' : ''}</span>
               <span class="nm">${esc(name)}</span><span class="ps">${sl.pos}</span></button>`;
           }).join('')}
