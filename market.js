@@ -296,7 +296,7 @@
       const sq = P.squad(g, c.id);
       for (let i = sq.length; i < 24; i++) {
         const lacking = Object.keys(P.SQUAD_TEMPLATE).find((pos) => P.squad(g, c.id).filter((x) => x.pos === pos).length < P.SQUAD_TEMPLATE[pos]) || 'MC';
-        const y = P.makePlayer(r, { pos: lacking, level: P.levelFromRep(c.rep) - 1, age: 17 + Math.floor(r() * 3), clubId: c.id, used, country: c.country });
+        const y = P.makePlayer(r, { pos: lacking, level: P.levelFromRep(c.rep) - 1, age: 17 + Math.floor(r() * 3), clubId: c.id, used, country: c.country, newgen: true });
         g.db.players[y.id] = y; P.dirty(g);
       }
     }

@@ -196,9 +196,36 @@
     'JPN', 'KOR', 'AUS', 'USA', 'CAN', 'IRL', 'AUT', 'PER', 'VEN', 'KSA', 'CHN', 'HKG', 'ANG', 'CPV', 'MOZ', 'WAL'];
   P.pickNat = (r, clubCountry) => (r() < 0.75 && P.COUNTRIES[clubCountry] ? clubCountry : P.pick(r, NAT_POOL));
 
-  P.makeName = function (r, used, nat) {
+  // Nomes femininos (usados só em parte dos jovens novos: newgens da base e dos olheiros)
+  const FEM = {
+    pt: ['Ana', 'Beatriz', 'Camila', 'Larissa', 'Marta', 'Júlia', 'Letícia', 'Gabriela', 'Fernanda', 'Bianca', 'Kerolin', 'Duda'],
+    es: ['Lucía', 'Sofía', 'Valentina', 'Camila', 'Martina', 'Paula', 'Daniela', 'Alexia', 'Aitana', 'Irene', 'Mariana', 'Carla'],
+    en: ['Emma', 'Olivia', 'Lucy', 'Chloe', 'Megan', 'Lauren', 'Ella', 'Grace', 'Beth', 'Alex', 'Mary', 'Rachel'],
+    de: ['Lena', 'Lea', 'Anna', 'Klara', 'Giulia', 'Sara', 'Lina', 'Sophie', 'Jule', 'Svenja', 'Laura', 'Alexandra'],
+    it: ['Giulia', 'Chiara', 'Sara', 'Martina', 'Elisa', 'Valentina', 'Barbara', 'Cristiana', 'Arianna', 'Manuela', 'Sofia', 'Federica'],
+    fr: ['Léa', 'Chloé', 'Manon', 'Camille', 'Wendie', 'Amandine', 'Kadidiatou', 'Eugénie', 'Sakina', 'Grace', 'Marie', 'Inès'],
+    nl: ['Lieke', 'Vivianne', 'Jill', 'Daniëlle', 'Esmee', 'Victoria', 'Jackie', 'Sherida', 'Lineth', 'Romée', 'Fenna', 'Tessa'],
+    tr: ['Elif', 'Zeynep', 'Ece', 'Ebru', 'Didem', 'Melike', 'Busem', 'Kader', 'Yağmur', 'Sevgi', 'Arzu', 'Gizem'],
+    gr: ['Eleni', 'Maria', 'Sofia', 'Anastasia', 'Katerina', 'Dimitra', 'Georgia', 'Ioanna', 'Christina', 'Vasiliki', 'Despina', 'Zoi'],
+    sl: ['Ana', 'Marija', 'Ewa', 'Katarina', 'Jelena', 'Natalia', 'Petra', 'Ivana', 'Milica', 'Olga', 'Tereza', 'Daria'],
+    sc: ['Ada', 'Pernille', 'Fridolina', 'Caroline', 'Sanna', 'Stina', 'Frida', 'Signe', 'Nadia', 'Hanna', 'Ingrid', 'Emilie'],
+    af: ['Asisat', 'Chiamaka', 'Rasheedat', 'Ajara', 'Barbra', 'Grace', 'Thembi', 'Gabrielle', 'Tabitha', 'Esther', 'Aminata', 'Halimatu'],
+    ar: ['Fatima', 'Ghizlane', 'Sanaa', 'Ibtissam', 'Nouhaila', 'Salma', 'Yasmin', 'Layla', 'Amina', 'Nour', 'Rania', 'Hana'],
+    jp: ['Saki', 'Mana', 'Yui', 'Hinata', 'Aoba', 'Riko', 'Mina', 'Hina', 'Yuka', 'Fuka', 'Momoko', 'Moeka'],
+    kr: ['Ji-so', 'Min-a', 'Seo-yeon', 'Ga-eun', 'Yu-ri', 'Hye-ri', 'Su-bin', 'Ye-eun', 'Da-eun', 'Ha-eun', 'So-hyun', 'Ji-woo'],
+    cn: ['Wang Shuang', 'Tang Jiali', 'Zhang Rui', 'Wu Chengshu', 'Li Ying', 'Shen Mengyu', 'Yang Lina', 'Zhao Yujie', 'Chen Qiaozhu', 'Xiao Yuyi', 'Liu Shanshan', 'Gu Yasha']
+  };
+  P.FEM_CHANCE = 0.07;
+  P.makeName = function (r, used, nat, fem) {
     const lang = (P.COUNTRIES[nat] || P.COUNTRIES.BRA).lang;
     const pool = NAMES[lang] || NAMES.pt;
+    if (fem && r() < fem && FEM[lang]) {
+      for (let i = 0; i < 40; i++) {
+        const f = P.pick(r, FEM[lang]);
+        const n = lang === 'cn' ? f : f + ' ' + P.pick(r, pool.l);
+        if (!used || !used.has(n)) { if (used) used.add(n); return n; }
+      }
+    }
     for (let i = 0; i < 60; i++) {
       const x = r();
       let n;
@@ -334,7 +361,7 @@
     const nat = opts.nat || P.pickNat(r, opts.country);
     return {
       id: opts.id || P.uid('p'),
-      name: opts.name || P.makeName(r, opts.used, nat),
+      name: opts.name || P.makeName(r, opts.used, nat, opts.newgen ? P.FEM_CHANCE : 0),
       age, pos, nat, clubId: opts.clubId || null, a, pot, xp: P.xpFromAge(age, r),
       cond: 100, mor: 70, inj: 0, susp: 0, ylw: 0,
       s: P.blankStats()

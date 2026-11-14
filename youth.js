@@ -79,7 +79,7 @@
     const potO = P.clamp(Math.round(opts.potO), 40, 97);
     const gap = { 15: 26, 16: 21, 17: 16, 18: 11, 19: 7 }[age] || 8;
     const target = P.clamp(potO - gap - Math.abs(P.gauss(r)) * 3, 30, 85);
-    const p = P.makePlayer(r, { pos: opts.pos, level: target / 5 - 0.4, age: 24, nat: opts.nat, used: opts.used, id: P.uid('y') });
+    const p = P.makePlayer(r, { pos: opts.pos, level: target / 5 - 0.4, age: 24, nat: opts.nat, used: opts.used, id: P.uid('y'), newgen: true });
     p.age = age;
     for (const [k, v] of Object.entries(opts.boost || {})) p.a[k] = P.clamp(p.a[k] + v, 1, 20);
     p.potO = Math.max(potO, P.ovr(p) + 2);

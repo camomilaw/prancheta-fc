@@ -1081,7 +1081,7 @@
       if (p.age >= 34 && (r() < (p.age - 33) * 0.25 || p.age >= 38)) {
         if (p.clubId) {
           const club = P.club(g, p.clubId);
-          const young = P.makePlayer(r, { pos: p.pos, level: P.levelFromRep(club ? club.rep : 65) - 1, age: 17 + Math.floor(r() * 3), clubId: p.clubId, used, country: club && club.country });
+          const young = P.makePlayer(r, { pos: p.pos, level: P.levelFromRep(club ? club.rep : 65) - 1, age: 17 + Math.floor(r() * 3), clubId: p.clubId, used, country: club && club.country, newgen: true });
           g.db.players[young.id] = young;
           if (p.clubId === g.user) retired.push(`${p.name} se aposentou; ${young.name} (${young.age} anos) subiu da base`);
         }
@@ -1114,7 +1114,7 @@
     const promoted = [];
     for (let i = mineNow.length; i < 22; i++) {
       const lacking = Object.keys(P.SQUAD_TEMPLATE).find((pos) => mineNow.concat(promoted).filter((x) => x.pos === pos).length < P.SQUAD_TEMPLATE[pos]) || 'MC';
-      const y = P.makePlayer(r, { pos: lacking, level: P.levelFromRep(meC.rep) - 1.5, age: 17 + Math.floor(r() * 3), clubId: g.user, used, country: meC.country });
+      const y = P.makePlayer(r, { pos: lacking, level: P.levelFromRep(meC.rep) - 1.5, age: 17 + Math.floor(r() * 3), clubId: g.user, used, country: meC.country, newgen: true });
       g.db.players[y.id] = y; promoted.push(y);
     }
     P.dirty(g);
