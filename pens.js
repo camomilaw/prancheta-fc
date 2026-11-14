@@ -40,7 +40,8 @@
     function finish() {
       if (stopped) return; stopped = true; cancelAnimationFrame(raf);
       // mostra o placar final mesmo se pulou
-      for (; i < seq.length; i++) { const k = seq[i]; marks[k.s].push(k.goal); if (k.goal) score[k.s]++; }
+      for (let j = marks[0].length + marks[1].length; j < seq.length; j++) { const k = seq[j]; marks[k.s].push(k.goal); if (k.goal) score[k.s]++; }
+      i = seq.length;
       drawMarks();
       const w = score[0] > score[1] ? 0 : 1;
       cap.innerHTML = `<b>${esc(C[w].name)}</b> vence nos pênaltis por ${score[w]} a ${score[1 - w]}`;
@@ -64,6 +65,7 @@
       const gkX = 50 + gkSide * 12, gkY = GOAL_Y - 2;
       cap.innerHTML = `${esc(att.short)} · <b>${esc((opts.names && opts.names[k.p]) || 'Batedor')}</b> na bola`;
       const t0 = performance.now(), RUN = 700, SHOT = 520, HOLD = 900;
+      let counted = false;
       put(gk, 50, GOAL_Y - 2); put(tk, SPOT.x - 6, SPOT.y + 9); put(ball, SPOT.x, SPOT.y);
       ball.setAttribute('transform', `translate(${SPOT.x},${SPOT.y})`);
       function frame(now) {
@@ -78,10 +80,12 @@
           ball.setAttribute('transform', `translate(${bx.toFixed(2)},${by.toFixed(2)})`);
           const d = Math.min(1, u * 1.6);
           put(gk, lerp(50, gkX, d), lerp(GOAL_Y - 2, gkY, d));
-        } else if (t < RUN + SHOT + 40) {
+        } else if (!counted) {
+          counted = true; // conta a cobrança uma vez só (antes podia contar em mais de um quadro)
           marks[k.s].push(k.goal); if (k.goal) score[k.s]++; drawMarks();
           cap.innerHTML = k.goal ? `<b class="pk-g">GOL!</b> ${esc(att.short)}` : miss ? `<b class="pk-x">Para fora!</b>` : `<b class="pk-x">Defendeu!</b> ${esc(def.short)}`;
-        } else if (t > RUN + SHOT + HOLD) { i++; kick(); return; }
+        }
+        if (t > RUN + SHOT + HOLD) { i++; kick(); return; }
         raf = requestAnimationFrame(frame);
       }
       raf = requestAnimationFrame(frame);
