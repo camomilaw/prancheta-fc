@@ -308,9 +308,10 @@
       const mf = 1 + 0.03 * (mast - 3);
       let ca = ATT_W[s.pos] * ra * f * (role ? role.a : 1) * post.a * mf;
       if (role && role.vsHigh && opp.line === 'alt') ca *= 1.15; // velocista contra linha alta
+      if (hasT(p, 'veloz') && opp.line === 'alt') ca *= 1.08;
       if (['ATA', 'PD', 'PE', 'MEI'].includes(s.pos)) atk.push(ca); else att += ca;
       mid += MID_W[s.pos] * (rm * 0.8 + r.phys * 0.2) * f * (role ? role.m : 1) * post.m * mf;
-      def += DEF_W[s.pos] * r.def * f * (role ? role.d : 1) * post.d * mf * (role && role.press && tac.pre === 'alt' ? 1.1 : 1);
+      def += DEF_W[s.pos] * r.def * f * (role ? role.d : 1) * post.d * mf * (role && role.press && tac.pre === 'alt' ? 1.1 : 1) * (hasT(p, 'pregui') ? 0.92 : 1);
       if (s.pos === 'GOL') gk = r.gk * f * mf * (role && role.gk ? role.gk : 1);
       if (['ZAG', 'LD', 'LE'].includes(s.pos)) cnt.d++;
       if (s.pos === 'ZAG') cnt.z++;
@@ -394,7 +395,7 @@
   P.SP_SKILL = {
     pen: (p) => (p.a.fin + p.a.com) / 2 + (hasT(p, 'penal') ? 3 : 0) + (hasT(p, 'pressao') ? 1 : 0) - (hasT(p, 'nervoso') ? 1.5 : 0),
     fk: (p) => p.a.fin * 0.4 + p.a.cru * 0.4 + p.a.com * 0.2 + (hasT(p, 'faltas') ? 4 : 0),
-    co: (p) => p.a.cru + (hasT(p, 'garcom') ? 2 : 0),
+    co: (p) => p.a.cru + (hasT(p, 'garcom') ? 2 : 0) + (hasT(p, 'cruzador') ? 2 : 0),
     cap: (p) => p.age * 0.25 + (p.a.dec + p.a.com) / 2 + (hasT(p, 'lider') ? 6 : 0)
   };
   // Cobrador (ou capitão) em campo: o escolhido na tática; fora de campo, o melhor que estiver jogando
@@ -456,7 +457,7 @@
       if (rnd() >= T.cornerShot) return;
       const tk = P.spTaker(L[side], 'co'); if (!tk) return;
       const pool = active(side).filter((s) => s.pos !== 'GOL' && s.p !== tk); if (!pool.length) return;
-      const hd = P.weighted(rnd, pool, (s) => ({ ZAG: 1.4, ATA: 1.4, VOL: 0.8 }[s.pos] || 0.5) * (s.p.a.cab + s.p.a.for * 0.3) * (hasT(s.p, 'cabeca') ? 1.6 : 1) * rfx(side, s, 'header'));
+      const hd = P.weighted(rnd, pool, (s) => ({ ZAG: 1.4, ATA: 1.4, VOL: 0.8 }[s.pos] || 0.5) * (s.p.a.cab + s.p.a.for * 0.3) * (hasT(s.p, 'cabeca') ? 1.6 : 1) * (hasT(s.p, 'fisico') ? 1.2 : 1) * rfx(side, s, 'header'));
       const gkS = active(1 - side).find((x) => x.pos === 'GOL'), areaF = gkS ? rfx(1 - side, gkS, 'area') : 1;
       const gk = gkOf(1 - side);
       const q = (P.SP_SKILL.co(tk) / 12) * (hd.p.a.cab * (hasT(hd.p, 'cabeca') ? 1.25 : 1) / 12);
@@ -494,7 +495,8 @@
         const insS = P.insOf(L[side].t);
         if (insS.pass === 'dir') cp *= 1.08;
         if (insS.pass === 'cur') cp *= 0.95;
-        cp *= active(side).reduce((m, x) => m * rfx(side, x, 'chance'), 1); // dribladores e carregadores criam mais
+        cp *= active(side).reduce((m, x) => m * rfx(side, x, 'chance') * (hasT(x.p, 'drible') ? 1.03 : 1), 1); // dribladores e carregadores criam mais
+        cp *= active(o).reduce((m, x) => m * (hasT(x.p, 'desat') ? 1.03 : 1), 1); // defensor desatento do outro lado
         cp = P.clamp(cp, 0.12, 0.8);
         // big = chance clara; senão, muitas vezes o time arrisca de longe (xG baixo)
         const big = rnd() < cp;
@@ -502,11 +504,13 @@
           shots[side]++;
           const pool = active(side).filter((s) => s.pos !== 'GOL');
           if (pool.length) {
-            const sh = P.weighted(rnd, pool, (s) => { const ro = P.roleOf ? P.roleOf(L[side].t, s.i, s.pos) : null; return ATT_W[s.pos] * (s.p.a.fin + s.p.a.cab * (ro && ro.aerial ? 0.8 : 0.4)) * (ro ? ro.a : 1) * (!big && hasT(s.p, 'longe') ? 2.2 : 1) * rfx(side, s, 'shot'); });
+            const sh = P.weighted(rnd, pool, (s) => { const ro = P.roleOf ? P.roleOf(L[side].t, s.i, s.pos) : null; return ATT_W[s.pos] * (s.p.a.fin + s.p.a.cab * (ro && ro.aerial ? 0.8 : 0.4)) * (ro ? ro.a : 1) * (!big && hasT(s.p, 'longe') ? 2.2 : 1) * rfx(side, s, 'shot') * (big && hasT(s.p, 'oport') ? 1.4 : 1) * (hasT(s.p, 'afobado') ? 1.3 : 1); });
             const a = sh.p.a;
             const q = ((a.fin * 2 + a.com + a.cab * 0.5) / 3.5) * P.fitP(sh.p, sh.pos) * P.condF(sh.p) * P.morF(sh.p)
               * press(sh.p, min) * (min >= 75 && hasT(sh.p, 'decisivo') ? 1.12 : 1) * (!big && hasT(sh.p, 'longe') ? 1.4 : 1);
             let pg = T.goalBase * q / (q + S[o].gk * 1.05) * (big ? 1 : T.longShotQ);
+            if (big && hasT(sh.p, 'matador')) pg *= 1.07;
+            if (hasT(sh.p, 'afobado')) pg *= 0.9;
             if (insS.pass === 'dir') pg *= 0.94;
             if (insS.pass === 'cur') pg *= 1.05;
             if (insS.build === 'pos') pg *= 1.05;
@@ -518,7 +522,7 @@
               let asId = null;
               const mates = pool.filter((s) => s !== sh);
               if (mates.length && rnd() < (big ? 0.75 : 0.45)) {
-                const as = P.weighted(rnd, mates, (s) => (MID_W[s.pos] + ATT_W[s.pos]) * (s.p.a.pas + s.p.a.vis + s.p.a.cru * 0.5) * (hasT(s.p, 'garcom') ? 1.7 : 1) * rfx(side, s, 'assist'));
+                const as = P.weighted(rnd, mates, (s) => (MID_W[s.pos] + ATT_W[s.pos]) * (s.p.a.pas + s.p.a.vis + s.p.a.cru * 0.5) * (hasT(s.p, 'garcom') ? 1.7 : 1) * (hasT(s.p, 'visao') ? 1.4 : 1) * (hasT(s.p, 'lanca') ? 1.3 : 1) * (hasT(s.p, 'pivo') ? 1.3 : 1) * rfx(side, s, 'assist'));
                 asId = as.p.id; ast[asId] = (ast[asId] || 0) + 1;
               }
               ev.push(Object.assign(mm(min), { t: 'gol', s: side, p: sh.p.id, as: asId }));
@@ -531,7 +535,7 @@
         } else {
           // ataque cortado: um defensor fica com o desarme
           const dpool = active(o).filter((s) => s.pos !== 'GOL');
-          if (dpool.length) pst(P.weighted(rnd, dpool, (s) => (DEF_W[s.pos] + 0.05) * (s.p.a.des + s.p.a.mar + s.p.a.pos) * rfx(o, s, 'tackle')).p.id).tk++;
+          if (dpool.length) pst(P.weighted(rnd, dpool, (s) => (DEF_W[s.pos] + 0.05) * (s.p.a.des + s.p.a.mar + s.p.a.pos) * rfx(o, s, 'tackle') * (hasT(s.p, 'leitura') ? 1.5 : 1) * (hasT(s.p, 'raca') ? 1.25 : 1) * (hasT(s.p, 'fisico') ? 1.2 : 1) * (hasT(s.p, 'desat') ? 0.6 : 1)).p.id).tk++;
           if (rnd() < 0.5) corner(side, min); // ataque cortado para escanteio
         }
       }
@@ -851,13 +855,15 @@
           const p = g.db.players[id];
           p.s.j++;
           p.s.nt += r.notes[id] || 6;
-          const drain = P.TUNING.condDrain - p.a.res * 0.6 + (t.pre === 'alt' ? 5 : t.pre === 'bai' ? -4 : 0);
+          const drain = (P.TUNING.condDrain - p.a.res * 0.6 + (t.pre === 'alt' ? 5 : t.pre === 'bai' ? -4 : 0)) * (hasT(p, 'incans') ? 0.7 : 1);
           p.cond = P.clamp(p.cond - drain, 30, 100);
-          p.mor = P.clamp(p.mor + res * 6 + ((r.notes[id] || 6) - 6.5) * 3, 20, 100);
+          p.mor = P.clamp(p.mor + res * 6 * (res < 0 && hasT(p, 'raca') ? 0.5 : 1) + ((r.notes[id] || 6) - 6.5) * 3, 20, 100);
         }
         for (const p of P.squad(g, cid)) {
-          if (!playedSet.has(p.id)) p.mor = P.clamp(p.mor + res * 2 - (P.ovr(p) > 70 ? 1.5 : 0), 20, 100);
+          if (!playedSet.has(p.id)) p.mor = P.clamp(p.mor + res * 2 - (P.ovr(p) > 70 ? 1.5 : 0) - (hasT(p, 'estrela') ? 3 : 0), 20, 100);
         }
+        // líder de vestiário segura o ânimo depois da derrota
+        if (res < 0 && P.squad(g, cid).some((p) => hasT(p, 'vestiario'))) for (const p of P.squad(g, cid)) p.mor = P.clamp(p.mor + 2, 20, 100);
         for (const [id, n] of Object.entries(r.yel[side])) {
           const p = g.db.players[id];
           if (n >= 2) { p.s.cv++; p.susp = Math.max(p.susp, 1); }

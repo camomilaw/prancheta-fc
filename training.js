@@ -50,6 +50,7 @@
     w *= 1.25 - ((p.a.dec + p.a.pos) / 2) * 0.025;            // inteligência tática ajuda
     if (P.facLvl) w *= 1 - (P.facLvl(g, 'ct') - 3) * 0.06;      // centro de treinamento
     if (P.staffStars) w *= 1 - 0.04 * P.staffStars(g, 'aux');  // auxiliar técnico
+    if (P.hasT && P.hasT(p, 'polival')) w *= 0.6;              // polivalente
     return Math.max(4, w);
   };
   P.posWeeksLeft = (g, p, pos) => Math.ceil(P.posBaseWeeks(g, p, pos) * (1 - mastery(p, pos)));

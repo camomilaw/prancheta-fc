@@ -1112,3 +1112,5 @@ table { font-family: var(--f-body); }
 .role-list { display: flex; flex-direction: column; gap: 2px; }
 .role-pill { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dotted var(--line); font-size: .9rem; }
 .role .stars.rm { color: var(--warn); font-weight: 400; } .role .stars .off { color: var(--line); }
+.role-syn { color: var(--good); font-weight: 600; font-style: normal; }
+.role .role-k span { font-size: inherit; color: inherit; }  .role .role-k .role-syn { color: var(--good); }
