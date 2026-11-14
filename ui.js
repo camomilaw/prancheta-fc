@@ -180,6 +180,8 @@
     list = list.slice().sort((a, b) => a.div - b.div || ovrs[b.id] - ovrs[a.id]);
     const picked = s.club && db.clubs.find((c) => c.id === s.club);
     return `<button class="jr-found" data-a="createOpen"><span>…ou funde o seu próprio clube</span><b>Criar →</b></button>
+      <button class="jr-found" data-a="setupImport"><span>…ou importe um patch (ex.: clubes reais)</span><b>${s.importing ? 'Fechar' : 'Importar →'}</b></button>
+      ${s.importing ? importBox() : ''}
       <section class="jr-sec" aria-labelledby="h-tab">
         <div class="jr-h jr-h-row"><h2 id="h-tab">Escolha o clube</h2>${divSel(s.divF, 'setupDiv')}</div>
         <input class="jr-search" id="clubq" data-i="clubQ" value="${esc(s.q)}" placeholder="Buscar clube, cidade ou país…" aria-label="Buscar clube">
