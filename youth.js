@@ -236,7 +236,7 @@
     for (const p of Object.values(g.y.squad)) {
       const gap = p.potO - P.ovr(p);
       if (gap <= 0) continue;
-      const pts = P.clamp(gap * 0.22, 0, 5.5) * f * (p.s.j >= 8 ? 1.2 : 1) * (P.staffStars ? 1 + 0.08 * P.staffStars(g, 'tsub') : 1) * (P.facLvl ? 1 + (P.facLvl(g, 'base') - 3) * 0.06 : 1) * (P.adF ? P.adF(g, p) : 1);
+      const pts = P.clamp(gap * 0.22, 0, 5.5) * f * (p.s.j >= 8 ? 1.2 : 1) * (P.staffStars ? 1 + 0.08 * P.staffStars(g, 'tsub') : 1) * (P.facLvl ? 1 + (P.facLvl(g, 'base') - 3) * 0.06 : 1) * (P.adF ? P.adF(g, p) : 1) * (P.coachHas && P.coachHas(g, 'formador') ? 1.2 : 1);
       for (const at of P.ATTRS) {
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, pts / 5 * (1 + P.gauss(r) * 0.3)), 1, 20);

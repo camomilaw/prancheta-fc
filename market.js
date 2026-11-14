@@ -34,6 +34,7 @@
     if (p.age <= 21) m *= 1.2;
     if (p.ctr <= g.season) m *= 0.6;
     if (p.saleList) m *= 0.85;
+    if (P.coachHas && P.coachHas(g, 'negociador')) m *= 0.92;
     if (c.bal < 0) m *= 0.8;
     return Math.round(P.value(p) * m * (P.diffM ? P.diffM(g, 'ask') : 1) / 10000) * 10000;
   };
@@ -45,6 +46,7 @@
     if (from && diff >= 3 && P.ovr(p) >= 72) return null;
     let d = Math.max(p.clubId ? p.wage * 1.1 : 0, P.wageFor(p) * (p.clubId ? 1 : 1.05));
     if (diff > 0) d *= 1 + diff * 0.25;
+    if (toCid === g.user && P.coachHas && P.coachHas(g, 'negociador')) d *= 1.03;
     return Math.round(d * (P.diffM ? P.diffM(g, 'demand') : 1) / 500) * 500;
   };
 
@@ -53,6 +55,7 @@
     const from = p.clubId, oldCtr = p.ctr;
     if (fee) { P.pay(g, toCid, -fee, kind === 'loan' ? 'Empréstimos' : 'Contratações'); if (from) P.pay(g, from, fee, kind === 'loan' ? 'Empréstimos' : 'Vendas'); }
     p.clubId = toCid; p.wage = wage; p.ctr = g.season + years; p.listed = false; p.loanList = false;
+    if (toCid === g.user && P.coachHas && P.coachHas(g, 'agregador')) p.mor = Math.max(30, (p.mor || 70) - 6); // chega estranhando o grupo
     p.mor = Math.max(p.mor, 70); p.cond = Math.max(p.cond, 80);
     delete p.loan;
     if (kind === 'loan') { p.loan = { from, till: g.season, wage: p.wage }; p.ctr = Math.max(oldCtr || 0, g.season); } // empréstimo não mexe no contrato
@@ -178,7 +181,7 @@
       const buyers = clubs.filter((c) => c.id !== g.user && c.div <= me.div + 1 && c.bal > P.value(p) * 1.3 && P.ovr(p) >= ovrs[c.id] - 6);
       if (buyers.length && !(g.offers || []).some((o) => o.pid === p.id)) {
         const b = P.pick(rnd, buyers);
-        const fee = Math.round(P.value(p) * (p.listed ? 0.8 + rnd() * 0.25 : 0.9 + rnd() * 0.4) * (isStarter(g, p) ? 1.15 : 1) * (P.diffM ? P.diffM(g, 'offer') : 1) / 10000) * 10000;
+        const fee = Math.round(P.value(p) * (p.listed ? 0.8 + rnd() * 0.25 : 0.9 + rnd() * 0.4) * (isStarter(g, p) ? 1.15 : 1) * (P.diffM ? P.diffM(g, 'offer') : 1) * (P.coachHas && P.coachHas(g, 'negociador') ? 1.05 : 1) / 10000) * 10000;
         const oid = P.uid('o');
         g.offers.push({ id: oid, pid: p.id, from: b.id, fee, until: g.week + 2 });
         P.news(g, `O ${b.name} fez uma proposta de ${P.money(fee)} por ${p.name}. Veja em Mercado › Propostas.`, 'warn');

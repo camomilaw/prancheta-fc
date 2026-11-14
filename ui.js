@@ -150,12 +150,8 @@
 
   // ---------- Tela inicial ----------
   function renderSetup() {
-    const s = A.setup, db = s.db;
-    const ovrs = P.clubOvrs(db);
-    const q = s.q.trim().toLowerCase();
-    let list = q ? db.clubs.filter((c) => (c.name + ' ' + c.city + ' ' + P.countryName(c.country)).toLowerCase().includes(q)) : P.divClubs(db, s.divF);
-    list = list.slice().sort((a, b) => a.div - b.div || ovrs[b.id] - ovrs[a.id]);
-    const picked = s.club && db.clubs.find((c) => c.id === s.club);
+    const s = A.setup;
+    if (s.newc && P.newCareerView) return P.newCareerView();
     const now = new Date(), edition = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 864e5);
     return `<div class="setup jr">
       <header class="jr-mast">
@@ -165,19 +161,27 @@
       </header>
       ${P.slotsCard ? P.slotsCard() : ''}
       ${P.teamImportPanel ? P.teamImportPanel() : ''}
-      ${P.tourEntry ? P.tourEntry() : ''}
       <section class="jr-classif" aria-labelledby="h-new">
         <div class="jr-classif-h"><h2 id="h-new">Procura-se técnico</h2><span>Classificados</span></div>
-        <p>Clube da Ultraliga contrata. 160 clubes, 17 países, 8 divisões. Paga-se em glória. Interessados preencher abaixo.</p>
-        <div class="field"><label class="jr-step" for="mgr">1 · Seu nome</label><input id="mgr" class="jr-sign" data-i="mgr" value="${esc(s.manager)}" placeholder="assine aqui" maxlength="30"></div>
-        ${P.setupExtra ? P.setupExtra() : ''}
-        ${P.slotPick ? P.slotPick() : ''}
-        <button class="jr-found" data-a="createOpen"><span>…ou funde o seu próprio clube</span><b>Criar →</b></button>
-        <div class="jr-small"><button class="jr-link" data-a="setupEdit">editar o banco de dados</button> · <button class="jr-link" data-a="setupImport">importar arquivo</button></div>
+        <p>Clube da Ultraliga contrata. 160 clubes, 17 países, 8 divisões. Paga-se em glória. Três passos: o técnico, a diretoria e o clube.</p>
+        <div class="row"><button class="btn primary" data-a="ncOpen">Começar nova carreira →</button></div>
+        <div class="jr-small"><button class="jr-link" data-a="setupEdit">editar o banco de dados</button> · <button class="jr-link" data-a="setupImport">importar arquivo (time, patch, banco ou carreira)</button></div>
         ${s.importing ? importBox() : ''}
       </section>
+      ${P.tourEntry ? P.tourEntry() : ''}
+    </div>`;
+  }
+  // Passo 3 da nova carreira: escolher (ou criar) o clube e assinar
+  A.clubPickSection = function () {
+    const s = A.setup, db = s.db;
+    const ovrs = P.clubOvrs(db);
+    const q = s.q.trim().toLowerCase();
+    let list = q ? db.clubs.filter((c) => (c.name + ' ' + c.city + ' ' + P.countryName(c.country)).toLowerCase().includes(q)) : P.divClubs(db, s.divF);
+    list = list.slice().sort((a, b) => a.div - b.div || ovrs[b.id] - ovrs[a.id]);
+    const picked = s.club && db.clubs.find((c) => c.id === s.club);
+    return `<button class="jr-found" data-a="createOpen"><span>…ou funde o seu próprio clube</span><b>Criar →</b></button>
       <section class="jr-sec" aria-labelledby="h-tab">
-        <div class="jr-h jr-h-row"><h2 id="h-tab">5 · Escolha o clube</h2>${divSel(s.divF, 'setupDiv')}</div>
+        <div class="jr-h jr-h-row"><h2 id="h-tab">Escolha o clube</h2>${divSel(s.divF, 'setupDiv')}</div>
         <input class="jr-search" id="clubq" data-i="clubQ" value="${esc(s.q)}" placeholder="Buscar clube, cidade ou país…" aria-label="Buscar clube">
         <div class="jr-clubs" id="clublist" role="list">${clubCards(list, ovrs, db)}</div>
         <p class="jr-note">Força média do elenco à direita. Toque num clube para escolher.</p>
@@ -186,9 +190,8 @@
         <div class="jr-sigline ${s.manager.trim() ? '' : 'empty'}"><span id="jr-sig">${esc(s.manager.trim())}</span></div>
         <button class="jr-stamp" data-a="start" ${s.club ? '' : 'disabled'}>Assinar o contrato</button>
         <span class="jr-note">${picked ? `com o <b>${esc(picked.name)}</b> · ${divName(picked.div)}` : 'escolha um clube para começar'}</span>
-      </div>
-    </div>`;
-  }
+      </div>`;
+  };
   function clubCards(list, ovrs, db) {
     if (!list.length) return '<p class="empty">Nenhum clube encontrado.</p>';
     return list.map((c, i) => `<button class="jr-club ${A.setup.club === c.id ? 'on' : ''}" role="listitem" data-a="pickClub" data-id="${c.id}" aria-pressed="${A.setup.club === c.id}">
@@ -1124,6 +1127,8 @@
     start() {
       const s = A.setup; if (!s.club) return;
       A.g = P.newGame(s.db, s.club, (s.manager || '').trim() || 'Técnico');
+      if (s.coach && (s.coach.styles.length || s.coach.form)) A.g.coach = { styles: s.coach.styles.slice(), form: s.coach.form };
+      s.newc = 0;
       A.save(); A.view = 'inicio'; A.st.div = null; A.render(); window.scrollTo(0, 0);
     },
     setupEdit() { A.setup.editing = true; A.st.ed = { v: 'clubs' }; A.render(); window.scrollTo(0, 0); },
@@ -1134,7 +1139,7 @@
       catch (e) { A.toast('Não deu para importar: ' + e.message); }
     },
     createOpen() { A.setup.creating = true; A.render(); window.scrollTo(0, 0); },
-    createClose() { A.setup.creating = false; A.render(); window.scrollTo(0, 0); },
+    createClose() { A.setup.creating = false; if (A.setup.newc) A.setup.newc = 3; A.render(); window.scrollTo(0, 0); },
     createDo() {
       const f = A.setup.form;
       if (!f.name.trim()) { A.toast('Dê um nome ao clube'); document.getElementById('cc-name').focus(); return; }
@@ -1144,7 +1149,7 @@
         stadium: f.stadium.trim() || 'Estádio ' + (f.city.trim() || f.name.trim()), country: f.country, c1: f.c1, c2: f.c2, squad: f.squad, logo: f.logo || null
       });
       if (P.applyCreateExtra) P.applyCreateExtra(c, f);
-      A.setup.club = c.id; A.setup.divF = c.div; A.setup.q = ''; A.setup.creating = false; A.setup.form = null;
+      A.setup.club = c.id; A.setup.divF = c.div; A.setup.q = ''; A.setup.creating = false; A.setup.form = null; A.setup.newc = 3;
       A.st.ed = { v: 'club', cid: c.id }; A.setup.editing = true;
       A.render(); window.scrollTo(0, 0);
       A.toast(`${c.name} criado! Ajuste o elenco e depois volte para começar.`);

@@ -210,6 +210,7 @@
     const note = M.stints[0].seeded ? '<p class="muted" style="font-size:.78rem;margin:12px 0 0">Carreira iniciada antes deste registro: números anteriores vêm do resumo de cada temporada, e o clube dos anos antigos pode não aparecer.</p>' : '';
     return `<div class="card"><div class="mg-head"><div class="mg-avatar">${monogram((g.manager || 'T').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase())}</div>
         <div style="flex:1;min-width:0"><h2 style="margin:0">${esc(g.manager)}</h2><div class="muted" style="font-size:.88rem">Técnico do ${esc(me.name)} · ${me.div}ª divisão</div></div></div>
+        ${P.coachCard ? P.coachCard(g) : ''}
         <div class="head" style="margin:14px 0 12px">${tabs}</div>${body}${note}</div>`;
   };
 

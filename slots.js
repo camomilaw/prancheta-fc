@@ -129,7 +129,7 @@
   P.slotPick = function () {
     const cur = A.setup.slot || firstFree() || 1;
     const m = meta.s[cur];
-    return `<div class="field"><span class="jr-step">4 · Arquivar no espaço</span><div class="seg">${[1, 2, 3].map((i) => `<button class="${cur === i ? 'on' : ''}" data-a="slotPick" data-n="${i}">${i}${meta.s[i] ? ' · ocupado' : ''}</button>`).join('')}</div>
+    return `<div class="field"><span class="jr-step">Salvar no espaço</span><div class="seg">${[1, 2, 3].map((i) => `<button class="${cur === i ? 'on' : ''}" data-a="slotPick" data-n="${i}">${i}${meta.s[i] ? ' · ocupado' : ''}</button>`).join('')}</div>
       ${m ? `<p class="jr-warn">Vai substituir a carreira ${esc(m.mgr)} · ${esc(m.club)}.</p>` : ''}</div>`;
   };
 

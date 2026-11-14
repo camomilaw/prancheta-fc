@@ -161,7 +161,8 @@
       if (!a || !b || !played.has(a) || !played.has(b)) continue;
       const k = key(a, b);
       const good = (r.notes[a] || 6) >= 7 && (r.notes[b] || 6) >= 7;
-      g.chem[k] = P.clamp(Math.round(P.chemVal(g, a, b) + 4 + (good ? 3 : 0) + res), 0, 100);
+      const agr = P.coachHas && P.coachHas(g, 'agregador') ? 1.4 : 1;
+      g.chem[k] = P.clamp(Math.round(P.chemVal(g, a, b) + (4 + (good ? 3 : 0) + res) * agr), 0, 100);
       touched.add(k);
     }
     // quem não joga junto vai perdendo entrosamento; remove pares de quem saiu

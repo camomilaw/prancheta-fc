@@ -1114,3 +1114,21 @@ table { font-family: var(--f-body); }
 .role .stars.rm { color: var(--warn); font-weight: 400; } .role .stars .off { color: var(--line); }
 .role-syn { color: var(--good); font-weight: 600; font-style: normal; }
 .role .role-k span { font-size: inherit; color: inherit; }  .role .role-k .role-syn { color: var(--good); }
+
+/* Estilo do técnico e nova carreira */
+.coach-pick { display: grid; gap: 6px; margin-top: 6px; }
+@media (min-width: 640px) { .coach-pick { grid-template-columns: 1fr 1fr; } }
+.coach-st { text-align: left; border: 1px solid var(--line); background: transparent; padding: 8px 10px; font: inherit; color: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.coach-st b { font-family: var(--f-display); font-weight: 900; font-size: 1.02rem; }
+.coach-st small { display: flex; flex-direction: column; font-size: .78rem; font-style: italic; }
+.coach-st .good { color: var(--good); } .coach-st .bad { color: var(--bad); }
+.coach-st.on { border: 2px solid var(--accent); background: var(--hi); }
+.coach-card { border-top: 1px dotted var(--line); border-bottom: 1px dotted var(--line); padding: 10px 0; margin-top: 12px; }
+.coach-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.coach-tag { border: 1px solid var(--accent); color: var(--accent); font-family: var(--f-label); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; }
+.coach-tag.f { border-color: var(--ink); color: var(--ink); }
+.nc-steps { display: inline-flex; align-items: center; gap: 4px; }
+.nc-steps i { width: 14px; height: 1px; background: var(--line); }
+.nc-dot { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--line); font-family: var(--f-num); font-size: .8rem; color: var(--muted); }
+.nc-dot.on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.nc-dot.done { background: var(--ink); color: var(--bg); border-color: var(--ink); }

@@ -139,7 +139,7 @@
   P.setupExtra = function () {
     const d = A.setup.diff || (A.setup.diff = { board: 'nor', market: 'nor' });
     const sel = (k, map) => `<select class="sel" data-c="diffSel" data-k="${k}">${Object.entries(map).map(([v, o]) => `<option value="${v}" ${d[k] === v ? 'selected' : ''}>${o.n}</option>`).join('')}</select>`;
-    return `<div class="form-grid jr-two"><div class="field"><span class="jr-step">2 · Diretoria</span>${sel('board', P.DIFF.board)}</div><div class="field"><span class="jr-step">3 · Negociações</span>${sel('market', P.DIFF.market)}</div></div>`;
+    return `<div class="form-grid jr-two"><div class="field"><span class="jr-step">Diretoria</span>${sel('board', P.DIFF.board)}</div><div class="field"><span class="jr-step">Negociações</span>${sel('market', P.DIFF.market)}</div></div>`;
   };
   P.createExtra = function (f) {
     if (f.cap == null) Object.assign(f, { cap: 15000, base: 2, ct: 2, sede: 2, bal: '' });

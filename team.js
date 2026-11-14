@@ -106,8 +106,8 @@
       const rep = s.teamRep && list.find((c) => c.id === s.teamRep) ? s.teamRep : list[0].id;
       const c = P.placeTeam(s.db, team, rep);
       s.teamImp = null; s.divF = c.div; s.q = '';
-      if (d.k === 'me') { s.club = c.id; if (team.manager && !s.manager) s.manager = team.manager; A.render(); A.toast(`${c.name} está na ${c.div}ª divisão. Assine o contrato para começar!`); }
-      else { if (s.club === c.id) s.club = null; A.render(); A.toast(`${c.name} entrou na ${c.div}ª divisão como adversário. Agora escolha o seu clube.`); }
+      if (d.k === 'me') { s.club = c.id; if (team.manager && !s.manager) s.manager = team.manager; s.newc = 1; A.render(); A.toast(`${c.name} está na ${c.div}ª divisão. Assine o contrato para começar!`); }
+      else { if (s.club === c.id) s.club = null; s.newc = 1; A.render(); A.toast(`${c.name} entrou na ${c.div}ª divisão como adversário. Agora escolha o seu clube.`); }
     }
   });
 })(window.PFC);

@@ -167,7 +167,7 @@
   P.payroll = (g, cid) => P.squad(g, cid).reduce((s, p) => s + p.wage, 0);
   // Renovação: o jogador pede aumento; com moral baixa ele recusa
   P.renewOffer = (g, p) => ({
-    wage: Math.max(p.wage, Math.round(P.wageFor(p) * (p.mor >= 60 ? 1.1 : 1.25) / 500) * 500),
+    wage: Math.max(p.wage, Math.round(P.wageFor(p) * (p.mor >= 60 ? 1.1 : P.coachHas && P.coachHas(g, 'motivador') ? 1.35 : 1.25) / 500) * 500),
     willing: p.mor >= 35
   });
   P.renew = function (g, p, years) {
@@ -422,9 +422,12 @@
       [0, 1].forEach((i) => { const miss = 11 - S[i].n; if (miss > 0) { const f = Math.pow(0.88, miss); S[i].att *= f; S[i].mid *= f; S[i].def *= f; } });
       // capitão em campo; um líder puxa mais o time
       [0, 1].forEach((i) => { const c = P.spTaker(L[i], 'cap'); if (c) { const f = 1.01 + (hasT(c, 'lider') ? 0.02 : 0); S[i].att *= f; S[i].mid *= f; S[i].def *= f; } });
+      // estilo do técnico (só no time do jogador)
+      [0, 1].forEach((i) => { const cf = P.coachFx ? P.coachFx(g, L[i].cid, L[i].t) : null; if (cf) { S[i].att *= cf.a; S[i].mid *= cf.m; S[i].def *= cf.d; } });
     };
     recalc();
-    return { fx, L, S, recalc, ev: [], goals: [0, 0], shots: [0, 0], sot: [0, 0], xg: [0, 0], fouls: [0, 0], corners: [0, 0], posAcc: [0, 0], gls: {}, ast: {}, min: 0, end: 90 + 1 + Math.floor(Math.random() * 5) };
+    const cardF = [0, 1].map((i) => { const cf = P.coachFx ? P.coachFx(g, L[i].cid, L[i].t) : null; return cf ? cf.cards : 1; });
+    return { fx, L, S, recalc, cardF, ev: [], goals: [0, 0], shots: [0, 0], sot: [0, 0], xg: [0, 0], fouls: [0, 0], corners: [0, 0], posAcc: [0, 0], gls: {}, ast: {}, min: 0, end: 90 + 1 + Math.floor(Math.random() * 5) };
   };
   P.simAdvance = function (st, toMin, stopFn) {
     const T = P.TUNING, rnd = Math.random;
@@ -549,7 +552,7 @@
       for (const side of [0, 1]) {
         const act = active(side);
         if (!act.length) continue;
-        if (rnd() < T.yellowPerMin * (L[side].t.pre === 'alt' ? 1.2 : 1)) {
+        if (rnd() < T.yellowPerMin * (L[side].t.pre === 'alt' ? 1.2 : 1) * ((st.cardF && st.cardF[side]) || 1)) {
           // quem já tem amarelo joga com mais cuidado (menos segundos amarelos)
           const s = P.weighted(rnd, act, (x) => (DEF_W[x.pos] + 0.2) * (L[side].yel[x.p.id] ? T.bookedCare : 1) * cardT(x.p) * rfx(side, x, 'foul'));
           const id = s.p.id;
@@ -857,7 +860,8 @@
           p.s.nt += r.notes[id] || 6;
           const drain = (P.TUNING.condDrain - p.a.res * 0.6 + (t.pre === 'alt' ? 5 : t.pre === 'bai' ? -4 : 0)) * (hasT(p, 'incans') ? 0.7 : 1);
           p.cond = P.clamp(p.cond - drain, 30, 100);
-          p.mor = P.clamp(p.mor + res * 6 * (res < 0 && hasT(p, 'raca') ? 0.5 : 1) + ((r.notes[id] || 6) - 6.5) * 3, 20, 100);
+          const motiv = cid === g.user && P.coachHas && P.coachHas(g, 'motivador'), discp = cid === g.user && P.coachHas && P.coachHas(g, 'disciplinador');
+          p.mor = P.clamp(p.mor + res * 6 * (res < 0 && hasT(p, 'raca') ? 0.5 : 1) * (res < 0 && motiv ? 0.6 : 1) + ((r.notes[id] || 6) - 6.5) * 3 + (motiv ? 1.5 : 0) - (discp ? 0.8 : 0), 20, 100);
         }
         for (const p of P.squad(g, cid)) {
           if (!playedSet.has(p.id)) p.mor = P.clamp(p.mor + res * 2 - (P.ovr(p) > 70 ? 1.5 : 0) - (hasT(p, 'estrela') ? 3 : 0), 20, 100);
