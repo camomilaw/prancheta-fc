@@ -426,7 +426,8 @@
       [0, 1].forEach((i) => { const cf = P.coachFx ? P.coachFx(g, L[i].cid, L[i].t) : null; if (cf) { S[i].att *= cf.a; S[i].mid *= cf.m; S[i].def *= cf.d; } });
     };
     recalc();
-    const cardF = [0, 1].map((i) => { const cf = P.coachFx ? P.coachFx(g, L[i].cid, L[i].t) : null; return cf ? cf.cards : 1; });
+    const derby = P.rivalry ? P.rivalry(g, fx.h, fx.a) : 0;
+    const cardF = [0, 1].map((i) => { const cf = P.coachFx ? P.coachFx(g, L[i].cid, L[i].t) : null; return (cf ? cf.cards : 1) * (1 + 0.07 * derby); });
     return { fx, L, S, recalc, cardF, ev: [], goals: [0, 0], shots: [0, 0], sot: [0, 0], xg: [0, 0], fouls: [0, 0], corners: [0, 0], posAcc: [0, 0], gls: {}, ast: {}, min: 0, end: 90 + 1 + Math.floor(Math.random() * 5) };
   };
   P.simAdvance = function (st, toMin, stopFn) {
@@ -861,7 +862,8 @@
           const drain = (P.TUNING.condDrain - p.a.res * 0.6 + (t.pre === 'alt' ? 5 : t.pre === 'bai' ? -4 : 0)) * (hasT(p, 'incans') ? 0.7 : 1);
           p.cond = P.clamp(p.cond - drain, 30, 100);
           const motiv = cid === g.user && P.coachHas && P.coachHas(g, 'motivador'), discp = cid === g.user && P.coachHas && P.coachHas(g, 'disciplinador');
-          p.mor = P.clamp(p.mor + res * 6 * (res < 0 && hasT(p, 'raca') ? 0.5 : 1) * (res < 0 && motiv ? 0.6 : 1) + ((r.notes[id] || 6) - 6.5) * 3 + (motiv ? 1.5 : 0) - (discp ? 0.8 : 0), 20, 100);
+          const derbyM = P.rivalry ? 1 + 0.25 * P.rivalry(g, m.h, m.a) : 1; // clássico mexe mais com a moral
+          p.mor = P.clamp(p.mor + res * 6 * derbyM * (res < 0 && hasT(p, 'raca') ? 0.5 : 1) * (res < 0 && motiv ? 0.6 : 1) + ((r.notes[id] || 6) - 6.5) * 3 + (motiv ? 1.5 : 0) - (discp ? 0.8 : 0), 20, 100);
         }
         for (const p of P.squad(g, cid)) {
           if (!playedSet.has(p.id)) p.mor = P.clamp(p.mor + res * 2 - (P.ovr(p) > 70 ? 1.5 : 0) - (hasT(p, 'estrela') ? 3 : 0), 20, 100);
@@ -910,7 +912,7 @@
       let gate;
       if (it.comp === 'sc') { gate = Math.round(hc.cap * P.ECON.ticket(hc.div) * P.ECON.scTicket); hc.lastOcc = 100; } // Supercopa: sempre lotado
       else {
-        const occ = P.clamp(0.4 + 0.4 * (1 - (posIn(m.h) - 1) / 19) + (it.ko ? 0.15 : 0), 0.25, 1);
+        const occ = P.clamp(0.4 + 0.4 * (1 - (posIn(m.h) - 1) / 19) + (it.ko ? 0.15 : 0) + (P.rivalry ? 0.12 * P.rivalry(g, m.h, m.a) : 0), 0.25, 1);
         gate = P.gateFor ? P.gateFor(g, hc, occ) : Math.round(hc.cap * occ * P.ECON.ticket(hc.div));
       }
       if (m.neutral) { P.pay(g, m.h, gate / 2, 'Bilheteria'); P.pay(g, m.a, gate / 2, 'Bilheteria'); }
@@ -976,6 +978,7 @@
     if (P.rzWeek) P.rzWeek(g, step, results);
 
     if (P.titleCheck) P.titleCheck(g, step); // tela de título
+    if (P.rivalWeek) P.rivalWeek(g, step, ctx.results);
 
     // 7. dados da animação (antes de enxugar o que não precisa ficar salvo)
     const anim = results.map(({ it }) => ({

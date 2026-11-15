@@ -381,7 +381,7 @@
     } else if (f.tab === 'prop') {
       body = offers.length ? `<div class="plist">${offers.map((o) => {
         const p = g.db.players[o.pid], b = club(o.from);
-        return `<div class="offer"><div class="row" style="gap:8px">${P.badge(b, 28)}<div style="flex:1;min-width:0"><b>${esc(b.name)}</b> <span class="muted">(${b.div}ª div)</span><div class="muted" style="font-size:.85rem">quer <b>${esc(p.name)}</b>${o.kind === 'loan' ? ' <span class="chip loan">por empréstimo</span>' : ''} · ${p.pos} · força ${P.ovr(p)} · vale ${P.money(P.value(p))}</div></div><b class="num">${P.money(o.fee)}${o.kind === 'loan' ? '<small class="muted" style="display:block;font-size:.7rem;font-weight:400;text-align:right">taxa</small>' : ''}</b></div>
+        return `<div class="offer"><div class="row" style="gap:8px">${P.badge(b, 28)}<div style="flex:1;min-width:0"><b>${esc(b.name)}</b> <span class="muted">(${b.div}ª div)</span>${o.ask ? ' <span class="chip sus">Ele quer ir</span>' : ''}<div class="muted" style="font-size:.85rem">quer <b>${esc(p.name)}</b>${o.kind === 'loan' ? ' <span class="chip loan">por empréstimo</span>' : ''} · ${p.pos} · força ${P.ovr(p)} · vale ${P.money(P.value(p))}</div></div><b class="num">${P.money(o.fee)}${o.kind === 'loan' ? '<small class="muted" style="display:block;font-size:.7rem;font-weight:400;text-align:right">taxa</small>' : ''}</b></div>
           <div class="row"><span class="muted" style="font-size:.8rem;flex:1">Vale até a semana ${o.until}</span><button class="btn sm" data-a="mkReject" data-id="${o.id}">Recusar</button><button class="btn sm primary" data-a="mkAccept" data-id="${o.id}">Aceitar</button></div></div>`;
       }).join('')}</div>` : `<p class="empty">Nenhuma proposta no momento. Coloque jogadores à venda pela ficha deles para atrair interessados.</p>`;
     } else if (f.tab === 'venda') {
@@ -421,6 +421,7 @@
         return `<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>Empréstimo até o fim da temporada</b>
           <div class="muted">Taxa de ${P.money(fee)} ao ${esc(club(p.clubId).name)}. Você paga o salário de ${P.money(p.wage)}/mês enquanto ele estiver aqui.</div>
           ${d.msg ? `<div class="msg ${d.ok ? 'good' : ''}">${esc(d.msg)}</div>` : ''}
+          ${!d.ok && P.loanOptRow ? P.loanOptRow(p) : ''}
           <div class="row"><button class="btn" data-a="player" data-id="${p.id}">Voltar</button><span class="spacer"></span>${d.ok ? '' : `<button class="btn primary" data-a="mkLoan" data-id="${p.id}">Pedir empréstimo</button>`}</div></div>`;
       }
       return `<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>${p.clubId ? 'Proposta de compra' : 'Contratar jogador livre'}</b>
@@ -429,6 +430,7 @@
         <div class="seg">${[1, 2, 3, 4, 5].map((y) => `<button class="${y === d.years ? 'on' : ''}" data-a="ofYears" data-id="${p.id}" data-y="${y}">${y} ${y === 1 ? 'ano' : 'anos'}</button>`).join('')}</div>
         <div class="muted" style="font-size:.85rem">Saldo: ${P.money(club(g.user).bal)} · valor de mercado: ${P.money(P.value(p))}</div>
         ${d.msg ? `<div class="msg ${d.ok ? 'good' : ''}">${esc(d.msg)}</div>` : ''}
+        ${!d.ok && p.clubId && P.clauseButton ? `<div class="row clause-row"><span class="muted" style="flex:1;font-size:.85rem">Ou pague a multa rescisória: o clube não pode recusar (o jogador ainda precisa aceitar o salário).</span>${P.clauseButton(g, p)}</div>` : ''}
         <div class="row"><button class="btn" data-a="player" data-id="${p.id}">Voltar</button><span class="spacer"></span>${d.ok ? '' : `<button class="btn primary" data-a="mkOffer" data-id="${p.id}">Enviar proposta</button>`}</div></div>`;
     }
     return '';

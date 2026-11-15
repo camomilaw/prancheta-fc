@@ -78,6 +78,7 @@
         let set;
         if (lm.ko && m.pen && v.gf === v.ga) set = m.w === g.user ? PEN_W : PEN_L;
         else if (lm.ko && lm.step.t !== 'lg') set = m.w === g.user ? (v.gf - v.ga >= 3 ? WIN_BIG : KO_W) : KO_L;
+        else if (P.rivalry && P.rivalry(g, m.h, m.a) >= 1 && v.gf !== v.ga) set = v.gf > v.ga ? ['{me} vence o clássico contra o {op}', 'O clássico é do {me}: {gf} a {ga} no {op}', 'Festa: {me} bate o rival {op}'] : ['{op} leva a melhor no clássico', 'Clássico amargo: {me} perde para o {op}', '{me} cai diante do rival {op}'];
         else if (v.gf > v.ga) set = v.gf - v.ga >= 3 ? WIN_BIG : pos === 1 && row.j >= 3 ? WIN_TOP : pos <= P.RULES.playoff[1] && me.div > 1 && row.j >= 5 ? WIN_UP : WIN;
         else if (v.gf === v.ga) set = v.gf === 0 ? DRAW0 : DRAW;
         else set = v.ga - v.gf >= 3 ? LOSS_BIG : pos > n - P.RULES.down && row.j >= 5 ? LOSS_DOWN : LOSS;
@@ -91,6 +92,7 @@
     if (nx) {
       const home = nx.m.h === g.user, op = P.club(g, home ? nx.m.a : nx.m.h);
       dek += nx.m.neutral ? ` e enfrenta o ${op.name} em campo neutro.` : home ? ` e recebe o ${op.name} na próxima.` : ` e visita o ${op.name} na próxima.`;
+      if (P.rivalry && P.rivalry(g, nx.m.h, nx.m.a) >= 1) dek += ` ${P.rivalWord(P.rivalry(g, nx.m.h, nx.m.a))} à vista: a torcida já está em clima de decisão.`;
     } else dek += '.';
     return { kicker, head, dek, pos, pts: row.pts, sg: row.gp - row.gc, j: row.j };
   };

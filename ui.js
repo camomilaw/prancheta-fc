@@ -299,7 +299,7 @@
       if (um) {
         const h = club(um.m.h), a = club(um.m.a);
         const adj = P.adjName ? P.adjName(g) : 'Auxiliar';
-        top += `<section class="jr-next"><div class="jr-next-h"><span>Próximo jogo</span><span>${esc(P.stepLabel(step))}</span></div>
+        top += `<section class="jr-next ${P.rivalry && P.rivalry(g, um.m.h, um.m.a) ? 'derby' : ''}"><div class="jr-next-h"><span>Próximo jogo</span><span>${esc(P.stepLabel(step))}</span></div>${P.derbyTag && P.derbyTag(g, um) ? `<div class="derby-line">${P.derbyTag(g, um)}</div>` : ''}
           <div class="fixture">
             <div class="side"><button class="badge-btn" data-a="clubInfo" data-id="${h.id}" aria-label="Resumo do ${esc(h.name)}">${P.badge(h, 52)}</button><b>${esc(h.name)}</b><span class="sub">${h.div}ª div · ${ord(posOf(h.id))} · ${form(h.id)}</span></div>
             <div class="vs">vs.</div>
@@ -449,7 +449,7 @@
       <div class="cs-head">${P.badge(c, 72)}<div style="flex:1;min-width:0">
         <div class="jr-kick">${c.div}ª divisão · ${esc(P.countryName(c.country))}</div>
         <div class="cs-sub">${esc(c.city || '')}${c.stadium ? ' · ' + esc(c.stadium) : ''}${c.cap ? ` (${c.cap.toLocaleString('pt-BR')} lugares)` : ''}</div>
-        <div class="cs-sub">${mine ? 'Seu clube' : 'Meta: ' + esc(P.expectation(g, cid))}</div></div></div>
+        <div class="cs-sub">${mine ? 'Seu clube' : 'Meta: ' + esc(P.expectation(g, cid))}</div>${P.rivalsOf && P.rivalsOf(g, cid).length ? `<div class="cs-sub">Rivais: ${P.rivalsOf(g, cid).slice(0, 3).map((r) => `<button class="jr-link" data-a="clubInfo" data-id="${r.id}">${esc(club(r.id).name)}</button>${r.v >= 2 ? ' ⚔' : ''}`).join(', ')}</div>` : ''}</div></div>
       <div class="kv">
         <div><span class="label">Posição</span><b>${row && row.j ? idx + 1 + 'º' : '–'}</b></div>
         <div><span class="label">Pontos</span><b>${row ? row.pts : 0}</b></div>
@@ -507,7 +507,7 @@
     const usoOther = usoPos && usoPos !== p.pos && P.ROLES[usoPos] && usoKey ? `<p class="ps-note">Na tática joga como <b>${usoPos}</b>: ${esc(P.ROLES[usoPos][usoKey].n)} ${P.starsHTML(P.roleMastery(p, usoPos, usoKey))}</p>` : '';
     // ações: as mais usadas à vista, o resto em "Mais ações", dispensar separado no fim
     const primary = mine
-      ? `${!mode && P.talkButton ? P.talkButton(p) : ''}${!mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button>` : ''}`
+      ? `${!mode && P.optBuyButton ? P.optBuyButton(g, p) : ''}${!mode && P.talkButton ? P.talkButton(p) : ''}${!mode && !p.loan ? `<button class="btn" data-a="renewOpen" data-id="${p.id}">Renovar contrato</button>` : ''}`
       : `${!mode && g ? P.marketButtons(p) : ''}`;
     const more = `${mine && !mode && g ? P.marketButtons(p) : ''}${mine && !mode && P.canDemote && P.canDemote(g, p) ? `<button class="btn" data-a="yDemote" data-id="${p.id}">Devolver ao Sub-20</button>` : ''}<button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button>${mine && !mode && !p.loan ? `<button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}`;
     A.openSheet(`<div class="bar-top"><span class="pos-tag ${P.LINE[p.pos]}" style="padding:4px 8px">${p.pos}</span>
@@ -516,7 +516,7 @@
         <div class="ps-ovr"><span class="label">Força</span><div class="big-ovr">${P.ovr(p)}</div></div></div>
       <div class="ps-rende"><span class="label">Rende em</span>${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}">${b.pos} ${b.v}</span>`).join('')}</div>
       <div class="ps-blocks">
-        <div class="ps-b"><h4 class="label">Contrato</h4><div class="kv">${kv('Valor', P.money(P.value(p)))}${kv('Salário', P.money(p.wage || 0) + '<small>/mês</small>')}${kv('Até', p.ctr || '—', g && p.ctr <= g.season ? 'v2' : '')}</div></div>
+        <div class="ps-b"><h4 class="label">Contrato</h4><div class="kv">${kv('Valor', P.money(P.value(p)))}${kv('Salário', P.money(p.wage || 0) + '<small>/mês</small>')}${kv('Até', p.ctr || '—', g && p.ctr <= g.season ? 'v2' : '')}${g && p.clubId && !p.loan && P.clauseOf ? kv('Multa', P.money(P.clauseOf(g, p))) : ''}${p.loan && p.loan.opt ? kv('Opção', P.money(p.loan.opt)) : ''}</div></div>
         <div class="ps-b"><h4 class="label">Momento</h4><div class="kv">${pot ? kv('Potencial', `${pot.v}${pot.pos !== p.pos ? ` <small>como ${pot.pos}</small>` : ''}${p.potT ? ` <span class="pot-t ${p.potT > 0 ? 'up' : 'dn'}">${p.potT > 0 ? '▲' : '▼'}${Math.abs(p.potT)}</span>` : ''}`) : ''}${kv('Condição', Math.round(p.cond) + '%', p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : '')}${kv('Moral', moraleWord(p.mor))}${P.xp ? kv('Experiência', `${Math.round(P.xp(p))} <small>${P.xpWord(P.xp(p))}</small>`) : ''}</div></div>
         <div class="ps-b"><h4 class="label">Temporada</h4><div class="kv">${kv('Jogos', p.s.j)}${kv('Gols', p.s.g + p.s.cg + (p.s.cg ? ` <small>${p.s.cg} na copa</small>` : ''))}${kv('Assist.', p.s.as)}${kv('Nota', avgNote(p))}</div></div>
       </div>
@@ -1076,6 +1076,7 @@
     renewOpen(d) { A.playerSheet(d.id, 'renew'); },
     renewYears(d) { A.playerSheet(d.id, 'renew', Number(d.y)); },
     renewDo(d) {
+      { const pr = A.g.db.players[d.id]; if (pr) delete pr.rc; } // renovar atualiza a multa
       const p = pl(d.id);
       if (P.renew(A.g, p, Number(d.y))) { A.save(); A.closeSheet(); A.render(); A.toast(`${p.name} renovou até ${p.ctr}`); }
       else A.playerSheet(d.id, 'renew');

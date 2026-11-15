@@ -1159,3 +1159,11 @@ table { font-family: var(--f-body); }
 .ps-more[open] summary { color: var(--ink); }
 .ps-more .row { gap: 8px; }
 .ps-more .btn.danger { margin-left: auto; }
+
+/* Clássicos e mercado vivo */
+.derby-line { text-align: center; margin-top: 8px; }
+.derby-tag { display: inline-block; padding: 1px 6px; background: var(--accent); color: #f6f0e1; font-family: var(--f-label); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
+.jr-next.derby { border-width: 2px; border-color: var(--accent); }
+.loan-opt { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+.clause-row { border-top: 1px dotted var(--line); padding-top: 8px; }
+.mail-tag.saida { color: var(--accent); }

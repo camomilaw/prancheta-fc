@@ -86,6 +86,9 @@
       const gf = home ? m.hg : m.ag, ga = home ? m.ag : m.hg;
       if (mine.it.ko) g.board.conf += m.w === g.user ? B.win : -B.loss;
       else g.board.conf += gf > ga ? B.win : gf < ga ? -B.loss : 0;
+      // clássico pesa mais para a diretoria
+      const dv = P.rivalry ? P.rivalry(g, m.h, m.a) : 0;
+      if (dv >= 2) { const won = mine.it.ko ? m.w === g.user : gf > ga, lost = mine.it.ko ? m.w !== g.user : gf < ga; g.board.conf += won ? dv : lost ? -dv : 0; }
     }
     if (step.t === 'lg' && step.r % 4 === 3) g.board.conf += P.clamp((g.board.target - myPos(g)) * 0.8, -4, 4);
     g.board.conf = P.clamp(Math.round(g.board.conf), 0, 100);

@@ -9,7 +9,8 @@
     prop: { tag: 'Proposta', go: 'Ver propostas' },
     inj: { tag: 'Lesão', go: 'Ajustar a tática' },
     sus: { tag: 'Suspensão', go: 'Ajustar a tática' },
-    adp: { tag: 'Adaptação', go: 'Ver o jogador' }
+    adp: { tag: 'Adaptação', go: 'Ver o jogador' },
+    saida: { tag: 'Saída', go: 'Ver propostas' }
   };
   const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '') || 'tecnico';
 
@@ -35,7 +36,8 @@
   // deixa de existir (aceita, recusada ou vencida). O e-mail é criado na semana m.w e lido a partir da m.w + 1.
   function alive(g, m) {
     if (m.s !== g.season) return false;
-    if (m.k !== 'prop') return g.week < m.w + 2;
+    if (m.k === 'saida' && !m.oid) return g.week < m.w + 2;
+    if (m.k !== 'prop' && m.k !== 'saida') return g.week < m.w + 2;
     if (g.week >= m.w + 3) return false;
     const offers = g.offers || [];
     return m.oid ? offers.some((o) => o.id === m.oid) : offers.some((o) => o.pid === m.pid);
@@ -75,7 +77,8 @@
       const g = A.g; prune(g);
       const m = box(g).list.find((x) => x.id === d.id); if (!m) { A.render(); return; }
       m.read = true;
-      if (m.k === 'prop') { A.st.mk = Object.assign(A.st.mk || {}, { tab: 'prop' }); A.view = 'mercado'; }
+      if (m.k === 'prop' || (m.k === 'saida' && m.oid)) { A.st.mk = Object.assign(A.st.mk || {}, { tab: 'prop' }); A.view = 'mercado'; }
+      else if (m.k === 'saida') { A.view = 'elenco'; }
       else if (m.k === 'adp' && m.pid) { A.save(); A.render(); if (A.g.db.players[m.pid]) A.playerSheet(m.pid); else if (A.youthSheet && A.g.y && A.g.y.squad[m.pid]) A.youthSheet(m.pid); return; }
       else A.view = 'tatica';
       A.save(); A.render(); window.scrollTo(0, 0);
