@@ -44,8 +44,8 @@
     const from = p.clubId ? P.club(g, p.clubId) : null;
     const diff = from ? to.div - from.div : 0;
     if (from && diff >= 3 && P.ovr(p) >= 72) return null;
-    let d = Math.max(p.clubId ? p.wage * 1.1 : 0, P.wageFor(p) * (p.clubId ? 1 : 1.05));
-    if (diff > 0) d *= 1 + diff * 0.25;
+    let d = Math.max(p.clubId ? p.wage * 1.05 : 0, P.wageFor(p) * (p.clubId ? 1 : 1.05));
+    if (diff > 0) d *= 1 + diff * 0.15;
     if (toCid === g.user && P.coachHas && P.coachHas(g, 'negociador')) d *= 1.03;
     return Math.round(d * (P.diffM ? P.diffM(g, 'demand') : 1) / 500) * 500;
   };
@@ -428,7 +428,7 @@
         ${p.clubId ? `<div class="field"><label class="label" for="of-fee">Valor da transferência (R$)</label><input id="of-fee" type="number" min="0" step="10000" inputmode="numeric" data-i="ofF" data-k="fee" value="${d.fee}"></div>` : ''}
         <div class="field"><label class="label" for="of-wage">Salário mensal oferecido (R$)</label><input id="of-wage" type="number" min="0" step="500" inputmode="numeric" data-i="ofF" data-k="wage" value="${d.wage}"></div>
         <div class="seg">${[1, 2, 3, 4, 5].map((y) => `<button class="${y === d.years ? 'on' : ''}" data-a="ofYears" data-id="${p.id}" data-y="${y}">${y} ${y === 1 ? 'ano' : 'anos'}</button>`).join('')}</div>
-        <div class="muted" style="font-size:.85rem">Saldo: ${P.money(club(g.user).bal)} · valor de mercado: ${P.money(P.value(p))}</div>
+        <div class="muted" style="font-size:.85rem">Saldo: ${P.money(club(g.user).bal)} · valor de mercado: ${P.money(P.value(p))}</div>${P.wageImpact ? P.wageImpact(g, d.wage) : ''}
         ${d.msg ? `<div class="msg ${d.ok ? 'good' : ''}">${esc(d.msg)}</div>` : ''}
         ${!d.ok && p.clubId && P.clauseButton ? `<div class="row clause-row"><span class="muted" style="flex:1;font-size:.85rem">Ou pague a multa rescisória: o clube não pode recusar (o jogador ainda precisa aceitar o salário).</span>${P.clauseButton(g, p)}</div>` : ''}
         <div class="row"><button class="btn" data-a="player" data-id="${p.id}">Voltar</button><span class="spacer"></span>${d.ok ? '' : `<button class="btn primary" data-a="mkOffer" data-id="${p.id}">Enviar proposta</button>`}</div></div>`;

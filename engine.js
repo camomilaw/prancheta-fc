@@ -130,7 +130,7 @@
     ticket: (div) => 15 + (8 - div) * 6.5,                         // ingresso médio (R$)
     prizeFactor: 0.6,                                              // premiação final = cota × fator × (21 - posição) / 20
     cupPrize: [0.2e6, 0.4e6, 0.8e6, 1.5e6, 3e6, 5e6, 8e6, 15e6],   // por vitória em cada fase da copa
-    wageBase: 11000, wageGrowth: 1.125                             // salário mensal de um jogador de força 55
+    wageBase: 9400, wageGrowth: 1.125                              // salário mensal de um jogador de força 55 (era 11000)
   };
   P.wageFor = (p) => {
     const age = p.age <= 20 ? 0.7 : p.age >= 33 ? 0.85 : 1;
@@ -167,7 +167,8 @@
   P.payroll = (g, cid) => P.squad(g, cid).reduce((s, p) => s + p.wage, 0);
   // Renovação: o jogador pede aumento; com moral baixa ele recusa
   P.renewOffer = (g, p) => ({
-    wage: Math.max(p.wage, Math.round(P.wageFor(p) * (p.mor >= 60 ? 1.1 : P.coachHas && P.coachHas(g, 'motivador') ? 1.35 : 1.25) / 500) * 500),
+    // o salário acompanha a força e a idade de agora: pode cair até 20% (veterano em queda aceita ganhar menos)
+    wage: Math.max(Math.round(p.wage * 0.8 / 500) * 500, Math.round(P.wageFor(p) * (p.mor >= 60 ? 1.05 : P.coachHas && P.coachHas(g, 'motivador') ? 1.2 : 1.15) / 500) * 500),
     willing: p.mor >= 35
   });
   P.renew = function (g, p, years) {

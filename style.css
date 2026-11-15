@@ -1176,3 +1176,7 @@ table { font-family: var(--f-body); }
 .debt-meter span { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
 .debt-list { margin: 4px 0 0; padding-left: 18px; font-size: .88rem; }
 .debt-list li { margin: 2px 0; }
+
+.budget-card { border-left: 4px solid var(--line); padding-left: 12px; }
+.bud-ok { color: var(--good); } .bud-warn { color: var(--warn); } .bud-bad { color: var(--bad); }
+.debt-meter i.bud-ok { background: var(--good); } .debt-meter i.bud-warn { background: var(--warn); } .debt-meter i.bud-bad { background: var(--bad); }

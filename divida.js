@@ -105,6 +105,49 @@
     return origRelease.apply(this, arguments);
   };
 
+  // ---------- Salários mais leves (saves antigos) ----------
+  // Os salários-base caíram 15%. Carreiras novas já nascem assim; as antigas são ajustadas uma vez.
+  const origNew = P.newGame;
+  P.newGame = function () { const g = origNew.apply(this, arguments); g.wv2 = 1; return g; };
+  const origEcon = P.ensureEconomy;
+  P.ensureEconomy = function (g) {
+    const r = origEcon.apply(this, arguments);
+    if (g && g.db && !g.wv2) {
+      for (const p of Object.values(g.db.players)) {
+        if (p.wage) p.wage = Math.max(1500, Math.round(p.wage * 0.85 / 500) * 500);
+        if (p.loan && p.loan.wage) p.loan.wage = Math.max(1500, Math.round(p.loan.wage * 0.85 / 500) * 500);
+      }
+      g.wv2 = 1;
+    }
+    return r;
+  };
+
+  // ---------- Orçamento: quanto da receita a folha consome ----------
+  P.budget = function (g, extraWage) {
+    const c = P.club(g, g.user), n = P.divClubs(g.db, c.div).length - 1; // jogos em casa na liga
+    const tv = P.ECON.tv[c.div - 1];
+    const gate = c.cap * 0.65 * P.ECON.ticket(c.div) * n;
+    const income = tv + (P.commercialOf ? P.commercialOf(c) : 0.4 * tv) + gate + tv * P.ECON.prizeFactor * 0.5;
+    const wages = (P.squad(g, g.user).reduce((s, p) => s + (p.wage || 0), 0) + (extraWage || 0)) * 12;
+    return { income, wages, pct: Math.round(wages / Math.max(1, income) * 100) };
+  };
+  const pctCls = (x) => (x <= 70 ? 'ok' : x <= 90 ? 'warn' : 'bad');
+  P.budgetCard = function (g) {
+    const b = P.budget(g);
+    const tip = b.pct <= 70 ? 'Folha saudável: sobra dinheiro para contratar e para imprevistos.'
+      : b.pct <= 90 ? 'Folha apertada: uma temporada ruim de bilheteria pode deixar o clube no vermelho.'
+      : 'Folha maior que a receita: o saldo vai cair. Venda ou empreste quem ganha muito e joga pouco.';
+    return `<div class="card budget-card"><div class="head"><span class="label">Orçamento da temporada</span><b class="bud-${pctCls(b.pct)}">${b.pct}%</b></div>
+      <div class="debt-meter bud"><i class="bud-${pctCls(b.pct)}" style="width:${Math.min(100, b.pct)}%"></i><span style="left:70%"></span><span style="left:90%"></span></div>
+      <div class="kv" style="margin-top:8px"><div><span class="label">Receita estimada</span><b>${P.money(b.income)}</b></div><div><span class="label">Folha anual</span><b>${P.money(b.wages)}</b></div></div>
+      <p class="muted" style="font-size:.82rem;margin:6px 0 0">A folha consome ${b.pct}% da receita estimada (TV, patrocínio, bilheteria e premiação). ${tip}</p></div>`;
+  };
+  // linha do painel de proposta: como fica a folha com o novo salário
+  P.wageImpact = function (g, wage) {
+    const b = P.budget(g, wage);
+    return `<div class="muted" style="font-size:.85rem">Com ele, a folha anual vai para ${P.money(b.wages)}: <b class="bud-${pctCls(b.pct)}">${b.pct}% da receita</b> estimada.</div>`;
+  };
+
   // ---------- Tela de finanças ----------
   P.debtCard = function (g) {
     const d = P.debtInfo(g);

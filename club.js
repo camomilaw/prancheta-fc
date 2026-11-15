@@ -51,7 +51,7 @@
     c.lastOcc = Math.round(o * 100);
     return Math.round(c.cap * o * P.ECON.ticket(c.div) * price);
   };
-  const commercial = (c) => 0.4 * P.ECON.tv[c.div - 1] * (c.rep / 70) * (0.6 + 0.2 * P.facOf(c).sede);
+  const commercial = P.commercialOf = (c) => 0.4 * P.ECON.tv[c.div - 1] * (c.rep / 70) * (0.6 + 0.2 * P.facOf(c).sede);
 
   // ---------- Diretoria ----------
   P.boardReset = function (g) {
