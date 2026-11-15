@@ -1167,3 +1167,12 @@ table { font-family: var(--f-body); }
 .loan-opt { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
 .clause-row { border-top: 1px dotted var(--line); padding-top: 8px; }
 .mail-tag.saida { color: var(--accent); }
+
+/* Clube no vermelho */
+.debt-card { border-left: 4px solid var(--warn); padding-left: 12px; }
+.debt-card.lv2, .debt-card.lv3 { border-left-color: var(--bad); }
+.debt-meter { position: relative; height: 8px; background: var(--line); margin-top: 4px; }
+.debt-meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bad); }
+.debt-meter span { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+.debt-list { margin: 4px 0 0; padding-left: 18px; font-size: .88rem; }
+.debt-list li { margin: 2px 0; }

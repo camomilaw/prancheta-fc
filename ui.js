@@ -926,6 +926,7 @@
           <div><span class="label">Cota de TV/ano</span><b>${P.money(tvSeason)}</b></div>
           <div><span class="label">Estádio</span><b>${me.cap.toLocaleString('pt-BR')}</b><span class="muted" style="font-size:.75rem">lugares · ingresso R$ ${Math.round(P.ECON.ticket(me.div))}</span></div>
         </div></div>
+      ${P.debtCard ? P.debtCard(g) : ''}
       <div class="grid2">
         <div class="card"><div class="head"><span class="label">Temporada ${g.season}</span></div>${Object.keys(g.fin.cat).length ? cats(g.fin.cat) : '<p class="empty">Nenhum movimento ainda.</p>'}</div>
         <div class="card"><div class="head"><span class="label">${g.fin.prev ? 'Temporada ' + g.fin.prev.s : 'Temporada anterior'}</span></div>${g.fin.prev ? cats(g.fin.prev.cat) : '<p class="empty">Aparece depois da primeira temporada.</p>'}</div>
