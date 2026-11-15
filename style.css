@@ -1180,3 +1180,43 @@ table { font-family: var(--f-body); }
 .budget-card { border-left: 4px solid var(--line); padding-left: 12px; }
 .bud-ok { color: var(--good); } .bud-warn { color: var(--warn); } .bud-bad { color: var(--bad); }
 .debt-meter i.bud-ok { background: var(--good); } .debt-meter i.bud-warn { background: var(--warn); } .debt-meter i.bud-bad { background: var(--bad); }
+
+/* Rádio Prancheta */
+#radio { display: none; }
+#radio.on { display: block; }
+.rd-pill { position: fixed; right: 14px; bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom, 0px)); z-index: 45;
+  width: 52px; height: 52px; padding: 0; border: 2px solid var(--press-ink, #f1e9d8); background: #16130f; box-shadow: var(--shadow); cursor: pointer; }
+.rd-pill img { width: 100%; height: 100%; display: block; }
+.rd-live { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); border: 2px solid var(--bg); }
+#radio.playing .rd-live { background: var(--accent); animation: rd-pulse 1.6s ease-in-out infinite; }
+@keyframes rd-pulse { 50% { transform: scale(1.35); } }
+#radio.open .rd-pill { display: none; }
+.rd-panel { position: fixed; left: 0; right: 0; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px)); z-index: 45;
+  background: var(--surface); border-top: 3px double var(--ink); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px;
+  transform: translateY(calc(100% + var(--nav-h) + 40px)); transition: transform .25s ease; box-shadow: 0 -6px 18px rgba(0,0,0,.18); }
+#radio.open .rd-panel { transform: none; }
+.rd-head { display: flex; align-items: center; gap: 10px; }
+.rd-head img { width: 40px; height: 40px; }
+.rd-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rd-id b { font-family: var(--f-display); font-size: 1.05rem; }
+.rd-id span { font-size: .8rem; color: var(--muted); }
+.rd-src { width: 100%; }
+.rd-src button { flex: 1; }
+.rd-sp iframe { display: block; border: 0; border-radius: 12px; }
+.rd-now { display: flex; flex-direction: column; }
+.rd-now b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rd-ctl { display: flex; gap: 6px; flex-wrap: wrap; }
+.rd-ctl .btn.on { outline: 2px solid var(--accent); }
+.rd-vol { display: flex; align-items: center; gap: 10px; }
+.rd-vol input { flex: 1; }
+.rd-add { display: flex; gap: 8px; flex-wrap: wrap; }
+.rd-note, .rd-fail { font-size: .78rem; margin: 0; }
+body.in-match .rd-pill { display: none; }
+body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + var(--nav-h) + 40px)); }
+.rd-card .head img { border: 1px solid var(--line); }
+@media (min-width: 900px) {
+  .rd-pill { bottom: 18px; right: 18px; }
+  .rd-panel { left: auto; right: 18px; bottom: 18px; width: 380px; border: 1px solid var(--line); border-top: 3px double var(--ink); }
+}
+.rd-vol input { accent-color: var(--accent); }
+.rd-card a, .rd-fail a { color: var(--accent); }
