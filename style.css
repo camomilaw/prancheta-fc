@@ -1309,3 +1309,14 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
   .fp-tbl, .fp-news { border-left: 1px solid var(--line); padding-left: 28px; }
   .front .fp-lead .jr-lead { border-bottom: 3px double var(--ink); padding-bottom: 14px; margin-bottom: 14px; }
 }
+/* Mercado no PC: filtros compactos (cabem em telas baixas, ex.: notebook 1366×768 com zoom) */
+@media (min-width: 900px) {
+  .mk-fbox .mk-filters { grid-template-columns: 1fr 1fr; grid-auto-flow: row dense; gap: 8px 10px; }
+  .mk-fbox .field { gap: 2px; }
+  .mk-fbox .field .label { font-size: .64rem; }
+  .mk-fbox .sel, .mk-fbox .num-in { min-height: 32px; height: 32px; padding: 2px 8px; font-size: .86rem; }
+  .mk-fbox .field:has(.range) { grid-column: 1 / -1; display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 6px; }
+  .mk-fbox .range { gap: 4px; }
+  .mk-fbox .range span { font-size: .8rem; }
+  .mk-fbox .cad-sub { margin-top: 0; }
+}

@@ -327,7 +327,7 @@
     const left = Math.ceil((g.cal.length - g.week) / g.cal.length * 12);
     return Math.max(0, (p.ctr - g.season) * 12 + left);
   };
-  const CTR_OPTS = [['any', 'Qualquer contrato'], ['free', 'Livres (sem clube)'], ['6', 'Termina em até 6 meses'], ['12', 'Até 12 meses'], ['18', 'Até 18 meses'], ['24', 'Até 24 meses'], ['25', 'Mais de 24 meses']];
+  const CTR_OPTS = [['any', 'Qualquer'], ['free', 'Livres (sem clube)'], ['6', 'Até 6 meses'], ['12', 'Até 12 meses'], ['18', 'Até 18 meses'], ['24', 'Até 24 meses'], ['25', 'Mais de 24 meses']];
   P.marketView = function () {
     const g = A.g, st = A.st;
     if (!g.loanKey && P.windowOpen(g)) refreshAiLoanList(g);
@@ -374,11 +374,11 @@
           <div class="field"><span class="label">Posição</span>${opt('pos', [['ALL', 'Todas']].concat(P.POS.map((x) => [x, x + ' · ' + P.POS_NAME[x]])), f.pos)}</div>
           <div class="field"><span class="label">Nacionalidade</span>${opt('nat', [['ALL', 'Todas']].concat(nats.map(([k, v]) => [k, v.n])), f.nat)}</div>
           <div class="field"><span class="label">Idade</span><div class="range">${numIn('amin', 'mín', 1, 'Idade mínima')}<span>a</span>${numIn('amax', 'máx', 1, 'Idade máxima')}</div></div>
-          <div class="field"><span class="label">Valor (R$ milhões)</span><div class="range">${numIn('vmin', 'mín', 0.1, 'Valor mínimo em milhões')}<span>a</span>${numIn('vmax', 'máx', 0.1, 'Valor máximo em milhões')}</div></div>
+          <div class="field"><span class="label">Valor (R$ mi)</span><div class="range">${numIn('vmin', 'mín', 0.1, 'Valor mínimo em milhões')}<span>a</span>${numIn('vmax', 'máx', 0.1, 'Valor máximo em milhões')}</div></div>
           <div class="field"><span class="label">Contrato</span>${opt('ctr', CTR_OPTS, f.ctr)}</div>
           <div class="field"><span class="label">Força</span><div class="range">${numIn('omin', 'mín', 1, 'Força mínima')}<span>a</span>${numIn('omax', 'máx', 1, 'Força máxima')}</div></div>
-          <div class="field"><span class="label">Divisão (1 a ${P.DIVS})</span><div class="range">${numIn('dmin', 'da', 1, 'Da divisão')}<span>a</span>${numIn('dmax', 'até', 1, 'Até a divisão')}</div></div>
-          <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer jogador'], ['venda', 'À venda (lista de transferência)'], ['emp', 'Na lista de empréstimo']], f.lst)}</div>
+          <div class="field"><span class="label">Divisão</span><div class="range">${numIn('dmin', 'da', 1, 'Da divisão')}<span>a</span>${numIn('dmax', 'até', 1, 'Até a divisão')}</div></div>
+          <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer'], ['venda', 'À venda'], ['emp', 'Para empréstimo']], f.lst)}</div>
         </div>
         <div class="row" style="margin-top:8px"><button class="btn sm ghost" data-a="mkClear">Limpar filtros</button></div></aside>
         <section class="mk-res">
