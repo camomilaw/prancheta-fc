@@ -211,9 +211,9 @@
     const spPick = (kind) => { const want = t.sp && t.sp[kind]; return (want && xiP.find((p) => p.id === want)) || spAuto(kind); };
     const capP = spPick('cap'), capId = capP && capP.id;
     // Novo layout (cadernos): no celular uma seção por vez; no PC o campo fica fixo à esquerda
-    const tab = A.st.tacTab || 'campo', side = tab === 'campo' ? 'ins' : tab;
+    const tab = A.st.tacTab || 'campo', side = tab === 'campo' ? 'res' : tab;
     const cls = (k) => `${tab === k ? 'on' : ''} ${side === k ? 'son' : ''}`;
-    const TABS = [['campo', 'A', 'Campo'], ['ins', 'B', 'Instruções'], ['sp', 'C', 'Bola parada'], ['res', 'D', `Reservas (${bench.length})`]];
+    const TABS = [['campo', 'A', 'Campo'], ['res', 'B', `Reservas (${bench.length})`], ['ins', 'C', 'Instruções'], ['sp', 'D', 'Bola parada']];
     const strip = [['ATA', s.att], ['MEI', s.mid], ['DEF', s.def], ['GOL', s.gk]].map(([n, v]) => { const x = sc(v); return `<span class="tq ${x >= 100 ? 'up' : x < 80 ? 'dn' : ''}"><small>${n}</small><b>${x}</b></span>`; }).join('');
     const pitch = `<div class="pitch" id="pitch"><div class="ln mid"></div><div class="ln circ"></div><div class="ln box1"></div><div class="ln box2"></div>
           <svg class="chem" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
@@ -245,6 +245,11 @@
           <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm only-m" data-a="bestXI">Escalar os melhores</button>${t.xy ? '<button class="btn sm" data-a="tReset">Voltar à formação ' + esc(t.f) + '</button>' : ''}</div>
         </section>
         <div class="cad-side">
+          <section class="cad-pane ${cls('res')}">
+            <div class="cad-sub">Reservas (${bench.length})</div>
+            <div class="plist">${bench.map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
+              <span class="nm"><b>${esc(p.name)}</b><small>${p.age} anos</small></span><span></span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div>
+          </section>
           <section class="cad-pane ${cls('ins')}">
             <div class="cad-sub">Geral</div>
             <div class="opt"><span class="muted">Mentalidade</span>${seg('men', [['def', 'Defensiva'], ['equ', 'Equilibrada'], ['ofe', 'Ofensiva']], t.men)}</div>
@@ -270,11 +275,6 @@
                 ${opts.map((p) => `<option value="${p.id}" ${want === p.id ? 'selected' : ''}>${lbl(p)}</option>`).join('')}</select></div>`;
             }).join('')}
             <p class="cad-fine">O número é a habilidade na função; ★ = característica ideal. Se o escolhido sair do jogo, o melhor em campo assume. O capitão melhora um pouco o time, e um <b>Líder</b> melhora mais.${capP ? ` Capitão agora: <b>${esc(capP.name)}</b>.` : ''}</p>
-          </section>
-          <section class="cad-pane ${cls('res')}">
-            <div class="cad-sub">Reservas (${bench.length})</div>
-            <div class="plist">${bench.map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
-              <span class="nm"><b>${esc(p.name)}</b><small>${p.age} anos</small></span><span></span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div>
           </section>
         </div>
       </div></div>`;
