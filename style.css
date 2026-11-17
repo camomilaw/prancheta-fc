@@ -1220,3 +1220,50 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + var(--na
 }
 .rd-vol input { accent-color: var(--accent); }
 .rd-card a, .rd-fail a { color: var(--accent); }
+
+/* ---------- Cadernos (layout novo das telas grandes) ---------- */
+.tac2 { display: flex; flex-direction: column; gap: 12px; }
+.cad-head { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: end; padding-bottom: 10px; border-bottom: 3px double var(--ink); }
+.cad-title h2 { margin: 0; font-family: var(--f-display); font-size: 1.7rem; line-height: 1.05; }
+.cad-kicker { display: block; white-space: nowrap; font-family: var(--f-label); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.cad-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.cad-tools .sel { min-width: 0; }
+.ticker { grid-column: 1 / -1; display: flex; align-items: stretch; border: 1px solid var(--ink); background: var(--surface); }
+.ticker .tk-l { display: flex; align-items: center; padding: 0 10px; background: var(--ink); color: var(--bg); font-family: var(--f-label); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+.ticker .tq { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4px 2px; border-left: 1px solid var(--line); }
+.ticker .tq small { font-family: var(--f-label); font-size: .62rem; letter-spacing: .1em; color: var(--muted); }
+.ticker .tq b { font-family: var(--f-num); font-size: 1.05rem; }
+.ticker .tq.up b { color: var(--good); } .ticker .tq.dn b { color: var(--bad); }
+.cad-note { grid-column: 1 / -1; font-size: .85rem; font-style: italic; color: var(--bad); }
+.cad-tabs { display: flex; gap: 0; overflow-x: auto; border-bottom: 1px solid var(--ink); scrollbar-width: none; }
+.cad-tabs::-webkit-scrollbar { display: none; }
+.cad-tabs button { flex: 1 0 auto; border: 0; background: none; padding: 10px 12px 8px; font-family: var(--f-label); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; cursor: pointer; }
+.cad-tabs button i { font-style: normal; display: inline-block; min-width: 1.4em; margin-right: 6px; padding: 0 3px; border: 1px solid currentColor; font-size: .7rem; text-align: center; }
+.cad-pane { flex-direction: column; gap: 12px; min-width: 0; }
+.cad-sub { font-family: var(--f-label); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-top: 4px; }
+.cad-fine { margin: 0; font-size: .82rem; color: var(--muted); font-style: italic; }
+.cad-side { display: contents; }
+@media (max-width: 899px) { .only-d { display: none !important; } .cad-head { align-items: center; } .cad-tools .sel { max-width: 130px; } }
+@media (min-width: 900px) { .only-m { display: none !important; } }
+.cad-body { display: flex; flex-direction: column; gap: 12px; }
+.pane-campo .pitch { width: min(100%, calc((100dvh - 300px) * .68)); min-width: 260px; }
+@media (max-width: 899px) {
+  .cad-tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+  .cad-pane { display: none; }
+  .cad-pane.on { display: flex; }
+}
+@media (min-width: 900px) {
+  .cad-body { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "pitch tabs" "pitch side"; grid-template-rows: auto 1fr; gap: 0 24px; align-items: start; }
+  .cad-body > .cad-tabs { grid-area: tabs; }
+  .pane-campo { grid-area: pitch; width: min(420px, calc((100vh - 250px) * .68)); }
+  .pane-campo .pitch { width: 100% !important; min-width: 0; }
+  .cad-side { grid-area: side; display: block; min-width: 0; padding-top: 12px; }
+  .pane-campo .pitch { width: min(420px, calc((100vh - 250px) * .68)); }
+  .cad-tabs .only-m { display: none; }
+  .cad-tabs button.son { color: var(--ink); border-bottom-color: var(--accent); }
+  .pane-campo { display: flex; position: sticky; top: 76px; }
+  .cad-side .cad-pane { display: none; }
+  .cad-side .cad-pane.son { display: flex; }
+  .cad-head { grid-template-columns: auto 1fr auto; }
+  .ticker { grid-column: auto; grid-row: 1; grid-column: 2; max-width: 420px; justify-self: center; width: 100%; }
+}

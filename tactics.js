@@ -186,6 +186,7 @@
     if (s.shape.m <= 1) w.push(s.shape.m ? 'Só 1 jogador no meio: o meio-campo vai sofrer.' : 'Sem meio-campistas: o adversário vai dominar o meio.');
     return w;
   }
+  A.ACT.tacTab = (d) => { A.st.tacTab = d.k; A.render(); };
   P.tacticsView = function () {
     const g = A.g, t = g.tac[g.user];
     if (!t.ins) t.ins = P.insOf(t);
@@ -209,11 +210,12 @@
     const spAuto = (kind) => xiP.filter((p) => kind === 'cap' || p.pos !== 'GOL').sort((a, b) => P.SP_SKILL[kind](b) - P.SP_SKILL[kind](a))[0];
     const spPick = (kind) => { const want = t.sp && t.sp[kind]; return (want && xiP.find((p) => p.id === want)) || spAuto(kind); };
     const capP = spPick('cap'), capId = capP && capP.id;
-    return `<div class="tac">
-      <div class="card">
-        <div class="head"><h2>Escalação</h2>
-          <select class="sel" data-c="tForm" aria-label="Formação">${t.xy ? '<option selected>Personalizada</option>' : ''}${Object.keys(P.FORMATIONS).map((f) => `<option ${!t.xy && t.f === f ? 'selected' : ''}>${f}</option>`).join('')}</select></div>
-        <div class="pitch" id="pitch"><div class="ln mid"></div><div class="ln circ"></div><div class="ln box1"></div><div class="ln box2"></div>
+    // Novo layout (cadernos): no celular uma seção por vez; no PC o campo fica fixo à esquerda
+    const tab = A.st.tacTab || 'campo', side = tab === 'campo' ? 'ins' : tab;
+    const cls = (k) => `${tab === k ? 'on' : ''} ${side === k ? 'son' : ''}`;
+    const TABS = [['campo', 'A', 'Campo'], ['ins', 'B', 'Instruções'], ['sp', 'C', 'Bola parada'], ['res', 'D', `Reservas (${bench.length})`]];
+    const strip = [['ATA', s.att], ['MEI', s.mid], ['DEF', s.def], ['GOL', s.gk]].map(([n, v]) => { const x = sc(v); return `<span class="tq ${x >= 100 ? 'up' : x < 80 ? 'dn' : ''}"><small>${n}</small><b>${x}</b></span>`; }).join('');
+    const pitch = `<div class="pitch" id="pitch"><div class="ln mid"></div><div class="ln circ"></div><div class="ln box1"></div><div class="ln box2"></div>
           <svg class="chem" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
           ${slots.map((sl, i) => {
             const p = pl(t.xi[i]);
@@ -226,43 +228,55 @@
               <span class="dot ${!p || !P.available(p) ? 'off' : f < 1 ? 'fit' : ''}" style="--c:${cc}">${p ? P.ovrAt(p, sl.pos) : '?'}${post !== 'equ' ? `<i class="post ${post}">${post === 'ofe' ? '▲' : '▼'}</i>` : ''}${p && p.id === capId ? '<i class="cap-mark" title="Capitão">C</i>' : ''}</span>
               <span class="nm">${esc(name)}</span><span class="ps">${sl.pos}</span></button>`;
           }).join('')}
+        </div>`;
+    return `<div class="tac2">
+      <header class="cad-head">
+        <div class="cad-title"><span class="cad-kicker">Caderno de Tática</span><h2>Escalação</h2></div>
+        <div class="cad-tools"><select class="sel" data-c="tForm" aria-label="Formação">${t.xy ? '<option selected>Personalizada</option>' : ''}${Object.keys(P.FORMATIONS).map((f) => `<option ${!t.xy && t.f === f ? 'selected' : ''}>${f}</option>`).join('')}</select>
+          <button class="btn sm only-d" data-a="bestXI">Escalar os melhores</button></div>
+        <div class="ticker" title="Força de cada setor. 100 = nível de um setor de elite; entrosamento, moral, funções e instruções podem levar além disso."><span class="tk-l">Força do time</span>${strip}</div>
+        ${warn.length ? `<div class="cad-note">${warn.map(esc).join(' · ')}</div>` : ''}
+      </header>
+      <div class="cad-body">
+        <nav class="cad-tabs" aria-label="Seções da tática">${TABS.map(([k, l, n]) => `<button class="${cls(k)} ${k === 'campo' ? 'only-m' : ''}" data-a="tacTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
+        <section class="cad-pane pane-campo ${cls('campo')}">
+          ${pitch}
+          <p class="cad-fine">Arraste para mudar a posição. Toque para escolher função, postura ou trocar o jogador. Linha clara = entrosados. ▲▼ = postura.</p>
+          <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm only-m" data-a="bestXI">Escalar os melhores</button>${t.xy ? '<button class="btn sm" data-a="tReset">Voltar à formação ' + esc(t.f) + '</button>' : ''}</div>
+        </section>
+        <div class="cad-side">
+          <section class="cad-pane ${cls('ins')}">
+            <div class="cad-sub">Geral</div>
+            <div class="opt"><span class="muted">Mentalidade</span>${seg('men', [['def', 'Defensiva'], ['equ', 'Equilibrada'], ['ofe', 'Ofensiva']], t.men)}</div>
+            <div class="opt"><span class="muted">Pressão</span>${seg('pre', [['bai', 'Baixa'], ['med', 'Média'], ['alt', 'Alta']], t.pre)}</div>
+            <div class="cad-sub">Com a bola</div>
+            <div class="opt"><span class="muted">Construção</span>${seg('build', [['pos', 'Posse paciente'], ['equ', 'Equilibrada'], ['con', 'Contra-ataque']], ins.build)}</div>
+            <div class="opt"><span class="muted">Passes</span>${seg('pass', [['cur', 'Curtos'], ['equ', 'Mistos'], ['dir', 'Diretos']], ins.pass)}</div>
+            <div class="opt"><span class="muted">Pontas</span>${seg('wing', [['cru', 'Abrir e cruzar'], ['cor', 'Cortar pro meio']], ins.wing)}</div>
+            <div class="cad-sub">Sem a bola</div>
+            <div class="opt"><span class="muted">Linha defensiva</span>${seg('line', [['alt', 'Alta'], ['med', 'Média'], ['bai', 'Bloco baixo']], ins.line)}</div>
+            <div class="opt"><span class="muted">Linha de impedimento</span>${seg('trap', [['true', 'Usar'], ['false', 'Não usar']], ins.trap)}</div>
+            <p class="cad-fine">${hint(t)}</p>
+            <label class="switch"><input type="checkbox" data-c="auto" ${t.auto ? 'checked' : ''}> Escalar os melhores automaticamente antes de cada jogo</label>
+          </section>
+          <section class="cad-pane ${cls('sp')}">
+            <div class="cad-sub">Capitão e bola parada</div>
+            ${[['cap', 'Capitão', 'lider'], ['pen', 'Pênaltis', 'penal'], ['fk', 'Faltas', 'faltas'], ['co', 'Escanteios', 'garcom']].map(([k, n, tr]) => {
+              const want = t.sp && t.sp[k], auto = spAuto(k);
+              const opts = xiP.filter((p) => k === 'cap' || p.pos !== 'GOL').sort((a, b) => P.SP_SKILL[k](b) - P.SP_SKILL[k](a));
+              const lbl = (p) => `${esc(p.name)} · ${Math.round(P.SP_SKILL[k](p))}${P.hasT && P.hasT(p, tr) ? ' ★' : ''}`;
+              return `<div class="opt sp-opt"><span class="muted">${n}</span><select class="sel" data-c="tSp" data-k="${k}" aria-label="${n}">
+                <option value="" ${!want || !xiP.some((p) => p.id === want) ? 'selected' : ''}>Automático${auto ? ' (' + esc(auto.name) + ')' : ''}</option>
+                ${opts.map((p) => `<option value="${p.id}" ${want === p.id ? 'selected' : ''}>${lbl(p)}</option>`).join('')}</select></div>`;
+            }).join('')}
+            <p class="cad-fine">O número é a habilidade na função; ★ = característica ideal. Se o escolhido sair do jogo, o melhor em campo assume. O capitão melhora um pouco o time, e um <b>Líder</b> melhora mais.${capP ? ` Capitão agora: <b>${esc(capP.name)}</b>.` : ''}</p>
+          </section>
+          <section class="cad-pane ${cls('res')}">
+            <div class="cad-sub">Reservas (${bench.length})</div>
+            <div class="plist">${bench.map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
+              <span class="nm"><b>${esc(p.name)}</b><small>${p.age} anos</small></span><span></span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div>
+          </section>
         </div>
-        <p class="muted" style="margin:10px 0 0;font-size:.85rem">Arraste para mudar a posição. Toque para escolher função, postura ou trocar o jogador. Linha clara = jogadores entrosados. ▲▼ = postura ofensiva ou defensiva.</p>
-        ${t.xy ? '<div style="margin-top:8px"><button class="btn sm" data-a="tReset">Voltar à formação ' + esc(t.f) + '</button></div>' : ''}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
-        <div class="card"><div class="head"><span class="label">Força do time</span></div>
-          <div class="bars">${[['Ataque', s.att], ['Meio', s.mid], ['Defesa', s.def], ['Goleiro', s.gk]].map(([n, v]) => `<div class="bar"><span>${n}</span><span class="tr str"><i style="width:${P.clamp(sc(v) / 1.3, 0, 100)}%"></i></span><b class="num">${sc(v)}</b></div>`).join('')}</div>
-          <p class="str-note">A marca vermelha é o 100: o nível de um setor de elite. Entrosamento, moral, funções e instruções táticas podem levar um setor além disso.</p>
-          ${warn.length ? `<div class="msg" style="margin-top:12px">${warn.map(esc).join('<br>')}</div>` : ''}</div>
-        <div class="card" style="display:flex;flex-direction:column;gap:14px">
-          <div class="label">Geral</div>
-          <div class="opt"><span class="muted">Mentalidade</span>${seg('men', [['def', 'Defensiva'], ['equ', 'Equilibrada'], ['ofe', 'Ofensiva']], t.men)}</div>
-          <div class="opt"><span class="muted">Pressão</span>${seg('pre', [['bai', 'Baixa'], ['med', 'Média'], ['alt', 'Alta']], t.pre)}</div>
-          <div class="label" style="margin-top:4px">Com a bola</div>
-          <div class="opt"><span class="muted">Construção</span>${seg('build', [['pos', 'Posse paciente'], ['equ', 'Equilibrada'], ['con', 'Contra-ataque']], ins.build)}</div>
-          <div class="opt"><span class="muted">Passes</span>${seg('pass', [['cur', 'Curtos'], ['equ', 'Mistos'], ['dir', 'Diretos']], ins.pass)}</div>
-          <div class="opt"><span class="muted">Pontas</span>${seg('wing', [['cru', 'Abrir e cruzar'], ['cor', 'Cortar pro meio']], ins.wing)}</div>
-          <div class="label" style="margin-top:4px">Sem a bola</div>
-          <div class="opt"><span class="muted">Linha defensiva</span>${seg('line', [['alt', 'Alta'], ['med', 'Média'], ['bai', 'Bloco baixo']], ins.line)}</div>
-          <div class="opt"><span class="muted">Linha de impedimento</span>${seg('trap', [['true', 'Usar'], ['false', 'Não usar']], ins.trap)}</div>
-          <p class="muted" style="margin:0;font-size:.85rem">${hint(t)}</p>
-          <label class="switch"><input type="checkbox" data-c="auto" ${t.auto ? 'checked' : ''}> Escalar os melhores automaticamente antes de cada jogo</label>
-          <div class="row"><button class="btn" data-a="bestXI">Escalar os melhores agora</button></div>
-        </div>
-        <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="label">Capitão e bola parada</div>
-          ${[['cap', 'Capitão', 'lider'], ['pen', 'Pênaltis', 'penal'], ['fk', 'Faltas', 'faltas'], ['co', 'Escanteios', 'garcom']].map(([k, n, tr]) => {
-            const want = t.sp && t.sp[k], auto = spAuto(k), cur = spPick(k);
-            const opts = xiP.filter((p) => k === 'cap' || p.pos !== 'GOL').sort((a, b) => P.SP_SKILL[k](b) - P.SP_SKILL[k](a));
-            const lbl = (p) => `${esc(p.name)} · ${Math.round(P.SP_SKILL[k](p))}${P.hasT && P.hasT(p, tr) ? ' ★' : ''}`;
-            return `<div class="opt sp-opt"><span class="muted">${n}</span><select class="sel" data-c="tSp" data-k="${k}" aria-label="${n}">
-              <option value="" ${!want || !xiP.some((p) => p.id === want) ? 'selected' : ''}>Automático${auto ? ' (' + esc(auto.name) + ')' : ''}</option>
-              ${opts.map((p) => `<option value="${p.id}" ${want === p.id ? 'selected' : ''}>${lbl(p)}</option>`).join('')}</select></div>`;
-          }).join('')}
-          <p class="muted" style="margin:0;font-size:.82rem">O número é a habilidade na função; ★ = característica ideal. Se o escolhido sair do jogo, o melhor em campo assume. O capitão melhora um pouco o time, e um <b>Líder</b> melhora mais.${capP ? ` Capitão agora: <b>${esc(capP.name)}</b>.` : ''}</p></div>
-        <div class="card"><div class="head"><span class="label">Reservas (${bench.length})</span></div>
-          <div class="plist">${bench.map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
-            <span class="nm"><b>${esc(p.name)}</b><small>${p.age} anos</small></span><span></span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div></div>
       </div></div>`;
   };
   function hint(t) {
