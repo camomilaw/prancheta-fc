@@ -437,7 +437,7 @@
     if (!st.sot) Object.assign(st, { sot: [0, 0], xg: [0, 0], fouls: [0, 0], corners: [0, 0] });
     const { sot, xg, fouls, corners } = st;
     const ps = st.ps || (st.ps = {});
-    const pst = (id) => ps[id] || (ps[id] = { sh: 0, sot: 0, xg: 0, tk: 0, sv: 0 });
+    const pst = (id) => ps[id] || (ps[id] = { sh: 0, sot: 0, xg: 0, tk: 0, sv: 0, kp: 0 });
     const active = (side) => L[side].on.filter((s) => !s.off);
     const mm = (min) => ({ m: Math.min(min, 90), x: min > 90 ? min - 90 : 0 });
     // pressão: fim de jogo apertado
@@ -452,7 +452,7 @@
     };
     const setShot = (side, min, p, pg, sp, asId, onT) => {
       shots[side]++; xg[side] += pg;
-      const q = pst(p.id); q.sh++; q.xg += pg;
+      const q = pst(p.id); q.sh++; q.xg += pg; if (asId) pst(asId).kp++;
       if (rnd() < pg) { q.sot++; score(side, min, p, sp, asId); }
       else if (rnd() < onT) { sot[side]++; q.sot++; const gk = gkOf(1 - side); if (gk) pst(gk.id).sv++; }
     };
@@ -521,14 +521,19 @@
             if (insS.build === 'pos') pg *= 1.05;
             xg[side] += pg; // xG: chance de gol desta finalização
             const qs = pst(sh.p.id); qs.sh++; qs.xg += pg;
+            // passe decisivo: quem deu o último passe para a finalização (vira assistência se for gol)
+            const mates = pool.filter((s) => s !== sh);
+            let kpS = null;
+            if (mates.length && rnd() < (big ? 0.75 : 0.45)) {
+              kpS = P.weighted(rnd, mates, (s) => (MID_W[s.pos] + ATT_W[s.pos]) * (s.p.a.pas + s.p.a.vis + s.p.a.cru * 0.5) * (hasT(s.p, 'garcom') ? 1.7 : 1) * (hasT(s.p, 'visao') ? 1.4 : 1) * (hasT(s.p, 'lanca') ? 1.3 : 1) * (hasT(s.p, 'pivo') ? 1.3 : 1) * rfx(side, s, 'assist'));
+              pst(kpS.p.id).kp++;
+            }
             if (rnd() < pg) {
               goals[side]++; sot[side]++; qs.sot++;
               gls[sh.p.id] = (gls[sh.p.id] || 0) + 1;
               let asId = null;
-              const mates = pool.filter((s) => s !== sh);
-              if (mates.length && rnd() < (big ? 0.75 : 0.45)) {
-                const as = P.weighted(rnd, mates, (s) => (MID_W[s.pos] + ATT_W[s.pos]) * (s.p.a.pas + s.p.a.vis + s.p.a.cru * 0.5) * (hasT(s.p, 'garcom') ? 1.7 : 1) * (hasT(s.p, 'visao') ? 1.4 : 1) * (hasT(s.p, 'lanca') ? 1.3 : 1) * (hasT(s.p, 'pivo') ? 1.3 : 1) * rfx(side, s, 'assist'));
-                asId = as.p.id; ast[asId] = (ast[asId] || 0) + 1;
+              if (kpS) {
+                asId = kpS.p.id; ast[asId] = (ast[asId] || 0) + 1;
               }
               ev.push(Object.assign(mm(min), { t: 'gol', s: side, p: sh.p.id, as: asId }));
             } else if (rnd() < (big ? 0.36 : 0.26)) {
@@ -636,7 +641,7 @@
       hg: goals[0], ag: goals[1], ev,
       st: { pos: Math.round(posAcc[0] / tot * 100), sh: shots, sot: st.sot, xg: st.xg.map((v) => Math.round(v * 100) / 100), fo: st.fouls, co: st.corners },
       notes, played: [Array.from(L[0].played), Array.from(L[1].played)],
-      ps: Object.fromEntries(Object.entries(st.ps || {}).map(([k, v]) => [k, { sh: v.sh, sot: v.sot, xg: Math.round(v.xg * 100) / 100, tk: v.tk, sv: v.sv }])),
+      ps: Object.fromEntries(Object.entries(st.ps || {}).map(([k, v]) => [k, { sh: v.sh, sot: v.sot, xg: Math.round(v.xg * 100) / 100, tk: v.tk, sv: v.sv, kp: v.kp || 0 }])),
       lu: L.map((lu) => { const sl = P.slots(lu.t); return { xy: sl.map((x) => [x.x, x.y]), on: lu.on.map((s) => [s.p.id, s.pos, s.i, s.replaced ? 1 : 0, s.off && !s.injured && !s.replaced ? 1 : 0, s.injured ? 1 : 0]) }; }),
       yel: [L[0].yel, L[1].yel], inj: L.map((lu) => lu.on.filter((s) => s.injured).map((s) => [s.p.id, s.injured, s.injN])),
       L
@@ -860,6 +865,8 @@
           const p = g.db.players[id];
           p.s.j++;
           p.s.nt += r.notes[id] || 6;
+          const q = r.ps && r.ps[id];
+          if (q) { const S = p.s; S.sh = (S.sh || 0) + q.sh; S.sot = (S.sot || 0) + q.sot; S.kp = (S.kp || 0) + (q.kp || 0); S.tk = (S.tk || 0) + q.tk; S.sv = (S.sv || 0) + q.sv; S.xg = Math.round(((S.xg || 0) + q.xg) * 100) / 100; }
           const drain = (P.TUNING.condDrain - p.a.res * 0.6 + (t.pre === 'alt' ? 5 : t.pre === 'bai' ? -4 : 0)) * (hasT(p, 'incans') ? 0.7 : 1);
           p.cond = P.clamp(p.cond - drain, 30, 100);
           const motiv = cid === g.user && P.coachHas && P.coachHas(g, 'motivador'), discp = cid === g.user && P.coachHas && P.coachHas(g, 'disciplinador');
@@ -1153,6 +1160,10 @@
         if (base >= 0 && p.a[at.k] >= 20 && d < 0) d = 0;
         if (p.age >= 32 && P.PHYS_ATTRS.includes(at.k)) d -= p.age >= 35 ? 0.4 : p.age >= 33 ? 0.3 : 0.2;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, d), 1, 20);
+      }
+      if (p.s && p.s.j) { // guarda as últimas 5 temporadas: [ano, clube, J, G, Ass, nota×10, final., no alvo, passes dec., desarmes, defesas, amarelos, vermelhos]
+        const S = p.s; (p.hs = p.hs || []).unshift([g.season, p.clubId || '', S.j, S.g + S.cg, S.as, Math.round(S.nt * 10), S.sh || 0, S.sot || 0, S.kp || 0, S.tk || 0, S.sv || 0, S.ca, S.cv]);
+        if (p.hs.length > 5) p.hs.length = 5;
       }
       p.s = P.blankStats(); p.cs = {}; p.cond = 100; p.mor = 70; p.inj = 0; p.susp = 0; p.ylw = 0;
     }

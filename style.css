@@ -1392,3 +1392,19 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
 .fin-pane .grid2 { margin: 0; }
 .tr2 .ticker .tq b, .fin2 .ticker .tq b { font-size: .9rem; }
 .cad-tools .seg { flex-wrap: nowrap; white-space: nowrap; }
+
+/* Ficha: temporada completa + comparação com dois radares */
+.ps-season { grid-column: 1 / -1; }
+.ps-season-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ps-years { display: flex; gap: 4px; flex-wrap: wrap; }
+.ps-years button { border: 1px solid var(--line); background: none; color: var(--muted); font-family: var(--f-num); font-size: .78rem; padding: 2px 8px; cursor: pointer; }
+.ps-years button.on { border-color: var(--accent); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+.ps-b .kv.ps-kv { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ps-kv b small { font-family: var(--f-num); font-size: .7rem; color: var(--muted); font-weight: 400; margin-left: 2px; }
+@media (max-width: 420px) { .ps-b .kv.ps-kv { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cmp-radars { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.cmp-radars figure { margin: 0; display: flex; flex-direction: column; align-items: center; }
+.cmp-radars figcaption { align-self: stretch; text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.cmp-radars figcaption small { text-transform: none; letter-spacing: 0; font-family: var(--f-body); color: var(--muted); }
+.cmp-none { font-size: .82rem; text-align: center; margin: 4px 0 0; }
+@media (min-width: 560px) { .cmp-radars { grid-template-columns: 1fr 1fr; } }

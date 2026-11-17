@@ -553,7 +553,7 @@
       <div class="ps-blocks">
         <div class="ps-b"><h4 class="label">Contrato</h4><div class="kv">${kv('Valor', P.money(P.value(p)))}${kv('Salário', P.money(p.wage || 0) + '<small>/mês</small>')}${kv('Até', p.ctr || '—', g && p.ctr <= g.season ? 'v2' : '')}${g && p.clubId && !p.loan && P.clauseOf ? kv('Multa', P.money(P.clauseOf(g, p))) : ''}${p.loan && p.loan.opt ? kv('Opção', P.money(p.loan.opt)) : ''}</div></div>
         <div class="ps-b"><h4 class="label">Momento</h4><div class="kv">${pot ? kv('Potencial', `${pot.v}${pot.pos !== p.pos ? ` <small>como ${pot.pos}</small>` : ''}${p.potT ? ` <span class="pot-t ${p.potT > 0 ? 'up' : 'dn'}">${p.potT > 0 ? '▲' : '▼'}${Math.abs(p.potT)}</span>` : ''}`) : ''}${kv('Condição', Math.round(p.cond) + '%', p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : '')}${kv('Moral', moraleWord(p.mor))}${P.xp ? kv('Experiência', `${Math.round(P.xp(p))} <small>${P.xpWord(P.xp(p))}</small>`) : ''}</div></div>
-        <div class="ps-b"><h4 class="label">Temporada</h4><div class="kv">${kv('Jogos', p.s.j)}${kv('Gols', p.s.g + p.s.cg + (p.s.cg ? ` <small>${p.s.cg} na copa</small>` : ''))}${kv('Assist.', p.s.as)}${kv('Nota', avgNote(p))}</div></div>
+        ${P.seasonBlock && g ? P.seasonBlock(p) : `<div class="ps-b"><h4 class="label">Temporada</h4><div class="kv">${kv('Jogos', p.s.j)}${kv('Gols', p.s.g + p.s.cg + (p.s.cg ? ` <small>${p.s.cg} na copa</small>` : ''))}${kv('Assist.', p.s.as)}${kv('Nota', avgNote(p))}</div></div>`}
       </div>
       <div class="attrs ps-attrs"><div>${left.map(([n, l]) => grp(n, l)).join('')}</div><div>${right.map(([n, l]) => grp(n, l)).join('')}</div></div>
       ${P.traitsBlock ? P.traitsBlock(p) : ''}
