@@ -1367,3 +1367,10 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
 /* abas nunca encolhem dentro de painéis com rolagem (ex.: ficha do clube) */
 .cad-tabs { flex-shrink: 0; }
 .sheet > * { flex-shrink: 0; }
+/* Treino e Sub-20 no menu lateral (PC); no celular ficam nos botões do Elenco */
+.nav .nav-sub { display: none; }
+@media (max-width: 899px) { .nav button.on-m, .nav button.on-m svg { color: var(--nav-ink); } .nav button.on-m::before { content: ""; position: absolute; left: 18%; right: 18%; top: 0; height: 3px; background: var(--accent); } }
+@media (min-width: 900px) {
+  .nav .nav-sub { display: flex; height: 36px; padding-left: 34px; font-size: .62rem; }
+  .nav .nav-sub svg { width: 16px; height: 16px; }
+}

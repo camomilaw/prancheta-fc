@@ -34,6 +34,8 @@
   // ---------- Ícones ----------
   const I = {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>',
+    train: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-8 4 4 4-9 4 13"/><path d="M3 20h18"/></svg>',
+    youth: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M6 21v-2a6 6 0 0112 0v2"/><path d="M12 13v3"/></svg>',
     squad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l-5 3 2 4 2-1v12h10V9l2 1 2-4-5-3c-1 2-2.5 3-4 3S9 5 8 3z"/></svg>',
     tactic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 12h16"/><circle cx="12" cy="12" r="2.5"/><path d="M8 7l2 2m0-2l-2 2M14 16l2 2m0-2l-2 2"/></svg>',
     table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 6H4a3 3 0 003 4M17 6h3a3 3 0 01-3 4"/><path d="M12 13v4M8 21h8M9 17h6"/></svg>',
@@ -116,8 +118,8 @@
     }
     const g = A.g, me = club(g.user);
     const views = { inicio: vInicio, elenco: vElenco, tatica: () => (P.tacticsView ? P.tacticsView() : vTatica()), tabela: vTabela, mercado: () => P.marketView(), calendario: () => P.calendarView(), clube: () => P.clubView(), stats: () => P.statsView(), base: () => P.baseView(), mais: vMais, financas: vFinancas, editor: () => P.editor.page(false), tecnico: () => P.managerView(), treino: () => P.trainingView() };
-    const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
-    const active = (A.view === 'editor' || A.view === 'financas' || A.view === 'clube' || A.view === 'stats' || A.view === 'tecnico') ? 'mais' : (A.view === 'base' || A.view === 'treino') ? 'elenco' : A.view === 'calendario' ? 'inicio' : A.view;
+    const nav = [['inicio', 'Início', I.home], ['elenco', 'Elenco', I.squad], ['treino', 'Treino', I.train, 'sub'], ['base', 'Sub-20', I.youth, 'sub'], ['tatica', 'Tática', I.tactic], ['tabela', 'Tabela', I.table], ['mercado', 'Mercado', I.market], ['mais', 'Mais', I.more]];
+    const active = (A.view === 'editor' || A.view === 'financas' || A.view === 'clube' || A.view === 'stats' || A.view === 'tecnico') ? 'mais' : A.view === 'calendario' ? 'inicio' : A.view;
     const step = g.cal[g.week];
     const meta = g.over ? `Temporada ${g.season} encerrada` : `${divName(me.div)} · ${P.stepLabel(step)} · ${g.season}`;
     const hasGame = !g.over && P.userMatch(g);
@@ -139,7 +141,7 @@
         ${P.calendarView ? `<button class="btn icon-btn" data-a="go" data-v="calendario" aria-label="Calendário" title="Calendário"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>` : ''}
         ${g.over ? '<button class="btn primary" data-a="newSeason">Nova temporada</button>' : `<button class="btn primary" data-a="play">${hasGame ? 'Jogar' : 'Avançar'}</button>`}
       </header>
-      <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span>${k === 'inicio' && P.unread && P.unread(g) ? `<i class="nav-dot" aria-label="${P.unread(g)} e-mails não lidos">${P.unread(g)}</i>` : ''}</button>`).join('')}</nav>
+      <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic, sub]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''} ${sub ? 'nav-sub' : ''} ${k === 'elenco' && (active === 'treino' || active === 'base') ? 'on-m' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span>${k === 'inicio' && P.unread && P.unread(g) ? `<i class="nav-dot" aria-label="${P.unread(g)} e-mails não lidos">${P.unread(g)}</i>` : ''}</button>`).join('')}</nav>
       <main class="main" id="view">${viewHTML}</main>
     </div>`;
     // faixas de abas com rolagem: mostra a aba ativa
@@ -913,7 +915,7 @@
     const on = (k) => (tab === k ? 'on son' : '');
     const IDX = [['financas', 'Finanças', `Saldo ${P.money(me.bal)} · receitas, despesas, folha e contratos`], ['clube', 'Clube e estrutura', 'Estádio, ingresso, base, centro de treinamento'],
       ['stats', 'Estatísticas', 'Artilheiros, garçons, notas da temporada e da carreira'], ['tecnico', 'Treinador', 'Seu perfil, clubes, títulos e Hall da Fama'],
-      ['treino', 'Treinamento', 'Foco da semana e evolução do elenco'], ['base', 'Sub-20 e olheiros', 'Base, missões de olheiros e promessas'], ['editor', 'Editor', 'Nomes, cores, atributos, jogadores e patches']];
+      ['editor', 'Editor', 'Nomes, cores, atributos, jogadores e patches']];
     const TABS = [['idx', 'A', 'Índice'], ['radio', 'B', 'Rádio'], ['save', 'C', 'Salvar'], ['car', 'D', 'Carreira'], ['help', 'E', 'Como funciona']];
     return `<div class="tac2 mais2">
       <header class="cad-head"><div class="cad-title"><span class="cad-kicker">Expediente</span><h2>Mais</h2></div></header>
