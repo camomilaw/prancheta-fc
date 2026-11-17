@@ -334,7 +334,8 @@
     if (!g.saleInit && P.windowOpen(g)) { g.loanKey = null; refreshAiLoanList(g); g.saleInit = true; }
     const f = st.mk = Object.assign({ tab: 'busca', pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', omin: '', omax: '', dmin: '', dmax: '', q: '', sort: 'ovr', div: 0, lst: 'any' }, st.mk || {});
     const offers = (g.offers || []).filter((o) => g.db.players[o.pid] && g.db.players[o.pid].clubId === g.user);
-    const tabs = `<div class="seg tabs-x">${[['busca', 'Buscar'], ['prop', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'À venda'], ['emp', 'Empréstimos'], ['tx', 'Transferências'], ['func', 'Funcionários']].map(([k, n]) => `<button class="${f.tab === k ? 'on' : ''}" data-a="mkTab" data-k="${k}">${n}</button>`).join('')}</div>`;
+    const TABS = [['busca', 'A', 'Buscar'], ['prop', 'B', `Propostas${offers.length ? ' (' + offers.length + ')' : ''}`], ['venda', 'C', 'À venda'], ['emp', 'D', 'Empréstimos'], ['tx', 'E', 'Transferências'], ['func', 'F', 'Funcionários']];
+    const tabs = `<nav class="cad-tabs cad-tabs-all" aria-label="Seções do mercado">${TABS.map(([k, l, n]) => `<button class="${f.tab === k ? 'on son' : ''}" data-a="mkTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>`;
     const me = club(g.user);
     let body = '';
     if (f.tab === 'busca') {
@@ -363,7 +364,12 @@
       const res = withO.sort(sorter).slice(0, 40).map((x) => x.p);
       const nats = Object.entries(P.COUNTRIES).sort((a, b) => a[1].n.localeCompare(b[1].n));
       const numIn = (k, ph, step, label) => `<input class="sel num-in" type="number" inputmode="decimal" min="0" step="${step}" data-c="mkF" data-k="${k}" value="${esc(f[k])}" placeholder="${ph}" aria-label="${label}">`;
-      body = `<div class="field mk-q"><span class="label">Nome</span><input class="sel search" id="mkq" type="search" data-i="mkQ" value="${esc(f.q || '')}" placeholder="Buscar jogador pelo nome…" aria-label="Buscar jogador pelo nome" autocomplete="off"></div>
+      const DEF = { pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', omin: '', omax: '', dmin: '', dmax: '', lst: 'any' };
+      const nAct = Object.keys(DEF).filter((k) => String(f[k] == null ? '' : f[k]) !== String(DEF[k])).length + (f.div ? 1 : 0);
+      body = `<div class="mk-busca">
+        <div class="mk-bar"><input class="sel search" id="mkq" type="search" data-i="mkQ" value="${esc(f.q || '')}" placeholder="Buscar jogador pelo nome…" aria-label="Buscar jogador pelo nome" autocomplete="off">
+          <button class="btn sm only-m ${nAct ? 'primary' : ''}" data-a="mkFOpen" aria-expanded="${st.mkOpen ? 'true' : 'false'}">Filtros${nAct ? ' (' + nAct + ')' : ''} ${st.mkOpen ? '▴' : '▾'}</button></div>
+        <aside class="mk-fbox ${st.mkOpen ? 'open' : ''}"><div class="cad-sub only-d">Filtros${nAct ? ' (' + nAct + ' ativos)' : ''}</div>
         <div class="mk-filters">
           <div class="field"><span class="label">Posição</span>${opt('pos', [['ALL', 'Todas']].concat(P.POS.map((x) => [x, x + ' · ' + P.POS_NAME[x]])), f.pos)}</div>
           <div class="field"><span class="label">Nacionalidade</span>${opt('nat', [['ALL', 'Todas']].concat(nats.map(([k, v]) => [k, v.n])), f.nat)}</div>
@@ -373,11 +379,12 @@
           <div class="field"><span class="label">Força</span><div class="range">${numIn('omin', 'mín', 1, 'Força mínima')}<span>a</span>${numIn('omax', 'máx', 1, 'Força máxima')}</div></div>
           <div class="field"><span class="label">Divisão (1 a ${P.DIVS})</span><div class="range">${numIn('dmin', 'da', 1, 'Da divisão')}<span>a</span>${numIn('dmax', 'até', 1, 'Até a divisão')}</div></div>
           <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer jogador'], ['venda', 'À venda (lista de transferência)'], ['emp', 'Na lista de empréstimo']], f.lst)}</div>
-          <div class="field"><span class="label">Ordenar</span>${opt('sort', [['ovr', 'Mais fortes'], ['val', 'Mais baratos'], ['age', 'Mais jovens'], ['ctr', 'Contrato acabando']], f.sort)}</div>
         </div>
-        <div class="row" style="margin:6px 0 10px"><span class="muted" style="flex:1;font-size:.88rem">${withO.length} ${withO.length === 1 ? 'jogador encontrado' : 'jogadores encontrados'}${withO.length > 40 ? ' (mostrando 40)' : ''}</span><button class="btn sm ghost" data-a="mkClear">Limpar filtros</button></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm ghost" data-a="mkClear">Limpar filtros</button></div></aside>
+        <section class="mk-res">
+        <div class="mk-count"><span>${withO.length} ${withO.length === 1 ? 'jogador encontrado' : 'jogadores encontrados'}${withO.length > 40 ? ' · mostrando 40' : ''}</span><label class="mk-sort"><span class="label">Ordenar</span>${opt('sort', [['ovr', 'Mais fortes'], ['val', 'Mais baratos'], ['age', 'Mais jovens'], ['ctr', 'Contrato acabando']], f.sort)}</label></div>
         <div class="plist">${res.map((p) => rowP(p, p.clubId && p.saleList && !p.loan ? '<span class="chip sus">À venda</span>' : p.clubId && p.loanList && !p.loan ? `<span class="chip loan">Empréstimo · ${P.money(P.loanFeeOf(p))}</span>` : '')).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
-        <p class="muted" style="font-size:.85rem">Toque num jogador para ver a ficha e fazer proposta.</p>`;
+        <p class="cad-fine">Toque num jogador para ver a ficha e fazer proposta.</p></section></div>`;
     } else if (f.tab === 'prop') {
       body = offers.length ? `<div class="plist">${offers.map((o) => {
         const p = g.db.players[o.pid], b = club(o.from);
@@ -406,9 +413,18 @@
         return `<tr class="${mineRow ? 'me' : ''} ${g.db.players[t.pid] ? 'click' : ''}" ${g.db.players[t.pid] ? `data-a="player" data-id="${t.pid}"` : ''}><td>${esc(t.name)} <span class="muted">${t.pos} ${t.ovr}</span></td><td>${fc ? esc(fc.short) : 'Livre'}</td><td>${tc ? esc(tc.short) : '-'}</td><td class="n">${t.kind === 'loan' ? 'Empr.' : t.fee ? P.money(t.fee) : 'Livre'}</td></tr>`;
       }).join('')}</tbody></table></div>` : '<p class="empty">Nenhuma transferência ainda nesta carreira.</p>';
     }
-    return `<div class="card"><div class="head"><h2>Mercado</h2><b class="${me.bal < 0 ? 'v1' : ''}">${P.money(me.bal)}</b></div>
-      <div class="window ${P.windowOpen(g) ? 'open' : ''}">${esc(P.windowText(g))}</div>
-      <div style="margin:12px 0">${tabs}</div>${body}</div>`;
+    const bud = P.budget ? P.budget(g) : null, open = P.windowOpen(g);
+    return `<div class="tac2 mk2">
+      <header class="cad-head">
+        <div class="cad-title"><span class="cad-kicker">Classificados · Mercado</span><h2>Mercado</h2></div>
+        <div class="ticker mk-tk"><span class="tk-l">${open ? 'Janela aberta' : 'Janela fechada'}</span>
+          <span class="tq ${me.bal < 0 ? 'dn' : ''}"><small>Saldo</small><b>${P.money(me.bal)}</b></span>
+          ${bud ? `<span class="tq ${bud.pct > 90 ? 'dn' : bud.pct <= 70 ? 'up' : ''}"><small>Folha</small><b>${bud.pct}%</b></span>` : ''}
+          <span class="tq ${offers.length ? 'up' : ''}"><small>Propostas</small><b>${offers.length}</b></span></div>
+        <div class="cad-note mk-win ${open ? 'open' : ''}">${esc(P.windowText(g))}</div>
+      </header>
+      ${tabs}
+      <div class="mk-body">${body}</div></div>`;
   };
 
   // Painel de proposta dentro da ficha do jogador
@@ -446,6 +462,7 @@
   // ---------- Ações ----------
   Object.assign(A.ACT, {
     mkTab(d) { A.st.mk.tab = d.k; A.render(); },
+    mkFOpen() { A.st.mkOpen = !A.st.mkOpen; A.render(); },
     mkClear() { const tab = A.st.mk.tab; A.st.mk = { tab }; A.render(); },
     offerOpen(d) { A.st.offer = null; A.playerSheet(d.id, 'offer'); },
     loanOpen(d) { A.st.offer = null; A.playerSheet(d.id, 'loan'); },

@@ -1267,3 +1267,27 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + var(--na
   .cad-head { grid-template-columns: auto 1fr auto; }
   .ticker { grid-column: auto; grid-row: 1; grid-column: 2; max-width: 420px; justify-self: center; width: 100%; }
 }
+
+/* Mercado em cadernos */
+.mk-tk .tq b { font-size: .92rem; white-space: nowrap; }
+.mk-win { color: var(--muted); font-style: normal; font-family: var(--f-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.mk-win.open { color: var(--good); }
+.mk-body { min-width: 0; }
+.mk-busca { display: flex; flex-direction: column; gap: 10px; }
+.mk-bar { display: flex; gap: 8px; align-items: center; }
+.mk-bar .search { flex: 1; min-width: 0; min-height: 42px; }
+.mk-count { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .86rem; color: var(--muted); padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.mk-sort { display: flex; align-items: center; gap: 6px; }
+.mk-sort .sel { min-height: 34px; }
+.mk-res { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 899px) {
+  .mk-fbox { display: none; border: 1px solid var(--ink); padding: 10px; background: var(--surface); }
+  .mk-fbox.open { display: block; }
+  .mk2 .ticker .tk-l { max-width: 72px; white-space: normal; line-height: 1.1; }
+}
+@media (min-width: 900px) {
+  .mk-busca { display: grid; grid-template-columns: 270px 1fr; grid-template-areas: "fbox bar" "fbox res"; grid-template-rows: auto 1fr; gap: 10px 24px; align-items: start; }
+  .mk-bar { grid-area: bar; } .mk-res { grid-area: res; }
+  .mk-fbox { grid-area: fbox; position: sticky; top: 76px; max-height: calc(100vh - 92px); overflow-y: auto; padding-right: 16px; border-right: 1px solid var(--line); }
+  .mk-fbox .mk-filters { grid-template-columns: 1fr; }
+}
