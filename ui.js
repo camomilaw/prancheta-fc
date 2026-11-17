@@ -286,12 +286,13 @@
 
     const hl = P.headline(g);
     const sg = hl.sg > 0 ? '+' + hl.sg : String(hl.sg);
-    let top = `<article class="jr-lead">
+    const lead = `<article class="jr-lead">
         <span class="jr-kick">${esc(hl.kicker)}</span>
         <h2 class="jr-head">${esc(hl.head)}</h2>
         <p class="jr-dek">${esc(hl.dek)}</p>
         <div class="jr-3"><div><b>${hl.j ? hl.pos + 'º' : '–'}</b><span>posição</span></div><div><b>${hl.pts}</b><span>pontos</span></div><div><b>${sg}</b><span>saldo</span></div></div>
       </article>`;
+    let top = '';
     if (g.over) top += seasonSummary(g);
     else {
       const step = g.cal[g.week];
@@ -326,11 +327,7 @@
     });
     const hist = userHistory(g).slice(-5).reverse();
 
-    return `${top}
-      ${P.inboxCard ? P.inboxCard(g) : ''}
-      ${P.boardCard ? P.boardCard(g) : ''}
-      <div class="grid2">
-        <div class="card"><div class="head"><span class="label">Situação</span><span class="label">Meta: ${esc(P.expectation(g, g.user))}</span></div>
+    const sit = `<div class="card"><div class="head"><span class="label">Situação</span><span class="label">Meta: ${esc(P.expectation(g, g.user))}</span></div>
           <div class="kv">
             <div><span class="label">Saldo</span><b class="${me.bal < 0 ? 'v1' : ''}" style="font-size:1.05rem">${P.money(me.bal)}</b></div>
             <div><span class="label">Divisão</span><b>${me.div}ª</b></div>
@@ -343,17 +340,28 @@
             <div><span class="label">Lesionados</span><b class="${injured ? 'v1' : ''}">${injured}</b></div>
             <div><span class="label">Suspensos</span><b class="${susp ? 'v2' : ''}">${susp}</b></div>
             <div><span class="label">Cansados</span><b class="${tired ? 'v2' : ''}">${tired}</b></div>
-          </div></div>
-        <div class="card"><div class="head"><span class="label">${divName(me.div)}</span><button class="btn sm ghost" data-a="go" data-v="tabela">Ver completa</button></div>
+          </div></div>`;
+    const tbl = `<div class="card"><div class="head"><span class="label">${divName(me.div)}</span><button class="btn sm ghost" data-a="go" data-v="tabela">Ver completa</button></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">J</th><th class="n">SG</th><th class="n">P</th></tr></thead><tbody>${mini}</tbody></table></div>
-          ${zoneLegend(me.div)}</div>
-      </div>
-      <div class="grid2">
-        <div class="card"><div class="head"><span class="label">Resultados</span></div>
-          ${hist.length ? `<div class="others" style="grid-template-columns:1fr">${hist.map((x) => `<div class="hist-row"><span class="label">${esc(x.label)}</span>${ogRow(x.m, x.m.hg, x.m.ag, { click: true, pen: x.m.pen, label: x.label })}</div>`).join('')}</div>` : '<p class="empty">Nenhum jogo disputado ainda.</p>'}</div>
-        <div class="card"><div class="head"><span class="label">Giro da rodada</span></div>
-          <ul class="news">${g.news.slice(0, 10).map((n) => `<li class="${n.type}"><div>${esc(n.txt)}<small>Temporada ${n.s} · semana ${n.w}</small></div></li>`).join('')}</ul></div>
-      </div>`;
+          ${zoneLegend(me.div)}</div>`;
+    const res = `<div class="card"><div class="head"><span class="label">Resultados</span></div>
+          ${hist.length ? `<div class="others" style="grid-template-columns:1fr">${hist.map((x) => `<div class="hist-row"><span class="label">${esc(x.label)}</span>${ogRow(x.m, x.m.hg, x.m.ag, { click: true, pen: x.m.pen, label: x.label })}</div>`).join('')}</div>` : '<p class="empty">Nenhum jogo disputado ainda.</p>'}</div>`;
+    const news = `<div class="card"><div class="head"><span class="label">Giro da rodada</span></div>
+          <ul class="news">${g.news.slice(0, 10).map((n) => `<li class="${n.type}"><div>${esc(n.txt)}<small>Temporada ${n.s} · semana ${n.w}</small></div></li>`).join('')}</ul></div>`;
+    // Capa em cadernos: no celular uma seção por vez; no PC tudo na página, em colunas de jornal
+    const un = P.unread ? P.unread(g) : 0;
+    const tab = A.st.homeTab || 'next';
+    const on = (k) => (tab === k ? 'on' : '');
+    const TABS = [['next', 'A', g.over ? 'Temporada' : 'Próximo jogo'], ['mail', 'B', `E-mails${un ? ' (' + un + ')' : ''}`], ['tbl', 'C', 'Tabela'], ['clube', 'D', 'Clube'], ['news', 'E', 'Notícias']];
+    return `<div class="front">
+      <div class="fp-lead">${lead}</div>
+      <nav class="cad-tabs only-m" aria-label="Seções da capa">${TABS.map(([k, l, n]) => `<button class="${on(k)}" data-a="homeTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
+      <div class="fp fp-next ${on('next')}">${top}</div>
+      <div class="fp fp-mail ${on('mail')}">${(P.inboxCard && P.inboxCard(g)) || '<p class="empty">Nenhum e-mail novo.</p>'}</div>
+      <div class="fp fp-tbl ${on('tbl')}">${tbl}</div>
+      <div class="fp fp-clube ${on('clube')}">${P.boardCard ? P.boardCard(g) : ''}${sit}</div>
+      <div class="fp fp-news ${on('news')}">${res}${news}</div>
+    </div>`;
   }
   function zoneLegend(d) {
     const items = d === 1 ? [['z1', 'Campeão'], ['z3', 'Rebaixamento']] : [['z1', 'Acesso direto'], ['z2', 'Playoff de acesso']].concat(d < P.DIVS ? [['z3', 'Rebaixamento']] : []);
@@ -1072,6 +1080,7 @@
     mdSpeed(d) { A.md.speed = Number(d.s); A.drawMatchday(); A.tickMatchday(); },
     mdSkip() { A.md.T = 96; clearTimeout(A._mdt); A.drawMatchday(); },
     mdClose(d) { clearTimeout(A._mdt); A.md = null; const el = document.getElementById('md'); if (el) { el.hidden = true; el.innerHTML = ''; } A.view = d.v || 'inicio'; if (d.v === 'tabela') A.st.div = null; A.render(); window.scrollTo(0, 0); },
+    homeTab(d) { A.st.homeTab = d.k; A.render(); },
     newSeason() { P.newSeason(A.g); A.save(); A.view = 'inicio'; A.st.rd = null; A.st.div = null; A.st.cupR = null; A.render(); window.scrollTo(0, 0); A.toast(`Temporada ${A.g.season} começou`); },
     player(d) { A.playerSheet(d.id); },
     renewOpen(d) { A.playerSheet(d.id, 'renew'); },

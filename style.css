@@ -1193,7 +1193,7 @@ table { font-family: var(--f-body); }
 #radio.open .rd-pill { display: none; }
 .rd-panel { position: fixed; left: 0; right: 0; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px)); z-index: 45;
   background: var(--surface); border-top: 3px double var(--ink); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px;
-  transform: translateY(calc(100% + var(--nav-h) + 40px)); transition: transform .25s ease; box-shadow: 0 -6px 18px rgba(0,0,0,.18); }
+  transform: translateY(calc(100% + 100vh)); transition: transform .25s ease; box-shadow: 0 -6px 18px rgba(0,0,0,.18); }
 #radio.open .rd-panel { transform: none; }
 .rd-head { display: flex; align-items: center; gap: 10px; }
 .rd-head img { width: 40px; height: 40px; }
@@ -1212,7 +1212,7 @@ table { font-family: var(--f-body); }
 .rd-add { display: flex; gap: 8px; flex-wrap: wrap; }
 .rd-note, .rd-fail { font-size: .78rem; margin: 0; }
 body.in-match .rd-pill { display: none; }
-body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + var(--nav-h) + 40px)); }
+body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh)); }
 .rd-card .head img { border: 1px solid var(--line); }
 @media (min-width: 900px) {
   .rd-pill { bottom: 18px; right: 18px; }
@@ -1290,4 +1290,22 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + var(--na
   .mk-bar { grid-area: bar; } .mk-res { grid-area: res; }
   .mk-fbox { grid-area: fbox; position: sticky; top: 76px; max-height: calc(100vh - 92px); overflow-y: auto; padding-right: 16px; border-right: 1px solid var(--line); }
   .mk-fbox .mk-filters { grid-template-columns: 1fr; }
+}
+
+/* Capa (Início) em colunas de jornal */
+.front { display: flex; flex-direction: column; gap: 12px; }
+.fp { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (max-width: 899px) {
+  .front .fp { display: none; }
+  .front .fp.on { display: flex; }
+  .front .cad-tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+}
+@media (min-width: 900px) {
+  .front { display: grid; gap: 0 28px; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, .9fr);
+    grid-template-areas: "lead lead tbl" "next mail tbl" "next clube news" "next clube news"; align-items: start; }
+  .fp-lead { grid-area: lead; } .fp-next { grid-area: next; } .fp-mail { grid-area: mail; }
+  .fp-tbl { grid-area: tbl; } .fp-clube { grid-area: clube; } .fp-news { grid-area: news; }
+  .fp-mail, .fp-clube { border-left: 1px solid var(--line); padding-left: 28px; }
+  .fp-tbl, .fp-news { border-left: 1px solid var(--line); padding-left: 28px; }
+  .front .fp-lead .jr-lead { border-bottom: 3px double var(--ink); padding-bottom: 14px; margin-bottom: 14px; }
 }
