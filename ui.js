@@ -322,7 +322,7 @@
     [...idxs].sort((a, b) => a - b).forEach((i) => {
       if (last >= 0 && i > last + 1) mini += '<tr><td colspan="5" class="muted" style="text-align:center">···</td></tr>';
       const r = tb[i], c = club(r.cid);
-      mini += `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${zoneOf(me.div, i, tb.length)}">${i + 1}</span></td><td><button class="club club-btn" data-a="clubInfo" data-id="${c.id}">${P.badge(c, 20)}${esc(c.name)}</button></td><td class="n">${r.j}</td><td class="n">${r.gp - r.gc}</td><td class="n"><b>${r.pts}</b></td></tr>`;
+      mini += `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${zoneOf(me.div, i, tb.length)}">${i + 1}</span></td><td class="mt-club"><button class="club club-btn" data-a="clubInfo" data-id="${c.id}">${P.badge(c, 20)}<span class="mt-nm">${esc(c.name)}</span></button></td><td class="n">${r.j}</td><td class="n">${r.gp - r.gc}</td><td class="n"><b>${r.pts}</b></td></tr>`;
       last = i;
     });
     const hist = userHistory(g).slice(-5).reverse();
@@ -344,23 +344,21 @@
     const tbl = `<div class="card"><div class="head"><span class="label">${divName(me.div)}</span><button class="btn sm ghost" data-a="go" data-v="tabela">Ver completa</button></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">J</th><th class="n">SG</th><th class="n">P</th></tr></thead><tbody>${mini}</tbody></table></div>
           ${zoneLegend(me.div)}</div>`;
-    const res = `<div class="card"><div class="head"><span class="label">Resultados</span></div>
-          ${hist.length ? `<div class="others" style="grid-template-columns:1fr">${hist.map((x) => `<div class="hist-row"><span class="label">${esc(x.label)}</span>${ogRow(x.m, x.m.hg, x.m.ag, { click: true, pen: x.m.pen, label: x.label })}</div>`).join('')}</div>` : '<p class="empty">Nenhum jogo disputado ainda.</p>'}</div>`;
     const news = `<div class="card"><div class="head"><span class="label">Giro da rodada</span></div>
           <ul class="news">${g.news.slice(0, 10).map((n) => `<li class="${n.type}"><div>${esc(n.txt)}<small>Temporada ${n.s} · semana ${n.w}</small></div></li>`).join('')}</ul></div>`;
     // Capa em cadernos: no celular uma seção por vez; no PC tudo na página, em colunas de jornal
     const un = P.unread ? P.unread(g) : 0;
-    const tab = A.st.homeTab || 'next';
-    const on = (k) => (tab === k ? 'on' : '');
-    const TABS = [['next', 'A', g.over ? 'Temporada' : 'Próximo jogo'], ['mail', 'B', `E-mails${un ? ' (' + un + ')' : ''}`], ['tbl', 'C', 'Tabela'], ['clube', 'D', 'Clube'], ['news', 'E', 'Notícias']];
+    const tab = A.st.homeTab || 'next', side = tab === 'tbl' ? 'next' : tab;
+    const on = (k) => `${tab === k ? 'on' : ''} ${side === k ? 'son' : ''}`;
+    const TABS = [['next', 'A', g.over ? 'Temporada' : 'Próximo jogo'], ['mail', 'B', `E-mails${un ? ' (' + un + ')' : ''}`], ['clube', 'C', 'Clube'], ['news', 'D', 'Notícias'], ['tbl', 'E', 'Tabela']];
     return `<div class="front">
       <div class="fp-lead">${lead}</div>
-      <nav class="cad-tabs only-m" aria-label="Seções da capa">${TABS.map(([k, l, n]) => `<button class="${on(k)}" data-a="homeTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
+      <nav class="cad-tabs fp-tabs" aria-label="Seções da capa">${TABS.map(([k, l, n]) => `<button class="${on(k)} ${k === 'tbl' ? 'only-m' : ''}" data-a="homeTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
       <div class="fp fp-next ${on('next')}">${top}</div>
       <div class="fp fp-mail ${on('mail')}">${(P.inboxCard && P.inboxCard(g)) || '<p class="empty">Nenhum e-mail novo.</p>'}</div>
       <div class="fp fp-tbl ${on('tbl')}">${tbl}</div>
       <div class="fp fp-clube ${on('clube')}">${P.boardCard ? P.boardCard(g) : ''}${sit}</div>
-      <div class="fp fp-news ${on('news')}">${res}${news}</div>
+      <div class="fp fp-news ${on('news')}">${news}<button class="btn sm ghost" data-a="homeRes">Ver todos os meus jogos ›</button></div>
     </div>`;
   }
   function zoneLegend(d) {
@@ -617,7 +615,7 @@
     const g = A.g, st = A.st, me = club(g.user);
     if (st.div == null) st.div = me.div;
     const d = st.div;
-    const tabs = `<div class="seg tabs-x">${[['class', 'Classificação'], ['art', 'Estatísticas'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra'], ['rz', (P.rzStatusName && P.rzStatusName(g)) || 'Copas regionais'], ['sc', 'Supercopa']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
+    const tabs = `<div class="seg tabs-x">${[['class', 'Classificação'], ['meus', 'Meus jogos'], ['art', 'Estatísticas'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra'], ['rz', (P.rzStatusName && P.rzStatusName(g)) || 'Copas regionais'], ['sc', 'Supercopa']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
     let body = '';
     if (st.tab === 'cup') return `<div class="card"><div class="head"><h2>Copa Ultra ${g.season}</h2>${tabs}</div>${cupView(g)}</div>`;
     if (st.tab === 'rz') return `<div class="card"><div class="head"><h2>Copas por divisão ${g.season}</h2>${tabs}</div>${P.raizesView(g)}</div>`;
@@ -633,6 +631,13 @@
             <td class="n hide-sm">${r.gp}</td><td class="n hide-sm">${r.gc}</td><td class="n">${r.gp - r.gc}</td>
             <td class="hide-sm"><span class="form">${r.form.slice(-5).map((f) => `<i class="${f}">${f}</i>`).join('')}</span></td></tr>`;
         }).join('')}</tbody></table></div>${zoneLegend(d)}${playoffView(g, d)}`;
+    } else if (st.tab === 'meus') {
+      const hist = userHistory(g).reverse();
+      const W = hist.filter((x) => { const h = x.m.h === g.user; return (h ? x.m.hg > x.m.ag : x.m.ag > x.m.hg) || (x.m.pen && x.m.w === g.user && x.m.hg === x.m.ag); }).length;
+      const D = hist.filter((x) => x.m.hg === x.m.ag && !x.m.pen).length;
+      body = hist.length ? `<p class="muted" style="margin:0 0 10px;font-size:.88rem">${hist.length} jogos na temporada (todas as competições): ${W} vitórias, ${D} empates, ${hist.length - W - D} derrotas. Toque num jogo para ver o relatório.</p>
+        <div class="others" style="grid-template-columns:1fr">${hist.map((x) => `<div class="hist-row"><span class="label">${esc(x.label)}</span>${ogRow(x.m, x.m.hg, x.m.ag, { click: true, pen: x.m.pen, label: x.label })}</div>`).join('')}</div>` : '<p class="empty">Nenhum jogo disputado ainda.</p>';
+      return `<div class="card"><div class="head"><h2>Meus jogos ${g.season}</h2>${tabs}</div>${body}</div>`;
     } else if (st.tab === 'art') {
       const po = d > 1 && g.po && st.cstPo;
       body = (d > 1 && g.po ? `<div class="seg" style="margin-bottom:10px">${[[0, 'Liga'], [1, 'Playoffs']].map(([k, n]) => `<button class="${!!po === !!k ? 'on' : ''}" data-a="cstPo" data-k="${k}">${n}</button>`).join('')}</div>` : '')
@@ -1081,6 +1086,7 @@
     mdSkip() { A.md.T = 96; clearTimeout(A._mdt); A.drawMatchday(); },
     mdClose(d) { clearTimeout(A._mdt); A.md = null; const el = document.getElementById('md'); if (el) { el.hidden = true; el.innerHTML = ''; } A.view = d.v || 'inicio'; if (d.v === 'tabela') A.st.div = null; A.render(); window.scrollTo(0, 0); },
     homeTab(d) { A.st.homeTab = d.k; A.render(); },
+    homeRes() { A.view = 'tabela'; A.st.tab = 'meus'; A.render(); window.scrollTo(0, 0); },
     newSeason() { P.newSeason(A.g); A.save(); A.view = 'inicio'; A.st.rd = null; A.st.div = null; A.st.cupR = null; A.render(); window.scrollTo(0, 0); A.toast(`Temporada ${A.g.season} começou`); },
     player(d) { A.playerSheet(d.id); },
     renewOpen(d) { A.playerSheet(d.id, 'renew'); },
