@@ -1374,3 +1374,21 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
   .nav .nav-sub { display: flex; height: 36px; padding-left: 34px; font-size: .62rem; }
   .nav .nav-sub svg { width: 16px; height: 16px; }
 }
+
+/* Treino, Finanças e Estatísticas em cadernos */
+.tr-grid, .st-grid { display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 899px) {
+  .tr-grid .tr-pane, .st-grid .st-pane { display: none; }
+  .tr-grid .tr-pane.on, .st-grid .st-pane.on { display: block; }
+  .tr2 .cad-tabs button.on, .st2 .cad-tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+}
+@media (min-width: 900px) {
+  .tr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .st-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+  .fin-pane.on { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 16px; }
+  .fin-pane .grid2 { display: contents; }
+  .fin-pane > .budget-card { grid-column: 1 / -1; }
+}
+.fin-pane .grid2 { margin: 0; }
+.tr2 .ticker .tq b, .fin2 .ticker .tq b { font-size: .9rem; }
+.cad-tools .seg { flex-wrap: nowrap; white-space: nowrap; }

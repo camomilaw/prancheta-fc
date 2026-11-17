@@ -969,18 +969,28 @@
     const exp = squad.filter((p) => p.ctr <= g.season).sort((a, b) => P.ovr(b) - P.ovr(a));
     const topWages = squad.slice().sort((a, b) => b.wage - a.wage).slice(0, 6);
     const tvSeason = P.ECON.tv[me.div - 1];
-    return `<div class="card"><div class="head"><h2>Finanças</h2><button class="btn sm ghost" data-a="go" data-v="mais">‹ Mais</button></div>
-        <div class="kv">
-          <div><span class="label">Saldo</span><b class="${me.bal < 0 ? 'v1' : ''}">${P.money(me.bal)}</b></div>
-          <div><span class="label">Folha mensal</span><b>${P.money(payroll)}</b></div>
-          <div><span class="label">Cota de TV/ano</span><b>${P.money(tvSeason)}</b></div>
-          <div><span class="label">Estádio</span><b>${me.cap.toLocaleString('pt-BR')}</b><span class="muted" style="font-size:.75rem">lugares · ingresso R$ ${Math.round(P.ECON.ticket(me.div))}</span></div>
-        </div></div>
-      ${P.debtCard ? P.debtCard(g) : ''}${P.budgetCard ? P.budgetCard(g) : ''}
+    const tab = A.st.finTab || 'res';
+    const on = (k) => (tab === k ? 'on son' : '');
+    const nExp = exp.length;
+    return `<div class="tac2 fin2">
+      <header class="cad-head">
+        <div class="cad-title"><span class="cad-kicker">Caderno de Economia</span><h2>Finanças</h2></div>
+        <div class="cad-tools"><button class="btn sm ghost" data-a="go" data-v="mais">‹ Mais</button></div>
+        <div class="ticker"><span class="tk-l">Cofre</span>
+          <span class="tq ${me.bal < 0 ? 'dn' : ''}"><small>Saldo</small><b>${P.money(me.bal).replace('R$ ', '')}</b></span>
+          <span class="tq"><small>Folha/mês</small><b>${P.money(payroll).replace('R$ ', '')}</b></span>
+          <span class="tq"><small>TV/ano</small><b>${P.money(tvSeason).replace('R$ ', '')}</b></span>
+          <span class="tq only-d"><small>Estádio</small><b>${me.cap.toLocaleString('pt-BR')}</b></span></div>
+      </header>
+      ${P.debtCard ? P.debtCard(g) : ''}
+      <nav class="cad-tabs cad-tabs-all" aria-label="Seções">${[['res', 'A', 'Orçamento'], ['ctr', 'B', `Contratos${nExp ? ' (' + nExp + ')' : ''}`], ['sem', 'C', 'Semana a semana']].map(([k, l, n]) => `<button class="${on(k)}" data-a="finTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
+      <div class="mais-pane fin-pane ${on('res')}">${P.budgetCard ? P.budgetCard(g) : ''}
       <div class="grid2">
         <div class="card"><div class="head"><span class="label">Temporada ${g.season}</span></div>${Object.keys(g.fin.cat).length ? cats(g.fin.cat) : '<p class="empty">Nenhum movimento ainda.</p>'}</div>
         <div class="card"><div class="head"><span class="label">${g.fin.prev ? 'Temporada ' + g.fin.prev.s : 'Temporada anterior'}</span></div>${g.fin.prev ? cats(g.fin.prev.cat) : '<p class="empty">Aparece depois da primeira temporada.</p>'}</div>
       </div>
+      </div>
+      <div class="mais-pane fin-pane ${on('ctr')}">
       <div class="grid2">
         <div class="card"><div class="head"><span class="label">Contratos que terminam em ${g.season}</span></div>
           ${exp.length ? `<div class="plist">${exp.map((p) => `<button class="prow" data-a="renewOpen" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span><span class="nm"><b>${esc(p.name)}</b><small>${p.age} anos · ${P.money(p.wage)}/mês</small></span><span class="chip sus">Renovar</span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div>
@@ -988,9 +998,12 @@
         <div class="card"><div class="head"><span class="label">Maiores salários</span></div>
           <div class="plist">${topWages.map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span><span class="nm"><b>${esc(p.name)}</b><small>até ${p.ctr}</small></span><b class="num">${P.money(p.wage)}</b><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div></div>
       </div>
+      </div>
+      <div class="mais-pane fin-pane ${on('sem')}">
       <div class="card"><div class="head"><span class="label">Últimas semanas</span></div>
         ${g.fin.log.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Semana</th><th class="hide-sm">Evento</th><th class="n">Resultado</th><th class="n">Saldo</th></tr></thead><tbody>${g.fin.log.slice(0, 12).map((l) => `<tr><td>${l.s} · ${l.w}</td><td class="hide-sm">${esc(l.l || '')}</td><td class="n ${l.v < 0 ? 'v1' : 'v4'}">${l.v < 0 ? '−' : '+'}${P.money(Math.abs(l.v))}</td><td class="n">${P.money(l.bal)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty">Jogue uma semana para ver os movimentos.</p>'}
-        <p class="muted" style="font-size:.85rem;margin:10px 0 0">Receitas: bilheteria dos jogos em casa (cresce com a posição na tabela), cota de TV a cada rodada, premiação da Copa Ultra por fase vencida e premiação pela posição final. Despesas: salários toda semana.</p></div>`;
+        <p class="muted" style="font-size:.85rem;margin:10px 0 0">Receitas: bilheteria dos jogos em casa (cresce com a posição na tabela), cota de TV a cada rodada, premiação da Copa Ultra por fase vencida e premiação pela posição final. Despesas: salários toda semana.</p></div>      </div>
+    </div>`;
   }
 
   // ---------- Folha (modal) ----------
@@ -1124,6 +1137,7 @@
     mdClose(d) { clearTimeout(A._mdt); A.md = null; const el = document.getElementById('md'); if (el) { el.hidden = true; el.innerHTML = ''; } A.view = d.v || 'inicio'; if (d.v === 'tabela') A.st.div = null; A.render(); window.scrollTo(0, 0); },
     homeTab(d) { A.st.homeTab = d.k; A.render(); },
     maisTab(d) { A.st.maisTab = d.k; A.render(); },
+    finTab(d) { A.st.finTab = d.k; A.render(); },
     homeRes() { A.view = 'tabela'; A.st.tab = 'meus'; A.render(); window.scrollTo(0, 0); },
     newSeason() { P.newSeason(A.g); A.save(); A.view = 'inicio'; A.st.rd = null; A.st.div = null; A.st.cupR = null; A.render(); window.scrollTo(0, 0); A.toast(`Temporada ${A.g.season} começou`); },
     player(d) { A.playerSheet(d.id); },

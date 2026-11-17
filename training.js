@@ -110,21 +110,33 @@
     const plan = P.planOf ? P.planOf(g, g.week) : null;
     const tabs = `<div class="seg">${[['main', 'Principal'], ['sub', 'Sub-20']].map(([k, n]) => `<button class="${st.sq === k ? 'on' : ''}" data-a="trSq" data-k="${k}">${n}</button>`).join('')}</div>`;
     const autoLbl = sub ? 'Evolução natural' : 'Plano da semana';
+    const present = P.TRAIN_GROUPS.filter(([line]) => players.some((p) => lineOf(p) === line));
+    const lnTab = present.some(([l]) => l === st.ln) ? st.ln : (present[0] || [])[0];
     const groups = P.TRAIN_GROUPS.map(([line, name]) => {
       const list = players.filter((p) => lineOf(p) === line).sort((a, b) => P.ovr(b) - P.ovr(a));
       if (!list.length) return '';
       const cur = T(g)[st.sq][line] || 'auto';
       const sel = `<select class="sel" data-c="trGrp" data-l="${line}" aria-label="Treino dos ${name.toLowerCase()}"><option value="auto" ${cur === 'auto' ? 'selected' : ''}>${autoLbl}</option>${optsFor(line).map((k) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${esc(aName(k))}</option>`).join('')}</select>`;
-      return `<div class="card"><div class="head"><span class="label">${name} (${list.length})</span>${sel}</div>
+      return `<div class="card tr-pane ${lnTab === line ? 'on' : ''}"><div class="head"><span class="label">${name} (${list.length})</span>${sel}</div>
         <div class="tr-list">${list.map((p) => row(g, p, sub)).join('')}</div></div>`;
     }).join('');
     const intro = sub
       ? 'Sem treino escolhido, os jovens evoluem naturalmente pelo potencial. Escolher um atributo concentra a evolução nele toda semana.'
       : `Esta semana: <b>${plan ? esc(P.TRAIN.int[plan.int].n) : '-'}</b>${plan && plan.int !== 'des' ? ` · foco <b>${esc(P.TRAIN.foco[plan.foco].n.toLowerCase())}</b>` : ''}${plan && plan.auto ? ' (adjunto)' : ''}. A intensidade vale para todos; quem segue o "plano da semana" treina o foco dela. Um atributo escolhido evolui mais rápido que os três do foco.`;
-    return `<div class="card"><div class="head"><h2>Treinamento</h2>${tabs}</div>
-        <p class="muted" style="margin:0;font-size:.88rem">${intro} Toque num jogador para escolher o atributo dele e uma posição para treinar.</p>
-        ${sub ? '' : '<div style="margin-top:10px"><button class="btn sm" data-a="go" data-v="calendario">Planejar intensidade e foco por semana</button></div>'}</div>
-      ${groups || '<div class="card"><p class="empty">Nenhum jogador aqui.</p></div>'}`;
+    const LET = 'ABCDEF';
+    return `<div class="tac2 tr2">
+      <header class="cad-head">
+        <div class="cad-title"><span class="cad-kicker">Caderno de Treino</span><h2>Treinamento</h2></div>
+        <div class="cad-tools">${tabs}</div>
+        ${sub ? '' : `<div class="ticker"><span class="tk-l">Esta semana</span>
+          <span class="tq"><small>Intensidade</small><b>${plan ? esc(P.TRAIN.int[plan.int].n) : '–'}</b></span>
+          <span class="tq"><small>Foco</small><b>${plan && plan.int !== 'des' ? esc(P.TRAIN.foco[plan.foco].n) : '–'}</b></span>
+          <span class="tq"><small>Quem decide</small><b>${plan && plan.auto ? 'Adjunto' : 'Você'}</b></span></div>`}
+        <p class="cad-fine" style="grid-column:1/-1">${intro} Toque num jogador para escolher o atributo dele e uma posição para treinar.</p>
+        ${sub ? '' : '<div style="grid-column:1/-1"><button class="btn sm" data-a="go" data-v="calendario">Planejar intensidade e foco por semana</button></div>'}
+      </header>
+      <nav class="cad-tabs only-m" aria-label="Setores">${present.map(([line, name], i) => `<button class="${lnTab === line ? 'on' : ''}" data-a="trLn" data-k="${line}"><i>${LET[i]}</i>${name}</button>`).join('')}</nav>
+      <div class="tr-grid">${groups || '<p class="empty">Nenhum jogador aqui.</p>'}</div></div>`;
   };
 
   function sheet(id) {
@@ -160,6 +172,7 @@
   }
 
   Object.assign(A.ACT, {
+    trLn(d) { A.st.trn.ln = d.k; A.render(); },
     trSq(d) { A.st.trn = { sq: d.k }; A.render(); },
     trOpen(d) { sheet(d.id); },
     trPos(d) {

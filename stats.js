@@ -69,18 +69,21 @@
     const me = P.club(g, g.user);
     const tabs = `<div class="seg">${[['temp', 'Temporada'], ['car', 'Carreira']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="stxTab" data-k="${k}">${n}</button>`).join('')}</div>`;
     let body = '';
+    let li = 0; const names = []; const sel = st.li || 0;
+    const short = (t) => t.replace(/ \(.*\)/, '').replace(' pelo clube', '');
     if (st.tab === 'temp') {
       let pool = Object.values(g.db.players).filter((p) => p.clubId);
       if (st.scope === 'club') pool = pool.filter((p) => p.clubId === g.user);
       if (st.scope === 'div') pool = pool.filter((p) => P.club(g, p.clubId).div === me.div);
       const list = (title, f, show, min) => {
         const top = pool.filter((p) => p.s.j >= (min || 1) && f(p) > 0).sort((a, b) => f(b) - f(a)).slice(0, 8);
-        return `<div class="card"><div class="head"><span class="label">${title}</span></div>${top.length ? `<table class="tbl"><tbody>${top.map((p, i) => { const c = P.club(g, p.clubId); return `<tr class="click ${p.clubId === g.user ? 'me' : ''}" data-a="player" data-id="${p.id}"><td class="n">${i + 1}</td><td>${esc(p.name)} <span class="muted">${esc(c.short)}</span></td><td class="n"><b>${show(p)}</b></td></tr>`; }).join('')}</tbody></table>` : '<p class="empty">Sem dados ainda.</p>'}</div>`;
+        const k = li++; names.push(title);
+        return `<div class="card st-pane ${k === sel ? 'on' : ''}"><div class="head"><span class="label">${title}</span></div>${top.length ? `<table class="tbl"><tbody>${top.map((p, i) => { const c = P.club(g, p.clubId); return `<tr class="click ${p.clubId === g.user ? 'me' : ''}" data-a="player" data-id="${p.id}"><td class="n">${i + 1}</td><td>${esc(p.name)} <span class="muted">${esc(c.short)}</span></td><td class="n"><b>${show(p)}</b></td></tr>`; }).join('')}</tbody></table>` : '<p class="empty">Sem dados ainda.</p>'}</div>`;
       };
       const rec = teamRecord(g, g.user);
       body = `<div class="filters" style="margin-bottom:12px"><div class="seg">${[['club', 'Meu clube'], ['div', 'Minha divisão'], ['all', 'Ultraliga']].map(([k, n]) => `<button class="${st.scope === k ? 'on' : ''}" data-a="stxScope" data-k="${k}">${n}</button>`).join('')}</div></div>
         <div class="kv" style="margin-bottom:16px"><div><span class="label">Jogos do seu time</span><b>${rec.j}</b></div><div><span class="label">Campanha</span><b>${rec.v}-${rec.e}-${rec.d}</b></div><div><span class="label">Gols pró</span><b>${rec.gp}</b></div><div><span class="label">Gols contra</span><b>${rec.gc}</b></div></div>
-        <div class="grid2">
+        STNAV<div class="st-grid">
           ${list('Artilheiros (liga + copa)', (p) => p.s.g + p.s.cg, (p) => p.s.g + p.s.cg)}
           ${list('Garçons', (p) => p.s.as, (p) => p.s.as)}
           ${list('Melhor nota média (mín. 5 jogos)', avg, (p) => fmt(avg(p)), 5)}
@@ -102,20 +105,23 @@
       const titles = (g.hist || []).filter((h) => h.pos === 1).length, cups = (g.hist || []).filter((h) => h.cupMine).length, supers = (g.hist || []).filter((h) => h.scMine).length, ups = (g.hist || []).filter((h) => /Acesso|acesso/.test(h.result)).length;
       const list = (title, f, show) => {
         const top = arr.filter((x) => f(x) > 0).sort((a, b) => f(b) - f(a)).slice(0, 10);
-        return `<div class="card"><div class="head"><span class="label">${title}</span></div>${top.length ? `<table class="tbl"><tbody>${top.map((x, i) => `<tr ${g.db.players[x.id] ? `class="click" data-a="player" data-id="${x.id}"` : ''}><td class="n">${i + 1}</td><td>${esc(x.name)} <span class="muted">${x.pos}</span></td><td class="n"><b>${show(x)}</b></td></tr>`).join('')}</tbody></table>` : '<p class="empty">Sem dados ainda.</p>'}</div>`;
+        const k = li++; names.push(title);
+        return `<div class="card st-pane ${k === sel ? 'on' : ''}"><div class="head"><span class="label">${title}</span></div>${top.length ? `<table class="tbl"><tbody>${top.map((x, i) => `<tr ${g.db.players[x.id] ? `class="click" data-a="player" data-id="${x.id}"` : ''}><td class="n">${i + 1}</td><td>${esc(x.name)} <span class="muted">${x.pos}</span></td><td class="n"><b>${show(x)}</b></td></tr>`).join('')}</tbody></table>` : '<p class="empty">Sem dados ainda.</p>'}</div>`;
       };
       body = `<div class="card" style="margin-bottom:16px"><div class="head"><span class="label">Técnico ${esc(g.manager)}</span></div>
           <div class="kv"><div><span class="label">Jogos</span><b>${tot.j}</b></div><div><span class="label">Vitórias</span><b>${tot.v}</b></div><div><span class="label">Empates</span><b>${tot.e}</b></div><div><span class="label">Derrotas</span><b>${tot.d}</b></div>
             <div><span class="label">Aproveitamento</span><b>${tot.j ? Math.round((tot.v * 3 + tot.e) / (tot.j * 3) * 100) : 0}%</b></div><div><span class="label">Gols</span><b>${tot.gp} × ${tot.gc}</b></div>
             <div><span class="label">Títulos da liga</span><b>${titles}</b></div><div><span class="label">Copas Ultra</span><b>${cups}</b></div><div><span class="label">Supercopas</span><b>${supers}</b></div><div><span class="label">Acessos</span><b>${ups}</b></div></div></div>
-        <div class="grid2">
+        STNAV<div class="st-grid">
           ${list('Artilheiros pelo clube', (x) => x.g, (x) => x.g)}
           ${list('Garçons pelo clube', (x) => x.as, (x) => x.as)}
           ${list('Mais jogos pelo clube', (x) => x.j, (x) => x.j)}
           ${list('Melhor nota média (mín. 15 jogos)', (x) => (x.j >= 15 ? x.nt / x.j : 0), (x) => fmt(x.nt / x.j))}
         </div>`;
     }
-    return `<div class="card" style="margin-bottom:0"><div class="head"><h2>Estatísticas</h2>${tabs}</div><p class="muted" style="margin:0;font-size:.85rem">${st.tab === 'temp' ? `Temporada ${g.season}.` : 'Números desde o início da sua carreira (no clube atual e nos anteriores).'}</p></div>${body}`;
+    body = body.replace('STNAV', `<nav class="cad-tabs only-m" aria-label="Rankings">${names.map((n, i) => `<button class="${i === sel ? 'on' : ''}" data-a="stxLi" data-k="${i}"><i>${'ABCDEFG'[i]}</i>${esc(short(n))}</button>`).join('')}</nav>`);
+    return `<div class="tac2 st2"><header class="cad-head"><div class="cad-title"><span class="cad-kicker">Caderno de Números</span><h2>Estatísticas</h2></div><div class="cad-tools">${tabs}</div>
+      <p class="cad-fine" style="grid-column:1/-1">${st.tab === 'temp' ? `Temporada ${g.season}.` : 'Números desde o início da sua carreira (no clube atual e nos anteriores).'}</p></header>${body}</div>`;
   };
 
   P.maisExtra = () => `<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Clube e estrutura</h2></div>
@@ -124,7 +130,8 @@
       <p class="muted" style="margin:0">Artilheiros, garçons, notas e jogos da temporada e da carreira.</p><div><button class="btn primary" data-a="go" data-v="stats">Ver estatísticas</button></div></div>`;
 
   Object.assign(A.ACT, {
-    stxTab(d) { A.st.stx.tab = d.k; A.render(); },
+    stxTab(d) { A.st.stx.tab = d.k; A.st.stx.li = 0; A.render(); },
+    stxLi(d) { A.st.stx.li = Number(d.k); A.render(); },
     stxScope(d) { A.st.stx.scope = d.k; A.render(); }
   });
 })(window.PFC);
