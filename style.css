@@ -1364,3 +1364,6 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
 @media (min-width: 900px) { .idx-list { columns: 2; column-gap: 32px; column-rule: 1px solid var(--line); } .idx-list li { break-inside: avoid; } }
 /* Ficha do clube com seções */
 .cs-tabs { margin: 4px 0 2px; }
+/* abas nunca encolhem dentro de painéis com rolagem (ex.: ficha do clube) */
+.cad-tabs { flex-shrink: 0; }
+.sheet > * { flex-shrink: 0; }
