@@ -1328,3 +1328,39 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
 .mt-club { max-width: 0; width: 100%; }
 .mt-club .club-btn { max-width: 100%; }
 .mt-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+/* Elenco em cadernos */
+.cad-tabs button small { font-family: var(--f-num); font-size: .7rem; opacity: .7; margin-left: 2px; }
+.el-bar { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.el-tbl { font-size: .9rem; }
+.el-tbl th { white-space: nowrap; }
+.el-tbl .th-sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
+.el-tbl th.on .th-sort { color: var(--accent); }
+.el-tbl td { vertical-align: middle; padding-top: 5px; padding-bottom: 5px; }
+.el-nm b { margin-right: 6px; }
+.el-nm small { display: block; color: var(--muted); font-size: .76rem; }
+.el-tbl tr.xi-row td:first-child { box-shadow: inset 3px 0 0 var(--pitch); }
+.el-ovr { font-family: var(--f-num); font-size: 1.05rem; }
+.el-tbl tr.click { cursor: pointer; }
+.el-tbl tr.click:hover td { background: var(--hi); }
+.ticker .tq b { white-space: nowrap; }
+.el-nm small { display: inline; margin-left: 4px; }
+.el-nm .chip { margin-left: 4px; }
+.el-tbl .pos-tag { min-width: 40px; text-align: center; display: inline-block; }
+
+/* Mais: índice de jornal e seções */
+.mais-pane { display: none; flex-direction: column; gap: 16px; }
+.mais-pane.on { display: flex; }
+@media (min-width: 900px) { .mais-grid.on { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+.idx-list { list-style: none; margin: 0; padding: 0; }
+.idx-list li { border-bottom: 1px dotted var(--line); }
+.idx-list button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 4px; background: none; border: 0; text-align: left; cursor: pointer; color: var(--ink); }
+.idx-list button:hover { background: var(--hi); }
+.idx-n { font-family: var(--f-display); font-size: 1.6rem; font-weight: 900; color: var(--accent); width: 1.4em; text-align: center; }
+.idx-t { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.idx-t b { font-family: var(--f-display); font-size: 1.1rem; }
+.idx-t small { color: var(--muted); font-size: .84rem; }
+.idx-go { font-size: 1.4rem; color: var(--muted); }
+@media (min-width: 900px) { .idx-list { columns: 2; column-gap: 32px; column-rule: 1px solid var(--line); } .idx-list li { break-inside: avoid; } }
+/* Ficha do clube com seções */
+.cs-tabs { margin: 4px 0 2px; }

@@ -64,6 +64,7 @@
   // Mais
   const origMais = P.maisExtra;
   P.maisExtra = () => card(A.g, false) + (origMais ? origMais() : '');
+  P.backupCard = () => card(A.g, false);
 
   // Marca quando a temporada terminou (para saber se o backup é anterior ao fim)
   const origEndWeek = P.endWeek;

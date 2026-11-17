@@ -404,7 +404,10 @@
       age: (a, b) => a.age - b.age,
       cond: (a, b) => a.cond - b.cond,
       gols: (a, b) => (b.s.g + b.s.cg) - (a.s.g + a.s.cg) || b.s.as - a.s.as,
-      nota: (a, b) => (b.s.j ? b.s.nt / b.s.j : 0) - (a.s.j ? a.s.nt / a.s.j : 0)
+      nota: (a, b) => (b.s.j ? b.s.nt / b.s.j : 0) - (a.s.j ? a.s.nt / a.s.j : 0),
+      jogos: (a, b) => b.s.j - a.s.j,
+      wage: (a, b) => b.wage - a.wage,
+      ctr: (a, b) => (a.ctr || 0) - (b.ctr || 0)
     }[by] || (() => 0);
     return list.sort(f);
   }
@@ -418,18 +421,39 @@
     sortPlayers(list, st.sort);
     const avgAge = (total.reduce((s, p) => s + p.age, 0) / total.length).toFixed(1).replace('.', ',');
     const val = total.reduce((s, p) => s + P.value(p), 0);
-    return `<div class="card"><div class="head"><h2>Elenco</h2><button class="btn sm" data-a="go" data-v="treino">Treinamento</button><button class="btn sm" data-a="go" data-v="base">Sub-20 e olheiros</button><span class="muted">${total.length} jogadores · média ${avgAge} anos · ${P.money(val)}</span></div>
-      <div class="filters" style="margin-bottom:8px">
-        <div class="seg">${[['ALL', 'Todos'], ['GOL', 'GOL'], ['DEF', 'DEF'], ['MEI', 'MEI'], ['ATA', 'ATA']].map(([k, n]) => `<button class="${st.filter === k ? 'on' : ''}" data-a="filter" data-k="${k}">${n}</button>`).join('')}</div>
-        <span class="spacer"></span>
-        <label class="label" for="sortsel">Ordenar</label>
-        <select id="sortsel" class="sel" data-c="sort">${[['pos', 'Posição'], ['ovr', 'Força'], ['age', 'Idade'], ['cond', 'Condição'], ['gols', 'Gols'], ['nota', 'Nota média']].map(([k, n]) => `<option value="${k}" ${st.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
-      </div>
-      <div class="plist">${list.map((p) => `<button class="prow" data-a="player" data-id="${p.id}">
+    const wages = total.reduce((s, p) => s + (p.wage || 0), 0);
+    const out = total.filter((p) => p.inj || p.susp).length;
+    const cnt = (k) => (k === 'ALL' ? total.length : total.filter((p) => P.LINE[p.pos] === k).length);
+    const TABS = [['ALL', 'A', 'Todos'], ['GOL', 'B', 'Goleiros'], ['DEF', 'C', 'Defesa'], ['MEI', 'D', 'Meio'], ['ATA', 'E', 'Ataque']];
+    const SORTS = [['pos', 'Posição'], ['ovr', 'Força'], ['age', 'Idade'], ['cond', 'Condição'], ['jogos', 'Jogos'], ['gols', 'Gols'], ['nota', 'Nota média'], ['wage', 'Salário'], ['ctr', 'Contrato']];
+    const th = (k, n, cls) => `<th class="${cls || ''} ${st.sort === k ? 'on' : ''}"><button class="th-sort" data-a="sortBy" data-k="${k}">${n}${st.sort === k ? ' ▾' : ''}</button></th>`;
+    return `<div class="tac2 el2">
+      <header class="cad-head">
+        <div class="cad-title"><span class="cad-kicker">Caderno de Elenco</span><h2>Elenco</h2></div>
+        <div class="cad-tools"><button class="btn sm" data-a="go" data-v="treino">Treino</button><button class="btn sm" data-a="go" data-v="base">Sub-20</button></div>
+        <div class="ticker"><span class="tk-l">Plantel</span>
+          <span class="tq"><small>Jogadores</small><b>${total.length}</b></span>
+          <span class="tq"><small>Idade</small><b>${avgAge}</b></span>
+          <span class="tq"><small>Valor</small><b>${P.money(val).replace('R$ ', '')}</b></span>
+          <span class="tq only-d"><small>Folha/mês</small><b>${P.money(wages).replace('R$ ', '')}</b></span>
+          <span class="tq ${out ? 'dn' : ''}"><small>Fora</small><b>${out}</b></span></div>
+      </header>
+      <nav class="cad-tabs cad-tabs-all" aria-label="Setores">${TABS.map(([k, l, n]) => `<button class="${st.filter === k ? 'on son' : ''}" data-a="filter" data-k="${k}"><i>${l}</i>${n} <small>${cnt(k)}</small></button>`).join('')}</nav>
+      <div class="el-bar only-m"><label class="label" for="sortsel">Ordenar</label>
+        <select id="sortsel" class="sel" data-c="sort">${SORTS.map(([k, n]) => `<option value="${k}" ${st.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+      <div class="plist only-m">${list.map((p) => `<button class="prow" data-a="player" data-id="${p.id}">
         <span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
         <span class="nm"><b>${esc(p.name)}${xi.has(p.id) ? '<span class="chip xi">Titular</span>' : ''}${status(p)}${p.ctr <= g.season ? '<span class="chip sus">Contrato acaba</span>' : ''}</b>
           <small>${esc(p.nat || '')} · ${p.age} anos · ${P.money(p.wage)}/mês · ${p.s.j} J · ${p.s.g + p.s.cg} G · nota ${avgNote(p)}</small></span>
-        ${condBar(p)}<span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div></div>`;
+        ${condBar(p)}<span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div>
+      <div class="tbl-wrap only-d"><table class="tbl el-tbl"><thead><tr>${th('pos', 'Pos')}<th>Jogador</th>${th('age', 'Idade', 'n')}${th('cond', 'Cond.', 'n')}<th>Moral</th>${th('jogos', 'J', 'n')}${th('gols', 'G', 'n')}<th class="n">Ass.</th>${th('nota', 'Nota', 'n')}${th('wage', 'Salário', 'n')}${th('ctr', 'Até', 'n')}${th('ovr', 'Força', 'n')}</tr></thead>
+        <tbody>${list.map((p) => `<tr class="click ${xi.has(p.id) ? 'xi-row' : ''}" data-a="player" data-id="${p.id}">
+          <td><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span></td>
+          <td class="el-nm"><b>${esc(p.name)}</b>${xi.has(p.id) ? '<span class="chip xi">Titular</span>' : ''}${status(p)}<small>${esc(P.countryName ? P.countryName(p.nat) : p.nat || '')}</small></td>
+          <td class="n">${p.age}</td><td class="n ${p.cond < 60 ? 'v1' : p.cond < 80 ? 'v2' : ''}">${Math.round(p.cond)}%</td><td>${esc(moraleWord(p.mor))}</td>
+          <td class="n">${p.s.j}</td><td class="n">${p.s.g + p.s.cg}</td><td class="n">${p.s.as || 0}</td><td class="n">${avgNote(p)}</td>
+          <td class="n">${P.money(p.wage)}</td><td class="n ${p.ctr <= g.season ? 'v2' : ''}">${p.ctr || '–'}</td><td class="n"><b class="el-ovr">${P.ovr(p)}</b></td></tr>`).join('')}</tbody></table></div>
+    </div>`;
   }
 
   // ---------- Ficha do jogador ----------
@@ -451,12 +475,14 @@
     const lines = { GOL: 'Goleiros', DEF: 'Defensores', MEI: 'Meio-campistas', ATA: 'Atacantes' };
     const groups = {}; sq.forEach((p) => (groups[P.LINE[p.pos]] = groups[P.LINE[p.pos]] || []).push(p));
     const mine = cid === g.user;
+    const csTab = A.st.csCid === cid ? A.st.csTab || 'res' : 'res'; A.st.csCid = cid; A.st.csTab = csTab;
     A.openSheet(`<div class="bar-top"><h2>${esc(c.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       <div class="cs-head">${P.badge(c, 72)}<div style="flex:1;min-width:0">
         <div class="jr-kick">${c.div}ª divisão · ${esc(P.countryName(c.country))}</div>
         <div class="cs-sub">${esc(c.city || '')}${c.stadium ? ' · ' + esc(c.stadium) : ''}${c.cap ? ` (${c.cap.toLocaleString('pt-BR')} lugares)` : ''}</div>
         <div class="cs-sub">${mine ? 'Seu clube' : 'Meta: ' + esc(P.expectation(g, cid))}</div>${P.rivalsOf && P.rivalsOf(g, cid).length ? `<div class="cs-sub">Rivais: ${P.rivalsOf(g, cid).slice(0, 3).map((r) => `<button class="jr-link" data-a="clubInfo" data-id="${r.id}">${esc(club(r.id).name)}</button>${r.v >= 2 ? ' ⚔' : ''}`).join(', ')}</div>` : ''}</div></div>
-      <div class="kv">
+      <nav class="cad-tabs cad-tabs-all cs-tabs" aria-label="Seções do clube">${[['res', 'A', 'Resumo'], ['el', 'B', `Elenco (${sq.length})`], ['jg', 'C', 'Jogos']].map(([kk, l, n]) => `<button class="${csTab === kk ? 'on son' : ''}" data-a="csTab" data-k="${kk}" data-id="${cid}"><i>${l}</i>${n}</button>`).join('')}</nav>
+      ${csTab === 'res' ? `<div class="kv">
         <div><span class="label">Posição</span><b>${row && row.j ? idx + 1 + 'º' : '–'}</b></div>
         <div><span class="label">Pontos</span><b>${row ? row.pts : 0}</b></div>
         <div><span class="label">Campanha</span><b>${row ? `${row.v}-${row.e}-${row.d}` : '–'}</b></div>
@@ -468,11 +494,12 @@
         ${top ? `<div><span class="label">Artilheiro</span><b>${esc(top.name)} <small class="muted">${top.s.g}</small></b></div>` : ''}
       </div>
       ${row && row.form.length ? `<div class="row" style="gap:8px"><span class="label">Forma</span><span class="form">${row.form.slice(-5).map((f) => `<i class="${f}">${f}</i>`).join('')}</span></div>` : ''}
-      ${best.length ? `<div><div class="label" style="margin-bottom:6px">Destaques</div><div class="row">${best.map((p) => `<button class="pos-tag ${P.LINE[p.pos]} cs-star" data-a="player" data-id="${p.id}">${esc(p.name)} · ${P.ovr(p)}</button>`).join('')}</div></div>` : ''}
-      ${last.length ? `<div><div class="label" style="margin-bottom:6px">Últimos jogos na liga</div><div class="others" style="grid-template-columns:1fr">${last.map((m) => ogRow(m, m.hg, m.ag)).join('')}</div></div>` : ''}
-      ${Object.keys(lines).filter((k) => groups[k]).map((k) => `<div><div class="label" style="margin:4px 0 2px">${lines[k]} (${groups[k].length})</div><div class="plist">${groups[k].map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span><span class="nm"><b>${esc(p.name)}${xi.has(p.id) ? '<span class="chip xi">Titular</span>' : ''}</b><small>${p.age} anos · ${esc(P.countryName(p.nat))} · ${p.s.j} J · ${p.s.g} G</small></span><span></span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div></div>`).join('')}`);
+      ${best.length ? `<div><div class="label" style="margin-bottom:6px">Destaques</div><div class="row">${best.map((p) => `<button class="pos-tag ${P.LINE[p.pos]} cs-star" data-a="player" data-id="${p.id}">${esc(p.name)} · ${P.ovr(p)}</button>`).join('')}</div></div>` : ''}` : ''}
+      ${csTab === 'jg' ? (last.length ? `<div><div class="label" style="margin-bottom:6px">Últimos jogos na liga</div><div class="others" style="grid-template-columns:1fr">${last.map((m) => ogRow(m, m.hg, m.ag)).join('')}</div></div>` : '<p class="empty">Nenhum jogo disputado ainda.</p>') : ''}
+      ${csTab !== 'el' ? '' : Object.keys(lines).filter((k) => groups[k]).map((k) => `<div><div class="label" style="margin:4px 0 2px">${lines[k]} (${groups[k].length})</div><div class="plist">${groups[k].map((p) => `<button class="prow" data-a="player" data-id="${p.id}"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span><span class="nm"><b>${esc(p.name)}${xi.has(p.id) ? '<span class="chip xi">Titular</span>' : ''}</b><small>${p.age} anos · ${esc(P.countryName(p.nat))} · ${p.s.j} J · ${p.s.g} G</small></span><span></span><span class="ovr">${P.ovr(p)}</span></button>`).join('')}</div></div>`).join('')}`);
   };
-  A.ACT.clubInfo = (d) => A.clubSheet(d.id);
+  A.ACT.clubInfo = (d) => { A.st.csCid = null; A.clubSheet(d.id); };
+  A.ACT.csTab = (d) => { A.st.csTab = d.k; A.st.csCid = d.id; A.clubSheet(d.id); };
 
   A.playerSheet = function (id, mode, years) {
     const p = pl(id); if (!p) return;
@@ -882,20 +909,21 @@
   function vMais() {
     const g = A.g, st = A.st;
     const me = club(g.user);
-    return `<div class="grid2">
-      ${P.maisExtra ? P.maisExtra() : ''}
-      <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Finanças</h2><b class="${me.bal < 0 ? 'v1' : ''}">${P.money(me.bal)}</b></div>
-        <p class="muted" style="margin:0">Saldo, receitas e despesas da temporada, folha salarial e contratos que vão terminar.</p>
-        <div><button class="btn primary" data-a="go" data-v="financas">Ver finanças</button></div></div>
-      <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Editor</h2></div>
-        <p class="muted" style="margin:0">Mude nomes, cores, países, atributos, idade e posição. Adicione, remova ou traga jogadores de outros clubes. Importe patches como o de clubes reais.</p>
-        <div><button class="btn primary" data-a="go" data-v="editor">Abrir editor</button></div></div>
-      <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Carreira</h2></div>
-        <div class="muted">${esc(g.manager)} · ${esc(club(g.user).name)} · temporada ${g.season}</div>
+    const tab = st.maisTab || 'idx';
+    const on = (k) => (tab === k ? 'on son' : '');
+    const IDX = [['financas', 'Finanças', `Saldo ${P.money(me.bal)} · receitas, despesas, folha e contratos`], ['clube', 'Clube e estrutura', 'Estádio, ingresso, base, centro de treinamento'],
+      ['stats', 'Estatísticas', 'Artilheiros, garçons, notas da temporada e da carreira'], ['tecnico', 'Treinador', 'Seu perfil, clubes, títulos e Hall da Fama'],
+      ['treino', 'Treinamento', 'Foco da semana e evolução do elenco'], ['base', 'Sub-20 e olheiros', 'Base, missões de olheiros e promessas'], ['editor', 'Editor', 'Nomes, cores, atributos, jogadores e patches']];
+    const TABS = [['idx', 'A', 'Índice'], ['radio', 'B', 'Rádio'], ['save', 'C', 'Salvar'], ['car', 'D', 'Carreira'], ['help', 'E', 'Como funciona']];
+    return `<div class="tac2 mais2">
+      <header class="cad-head"><div class="cad-title"><span class="cad-kicker">Expediente</span><h2>Mais</h2></div></header>
+      <nav class="cad-tabs cad-tabs-all" aria-label="Seções">${TABS.map(([k, l, n]) => `<button class="${on(k)}" data-a="maisTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
+      <div class="mais-pane ${on('idx')}"><ol class="idx-list">${IDX.map(([v, n, d], i) => `<li><button data-a="go" data-v="${v}"><span class="idx-n">${i + 1}</span><span class="idx-t"><b>${n}</b><small>${esc(d)}</small></span><span class="idx-go">›</span></button></li>`).join('')}</ol></div>
+      <div class="mais-pane ${on('radio')}">${P.radioCard ? P.radioCard() : ''}</div>
+      <div class="mais-pane mais-grid ${on('save')}">${P.backupCard ? P.backupCard() : ''}
+      <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Meu time em arquivo</h2></div>
         <div class="row"><button class="btn" data-a="teamDownload">Baixar meu time (arquivo)</button></div>
-        <p class="muted" style="margin:0;font-size:.82rem">Mande o arquivo para outras pessoas: elas podem começar uma carreira com ele, enfrentá-lo ou usá-lo no Modo Torneio (Importar, na tela inicial).</p>
-        ${g.hist.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>Div</th><th class="n">Pos</th><th>Resultado</th><th class="hide-sm">Campeão</th><th class="hide-sm">Copa</th></tr></thead><tbody>${g.hist.slice().reverse().map((h) => `<tr><td>${h.season}</td><td>${h.div}ª</td><td class="n">${ord(h.pos)}</td><td>${esc(h.result)}${h.cupMine ? ' · copa' : ''}</td><td class="hide-sm">${esc(h.champ)}</td><td class="hide-sm">${esc(h.cup)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty" style="padding:0">O histórico aparece ao fim da primeira temporada.</p>'}
-      </div>
+        <p class="muted" style="margin:0;font-size:.82rem">Mande o arquivo para outras pessoas: elas podem começar uma carreira com ele, enfrentá-lo ou usá-lo no Modo Torneio (Importar, na tela inicial).</p></div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Salvar e transferir</h2></div>
         <p class="muted" style="margin:0">O jogo salva sozinho neste aparelho depois de cada semana. Para continuar em outro aparelho ou site, exporte a carreira e importe lá.</p>
         <div class="row"><button class="btn" data-a="exportGame">Exportar carreira</button><button class="btn" data-a="importGame">Importar carreira</button></div>
@@ -905,7 +933,13 @@
         <p class="muted" style="margin:0">Volta para a tela inicial, onde ficam seus 3 espaços de carreira. Esta carreira continua salva${A.slot ? ` no espaço ${A.slot}` : ''}.</p>
         <div><button class="btn" data-a="newGameYes">Ir para a tela inicial</button></div>
       </div>
-      <div class="card" style="grid-column:1/-1"><div class="head"><h2>Como funciona</h2></div>
+      </div>
+      <div class="mais-pane ${on('car')}"><div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Carreira</h2></div>
+        <div class="muted">${esc(g.manager)} · ${esc(club(g.user).name)} · temporada ${g.season}</div>
+        ${g.hist.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>Div</th><th class="n">Pos</th><th>Resultado</th><th class="hide-sm">Campeão</th><th class="hide-sm">Copa</th></tr></thead><tbody>${g.hist.slice().reverse().map((h) => `<tr><td>${h.season}</td><td>${h.div}ª</td><td class="n">${ord(h.pos)}</td><td>${esc(h.result)}${h.cupMine ? ' · copa' : ''}</td><td class="hide-sm">${esc(h.champ)}</td><td class="hide-sm">${esc(h.cup)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty" style="padding:0">O histórico aparece ao fim da primeira temporada.</p>'}
+      </div>
+      </div>
+      <div class="mais-pane ${on('help')}">      <div class="card" ><div class="head"><h2>Como funciona</h2></div>
         <ul class="muted" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">
           <li><b>Ultraliga:</b> 8 divisões de 20 clubes, turno e returno. Sobem os 2 primeiros e o vencedor do playoff (3º × 6º e 4º × 5º, depois final). Descem os 3 últimos.</li>
           <li><b>Copa Ultra:</b> todos os 160 clubes em mata-mata de jogo único, com pênaltis no empate. Os 64 mais fracos fazem a fase preliminar.</li>
@@ -914,6 +948,7 @@
           <li><b>Moral</b> sobe com vitórias e boas atuações e cai com derrotas ou falta de jogos.</li>
           <li>Três amarelos ou uma expulsão geram <b>suspensão</b>. Lesões duram de 1 a 5 semanas.</li>
         </ul></div>
+</div>
     </div>`;
   }
 
@@ -1086,6 +1121,7 @@
     mdSkip() { A.md.T = 96; clearTimeout(A._mdt); A.drawMatchday(); },
     mdClose(d) { clearTimeout(A._mdt); A.md = null; const el = document.getElementById('md'); if (el) { el.hidden = true; el.innerHTML = ''; } A.view = d.v || 'inicio'; if (d.v === 'tabela') A.st.div = null; A.render(); window.scrollTo(0, 0); },
     homeTab(d) { A.st.homeTab = d.k; A.render(); },
+    maisTab(d) { A.st.maisTab = d.k; A.render(); },
     homeRes() { A.view = 'tabela'; A.st.tab = 'meus'; A.render(); window.scrollTo(0, 0); },
     newSeason() { P.newSeason(A.g); A.save(); A.view = 'inicio'; A.st.rd = null; A.st.div = null; A.st.cupR = null; A.render(); window.scrollTo(0, 0); A.toast(`Temporada ${A.g.season} começou`); },
     player(d) { A.playerSheet(d.id); },
@@ -1107,6 +1143,7 @@
     closeSheet() { A.closeSheet(); },
     bgClose(d, el, e) { if (e.target === el) A.closeSheet(); },
     filter(d) { A.st.filter = d.k; A.render(); },
+    sortBy(d) { A.st.sort = d.k; A.render(); },
     tab(d) { A.st.tab = d.k; A.render(); },
     cstPo(d) { A.st.cstPo = d.k === '1'; A.render(); },
     myDiv() { A.st.div = club(A.g.user).div; A.st.rd = null; A.render(); },

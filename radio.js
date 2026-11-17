@@ -231,11 +231,12 @@
 
   // Cartão em Mais
   const prevMais = P.maisExtra;
-  P.maisExtra = () => `<div class="card rd-card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Rádio Prancheta</h2><img src="${LOGO}" alt="" width="44" height="44"></div>
+  P.radioCard = () => `<div class="card rd-card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Rádio Prancheta</h2><img src="${LOGO}" alt="" width="44" height="44"></div>
       <p class="muted" style="margin:0">Música de fundo enquanto você joga: a <a href="${PLAYLIST_URL}" target="_blank" rel="noopener">playlist da rádio no Spotify</a> ou músicas do seu aparelho.</p>
       <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ${R.on ? '' : 'primary'}" data-a="rdOnOff">${R.on ? 'Desligar a rádio' : 'Ligar a rádio'}</button>${R.on ? '<button class="btn" data-a="rdOpen">Abrir a rádio</button>' : ''}</div>
       <div><span class="label">Nas partidas ao vivo</span><div class="seg" style="margin-top:6px">${[['cont', 'Continua tocando'], ['baixa', 'Baixa o volume'], ['pausa', 'Pausa']].map(([k, n]) => `<button class="${R.live === k ? 'on' : ''}" data-a="rdLive" data-k="${k}">${n}</button>`).join('')}</div>
-      ${R.live === 'baixa' ? '<small class="muted" style="font-size:.78rem">Baixar o volume só funciona em Minhas músicas: o Spotify não deixa o jogo mexer no volume dele.</small>' : ''}</div></div>` + (prevMais ? prevMais() : '');
+      ${R.live === 'baixa' ? '<small class="muted" style="font-size:.78rem">Baixar o volume só funciona em Minhas músicas: o Spotify não deixa o jogo mexer no volume dele.</small>' : ''}</div></div>`;
+  P.maisExtra = () => P.radioCard() + (prevMais ? prevMais() : '');
 
   // Início
   loadTracks();
