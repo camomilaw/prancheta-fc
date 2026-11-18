@@ -323,12 +323,12 @@
       }
     }
 
-    const idxs = new Set([0, 1, 2, 3, 4, 5, myIdx - 1, myIdx, myIdx + 1, tb.length - 3, tb.length - 2, tb.length - 1].filter((i) => i >= 0 && i < tb.length));
+    const idxs = new Set([0, 1, 2, 3, 4, 5, myIdx - 2, myIdx - 1, myIdx, myIdx + 1, myIdx + 2, tb.length - 3, tb.length - 2, tb.length - 1].filter((i) => i >= 0 && i < tb.length));
     let last = -1, mini = '';
     [...idxs].sort((a, b) => a - b).forEach((i) => {
-      if (last >= 0 && i > last + 1) mini += '<tr><td colspan="5" class="muted" style="text-align:center">···</td></tr>';
+      if (last >= 0 && i > last + 1) mini += '<tr class="mt-gap"><td colspan="5" class="muted" style="text-align:center">···</td></tr>';
       const r = tb[i], c = club(r.cid);
-      mini += `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${zoneOf(me.div, i, tb.length)}">${i + 1}</span></td><td class="mt-club"><button class="club club-btn" data-a="clubInfo" data-id="${c.id}">${P.badge(c, 20)}<span class="mt-nm">${esc(c.name)}</span></button></td><td class="n">${r.j}</td><td class="n">${r.gp - r.gc}</td><td class="n"><b>${r.pts}</b></td></tr>`;
+      mini += `<tr class="${r.cid === g.user ? 'me' : ''} ${Math.abs(i - myIdx) <= 2 || (myIdx < 2 && i <= 4) || (myIdx > tb.length - 3 && i >= tb.length - 5) ? 'mt-near' : 'mt-far'}"><td class="n"><span class="zone ${zoneOf(me.div, i, tb.length)}">${i + 1}</span></td><td class="mt-club"><button class="club club-btn" data-a="clubInfo" data-id="${c.id}">${P.badge(c, 20)}<span class="mt-nm">${esc(c.name)}</span></button></td><td class="n">${r.j}</td><td class="n">${r.gp - r.gc}</td><td class="n"><b>${r.pts}</b></td></tr>`;
       last = i;
     });
     const hist = userHistory(g).slice(-5).reverse();
@@ -361,7 +361,7 @@
       <div class="fp-lead">${lead}</div>
       <nav class="cad-tabs fp-tabs" aria-label="Seções da capa">${TABS.map(([k, l, n]) => `<button class="${on(k)} ${k === 'tbl' ? 'only-m' : ''} ${k === 'news' ? 'hide-land' : ''}" data-a="homeTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
       <div class="fp fp-next ${on('next')}">${top}</div>
-      <div class="fp fp-mail ${on('mail')}">${(P.inboxCard && P.inboxCard(g)) || '<p class="empty">Nenhum e-mail novo.</p>'}</div>
+      <div class="fp fp-mail ${on('mail')}">${(P.inboxCard && P.inboxCard(g)) || '<p class="empty">Nenhum e-mail novo.</p>'}<div class="fp-news-in">${news}</div></div>
       <div class="fp fp-tbl ${on('tbl')}">${tbl}</div>
       <div class="fp fp-clube ${on('clube')}">${P.boardCard ? P.boardCard(g) : ''}${sit}</div>
       <div class="fp fp-news ${on('news')}">${news}<button class="btn sm ghost" data-a="homeRes">Ver todos os meus jogos ›</button></div>

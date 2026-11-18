@@ -1802,3 +1802,29 @@ html.phone-land .lv2.done .lv-left .pitch { max-width: 260px; margin: 0 auto; }
 html.phone-land .lv2.done .lv-left .slot .dot { width: 28px; height: 28px; font-size: .72rem; }
 html.phone-land .lv2.done .lv-left .slot .nm { font-size: .56rem; }
 html.phone-land .lv2.done .feed li b { font-size: .95rem; }
+
+/* ---------- Deitado: Início sem rolar a página; tabela estática com o "close" da sua posição ---------- */
+html.phone-land .main:has(.front) { overflow: hidden; padding-bottom: 8px; }
+html.phone-land .front { height: 100%; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr); grid-template-areas: "lead tbl" "tabs tbl" "pane tbl"; }
+html.phone-land .front .fp-next.son, html.phone-land .front .fp-mail.son, html.phone-land .front .fp-clube.son { grid-area: pane; min-height: 0; overflow-y: auto; }
+html.phone-land .front:has(.fp-mail.son) .fp-mail { grid-area: pane; }
+html.phone-land .front:has(.fp-mail.son) .fp-news { display: none !important; }
+html.phone-land .front .fp-mail.son .fp-news-in { display: block; }
+html.phone-land .front .fp-tbl { position: static; max-height: none; overflow: hidden; align-self: start; }
+html.phone-land .front .fp-tbl tr.mt-far, html.phone-land .front .fp-tbl tr.mt-gap { display: none; }
+html.phone-land .front .fp-tbl .legend { display: none; }
+html.phone-land .front .fp-tbl .card > .head .btn { font-size: .72rem; }
+
+/* ---------- Deitado: Mercado com filtros e lista rolando separados ---------- */
+html.phone-land .main:has(.mk2 .mk-busca) { overflow: hidden; padding-bottom: 8px; }
+html.phone-land .mk2:has(.mk-busca) { height: 100%; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+html.phone-land .mk2 .mk-body { min-height: 0; }
+html.phone-land .mk2 .mk-busca { height: 100%; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+html.phone-land .mk2 .mk-fbox { position: static; max-height: none; height: 100%; min-height: 0; overflow-y: auto; }
+html.phone-land .mk2 .mk-res { min-height: 0; overflow-y: auto; }
+
+.fp-news-in { display: none; }
+html.phone-land .front .fp-next.son, html.phone-land .front .fp-mail.son, html.phone-land .front .fp-clube.son { align-self: stretch; }
+html.phone-land .mk2 .mk-fbox, html.phone-land .mk2 .mk-res { align-self: stretch; }
+html.phone-land .mk2 .mk-busca { align-items: stretch; }
+html.phone-land .jr-lead .jr-dek { -webkit-line-clamp: 1; }
