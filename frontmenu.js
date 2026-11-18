@@ -115,6 +115,7 @@
           <div class="fm-text"><p class="fm-dek">${body}</p></div>
           ${x.pos || x.next ? `<aside class="fm-box"><h4>Em números</h4>${box('Posição', x.pos ? x.pos + 'º' : '')}${box('Pontos', x.pos ? x.pts : '')}${box('Campanha', x.pos ? `${x.v}-${x.e}-${x.d}` : '')}${box('Saldo', x.pos ? (x.sg > 0 ? '+' : '') + x.sg : '')}${x.bal != null ? box('Caixa', P.money(x.bal)) : ''}${x.next ? `<div class="fm-next"><span>Próximo jogo</span><b>${x.next.home ? 'vs.' : '@'} ${esc(x.next.op)}</b></div>` : ''}</aside>` : ''}
         </div>
+        ${P.columnHTML ? P.columnHTML(x, { season: m.season, week: m.week, club: m.club, mgr: m.mgr }) : ''}
         <div class="row fm-act"><button class="btn primary" data-a="slotOpen" data-n="${last}">Continuar a leitura →</button></div>
       </article>`;
     } else {

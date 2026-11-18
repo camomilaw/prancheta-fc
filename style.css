@@ -1960,3 +1960,15 @@ html.phone-land .fm-photo figcaption { display: none; }
 html.phone-land .fm-big .fm-text .fm-dek { column-count: 1; font-size: .86rem; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
 html.phone-land .fm-big .fm-head { font-size: 1.5rem; }
 html.phone-land .fm-big .fm-text .fm-dek { -webkit-line-clamp: 4; }
+
+/* Colunistas */
+.col-box { border: 1px solid var(--line); border-left: 4px solid var(--accent); padding: 10px 12px; background: var(--surface); display: flex; flex-direction: column; gap: 6px; }
+.col-h { display: flex; align-items: center; gap: 10px; }
+.col-ini { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); font-family: var(--f-display); font-weight: 900; font-size: .9rem; flex: 0 0 auto; }
+.col-h > div { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.col-h b { font-family: var(--f-display); font-size: 1rem; }
+.col-h small { font-size: .76rem; font-style: italic; color: var(--muted); }
+.col-tag { font-family: var(--f-label); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 1px 6px; }
+.col-q { margin: 0; font-family: var(--f-display); font-style: italic; font-size: 1.02rem; line-height: 1.4; }
+.fm-big .col-box { margin-top: 4px; }
+html.phone-land .fm-big .col-box { display: none; }

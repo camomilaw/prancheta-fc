@@ -362,10 +362,10 @@
       <div class="fp-lead">${lead}</div>
       <nav class="cad-tabs fp-tabs" aria-label="Seções da capa">${TABS.map(([k, l, n]) => `<button class="${on(k)} ${k === 'tbl' ? 'only-m' : ''} ${k === 'news' ? 'hide-land' : ''}" data-a="homeTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
       <div class="fp fp-next ${on('next')}">${top}</div>
-      <div class="fp fp-mail ${on('mail')}">${(P.inboxCard && P.inboxCard(g)) || '<p class="empty">Nenhum e-mail novo.</p>'}<div class="fp-news-in">${news}</div></div>
+      <div class="fp fp-mail ${on('mail')}">${(P.inboxCard && P.inboxCard(g)) || '<p class="empty">Nenhum e-mail novo.</p>'}<div class="fp-news-in">${P.columnFor ? P.columnFor(g) : ''}${news}</div></div>
       <div class="fp fp-tbl ${on('tbl')}">${tbl}</div>
       <div class="fp fp-clube ${on('clube')}">${P.boardCard ? P.boardCard(g) : ''}${sit}</div>
-      <div class="fp fp-news ${on('news')}">${news}<button class="btn sm ghost" data-a="homeRes">Ver todos os meus jogos ›</button></div>
+      <div class="fp fp-news ${on('news')}">${P.columnFor ? P.columnFor(g) : ''}${news}<button class="btn sm ghost" data-a="homeRes">Ver todos os meus jogos ›</button></div>
     </div>`;
   }
   function zoneLegend(d) {
