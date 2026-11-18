@@ -22,6 +22,7 @@
       stad: c.stadium || '', city: c.city || '', bal: c.bal, conf: g.board ? g.board.conf : null, obj: P.expectation ? P.expectation(g, g.user) : '',
       top: top && (top.s.g + top.s.cg) ? { n: top.name, g: top.s.g + top.s.cg } : null, star: star ? { n: star.name, o: P.ovr(star), p: star.pos } : null,
       next: nx ? { op: P.club(g, nx.m.h === g.user ? nx.m.a : nx.m.h).name, home: nx.m.h === g.user, lbl: P.stepLabel(g.cal[g.week]) } : null, last,
+      tx: (() => { const t = (g.tx || []).find((x) => x.s === g.season && (x.to === g.user || x.from === g.user)); return t ? { n: t.name, in: t.to === g.user, op: (P.club(g, t.to === g.user ? t.from : t.to) || {}).name || '', fee: t.fee, loan: t.kind === 'loan' } : null; })(),
       badgeL: P.badge(c, 140)
     };
   };
@@ -51,6 +52,7 @@
         x.pos ? `Na tabela da ${m.div}ª divisão, o time é o ${x.pos}º colocado entre ${x.n}, com ${x.pts} pontos (${x.v} ${x.v === 1 ? 'vitória' : 'vitórias'}, ${x.e} ${x.e === 1 ? 'empate' : 'empates'} e ${x.d} ${x.d === 1 ? 'derrota' : 'derrotas'}) e saldo de ${x.sg > 0 ? '+' : ''}${x.sg}.` : '',
         x.obj ? `A diretoria espera ${esc(x.obj.toLowerCase())}${x.conf != null ? ` e, por ora, dá nota ${x.conf} de 100 à confiança no técnico ${esc(m.mgr)}` : ''}.` : '',
         x.top ? `${esc(x.top.n)} é o artilheiro do elenco, com ${x.top.g} ${x.top.g === 1 ? 'gol' : 'gols'}.` : x.star ? `${esc(x.star.n)} (${x.star.p}, força ${x.star.o}) é a principal referência do elenco.` : '',
+        x.tx ? (x.tx.in ? `No mercado, o clube trouxe ${esc(x.tx.n)}${x.tx.op ? ` do ${esc(x.tx.op)}` : ''}${x.tx.loan ? ' por empréstimo' : x.tx.fee ? ` por ${P.money(x.tx.fee)}` : ''}.` : `No mercado, ${esc(x.tx.n)} deixou o clube rumo ao ${esc(x.tx.op)}${x.tx.loan ? ' por empréstimo' : x.tx.fee ? ` por ${P.money(x.tx.fee)}` : ''}.`) : '',
         x.next ? `O próximo desafio é ${x.next.home ? 'em casa, contra' : 'fora, diante d'}o ${esc(x.next.op)}, pela ${esc(x.next.lbl)}${x.next.home && x.stad ? `, no ${esc(x.stad)}` : ''}.` : ''
       ].filter(Boolean).join(' ');
       right = `<article class="fm-news fm-big">
