@@ -1836,3 +1836,11 @@ html.phone-land .app { grid-template-columns: calc(64px + env(safe-area-inset-le
 @media (min-width: 1700px) { .main { max-width: 1440px; } }
 @media (min-width: 2200px) { html:not(.phone-land) { font-size: 118%; } .main { max-width: 1680px; } }
 @media (min-width: 3000px) { html:not(.phone-land) { font-size: 135%; } .main { max-width: 2000px; } }
+
+/* Sem "balanço" lateral no celular: a página nunca rola para os lados.
+   (clip corta sobras de largura sem criar rolagem e sem quebrar os elementos fixos/grudados) */
+html, body { overflow-x: clip; overscroll-behavior-x: none; }
+.main, .app, .md, .sheet { overflow-x: clip; }
+.cad-tabs, .tabs-x, .tbl-wrap, .seg { overscroll-behavior-x: contain; }
+.main img, .main svg, .main table { max-width: 100%; }
+@supports not (overflow-x: clip) { html, body { overflow-x: hidden; } }
