@@ -1780,3 +1780,25 @@ html.phone-land .nav-radio { height: 39px; min-height: 39px; }
 /* deitado: manchete do gol só aparece uma vez (o redesenho a cada minuto não a repete) */
 html.phone-land .lv2 .lv-goal:not(.pop) { display: none; }
 html.phone-land .yb-body .msg { padding: 6px 10px; font-size: .85rem; }
+
+/* Copas: explicação recolhida */
+.cup-info { margin: 0 0 10px; }
+.cup-info summary { cursor: pointer; font-family: var(--f-label); font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style: none; }
+.cup-info summary::-webkit-details-marker { display: none; }
+.cup-info[open] summary { color: var(--accent); }
+/* Funcionários: grade compacta */
+@media (min-width: 700px) { .staff-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; } }
+html.phone-land .staff-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+.staff-grid .staff-row { padding-top: 6px; padding-bottom: 6px; }
+html.phone-land .staff-grid .st-long { display: none; }
+/* Início › Clube: diretoria e situação lado a lado no deitado */
+html.phone-land .fp-clube.son { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 14px; align-items: start; }
+html.phone-land .fp-clube .kv { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; }
+html.phone-land .fp-clube .kv .label { font-size: .58rem; }
+html.phone-land .fp-clube .card p.muted { font-size: .76rem; }
+/* Fim de jogo deitado: lances com mais espaço, notas menores */
+html.phone-land .lv2.done { grid-template-columns: minmax(0, .85fr) minmax(0, 1.35fr) minmax(0, 1fr); }
+html.phone-land .lv2.done .lv-left .pitch { max-width: 260px; margin: 0 auto; }
+html.phone-land .lv2.done .lv-left .slot .dot { width: 28px; height: 28px; font-size: .72rem; }
+html.phone-land .lv2.done .lv-left .slot .nm { font-size: .56rem; }
+html.phone-land .lv2.done .feed li b { font-size: .95rem; }

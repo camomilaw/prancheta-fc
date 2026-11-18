@@ -199,7 +199,7 @@
     const next = P.scNextSeason(g);
     const ed = cur || (g.over && s.eds.length && s.eds[s.eds.length - 1].season === g.season ? s.eds[s.eds.length - 1] : null);
     const total = P.ECON.scPart + P.ECON.scPrize.reduce((a, b) => a + b, 0);
-    const intro = `<p class="muted" style="margin:0 0 12px;font-size:.88rem">A cada 4 anos, no fim da temporada, os campeões da Ultraliga e da Copa Ultra do ciclo se enfrentam em quartas, semifinal e final, em jogo único e com estádio cheio. Se um campeão já tem vaga, ela vai para o vice ou o 3º. Participar rende ${P.money(P.ECON.scPart)}; o campeão leva ${P.money(total)}.</p>`;
+    const intro = `<details class="cup-info"><summary>ⓘ Como funciona</summary><p class="muted" style="margin:6px 0 12px;font-size:.88rem">A cada 4 anos, no fim da temporada, os campeões da Ultraliga e da Copa Ultra do ciclo se enfrentam em quartas, semifinal e final, em jogo único e com estádio cheio. Se um campeão já tem vaga, ela vai para o vice ou o 3º. Participar rende ${P.money(P.ECON.scPart)}; o campeão leva ${P.money(total)}.</p></details>`;
     const qRow = (x) => {
       const c = x.cid && club(g, x.cid);
       return `<div class="sc-q ${x.cid === g.user ? 'me' : ''}">${c ? P.badge(c, 22) : '<span class="sc-tbd">?</span>'}

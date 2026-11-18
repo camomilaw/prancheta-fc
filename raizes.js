@@ -189,7 +189,7 @@
     const t = P.tierByKey(st.tierK) || mt || P.TIERS[0];
     const z = zOf(g, t.k), pr = P.tierPrize(t);
     const pick = `<div class="seg tabs-x tier-pick" style="margin-bottom:12px">${P.TIERS.map((x) => `<button class="${x === t ? 'on' : ''}" data-a="tierK" data-k="${x.k}"><i class="lg-dot" style="background:${x.color}"></i>${esc(x.n)} <small class="muted">${x.divs[0]}ª e ${x.divs[1]}ª</small></button>`).join('')}</div>`;
-    const intro = `<p class="muted" style="margin:0 0 12px;font-size:.88rem">Os 40 clubes da ${t.divs[0]}ª e da ${t.divs[1]}ª divisão em 8 grupos de 5 (turno único). Os 2 primeiros de cada grupo vão às oitavas; daí em diante é jogo único, com final em campo neutro. Participar rende ${P.money(pr.part)}, cada vitória nos grupos ${P.money(pr.win)}, e o campeão leva até ${P.money(P.tierChampTotal(t))} e entra direto na 1ª fase da Copa Ultra do ano seguinte.</p>`;
+    const intro = `<details class="cup-info"><summary>ⓘ Como funciona</summary><p class="muted" style="margin:6px 0 12px;font-size:.88rem">Os 40 clubes da ${t.divs[0]}ª e da ${t.divs[1]}ª divisão em 8 grupos de 5 (turno único). Os 2 primeiros de cada grupo vão às oitavas; daí em diante é jogo único, com final em campo neutro. Participar rende ${P.money(pr.part)}, cada vitória nos grupos ${P.money(pr.win)}, e o campeão leva até ${P.money(P.tierChampTotal(t))} e entra direto na 1ª fase da Copa Ultra do ano seguinte.</p></details>`;
     if (!z) {
       const started = P.TIERS.some((x) => zOf(g, x.k));
       return pick + intro + `<p class="empty">${started ? 'Esta copa começa na próxima temporada.' : `O sorteio dos grupos acontece depois da rodada ${P.RZ_AFTER[0]} da liga.`}</p>${hist(g, t)}`;
