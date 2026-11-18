@@ -668,7 +668,7 @@
       const hist = userHistory(g).reverse();
       const W = hist.filter((x) => { const h = x.m.h === g.user; return (h ? x.m.hg > x.m.ag : x.m.ag > x.m.hg) || (x.m.pen && x.m.w === g.user && x.m.hg === x.m.ag); }).length;
       const D = hist.filter((x) => x.m.hg === x.m.ag && !x.m.pen).length;
-      body = hist.length ? `<p class="muted" style="margin:0 0 10px;font-size:.88rem">${hist.length} jogos na temporada (todas as competições): ${W} vitórias, ${D} empates, ${hist.length - W - D} derrotas. Toque num jogo para ver o relatório.</p>
+      body = hist.length ? `<p class="muted" style="margin:0 0 10px;font-size:.88rem">${hist.length} ${hist.length === 1 ? 'jogo' : 'jogos'} na temporada (todas as competições): ${W} ${W === 1 ? 'vitória' : 'vitórias'}, ${D} ${D === 1 ? 'empate' : 'empates'}, ${hist.length - W - D} ${hist.length - W - D === 1 ? 'derrota' : 'derrotas'}. Toque num jogo para ver o relatório.</p>
         <div class="others" style="grid-template-columns:1fr">${hist.map((x) => `<div class="hist-row"><span class="label">${esc(x.label)}</span>${ogRow(x.m, x.m.hg, x.m.ag, { click: true, pen: x.m.pen, label: x.label })}</div>`).join('')}</div>` : '<p class="empty">Nenhum jogo disputado ainda.</p>';
       return `<div class="card"><div class="head"><h2>Meus jogos ${g.season}</h2>${tabs}</div>${body}</div>`;
     } else if (st.tab === 'art') {

@@ -1438,6 +1438,83 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
 }
 @media (min-width: 900px) { .nav .nav-dot { position: static; margin-left: 6px; } }
 
+/* ===== AUTO: regras de PC repetidas para o celular deitado ===== */
+html.phone-land .app { display: grid; grid-template-columns: 210px 1fr; grid-template-rows: auto 1fr; }
+html.phone-land .top { grid-column: 1 / -1; }
+html.phone-land .nav { position: sticky; top: 64px; align-self: start; height: calc(100vh - 64px);
+    display: flex; flex-direction: column; gap: 2px; padding: 16px 10px; border-top: 0; border-right: 1px solid var(--line); }
+html.phone-land .nav button { height: 44px; flex-direction: row; justify-content: flex-start; gap: 12px; padding: 0 12px; border-radius: 10px; font-size: .95rem; }
+html.phone-land .nav button.on { background: var(--surface-2); }
+html.phone-land .main { padding-bottom: 32px; width: 100%; }
+html.phone-land .tac { grid-template-columns: minmax(320px, 440px) 1fr; }
+html.phone-land .nav { border-right: 0; padding: 16px 0; }
+html.phone-land .nav button { border-radius: 0; font-size: .82rem; padding: 0 18px; }
+html.phone-land .nav button.on { background: color-mix(in srgb, var(--press-ink) 8%, transparent); }
+html.phone-land .nav button.on::before { left: 0; right: auto; top: 8px; bottom: 8px; width: 3px; height: auto; }
+html.phone-land .jr-lead { padding-top: 6px; }
+html.phone-land .nav { border-right: 1px solid var(--line); }
+html.phone-land .nav button.on { background: color-mix(in srgb, var(--nav-ink) 9%, transparent); }
+html.phone-land .rd-pill { bottom: 18px; right: 18px; }
+html.phone-land .rd-panel { left: auto; right: 18px; bottom: 18px; width: 380px; border: 1px solid var(--line); border-top: 3px double var(--ink); }
+html.phone-land .only-m { display: none !important; }
+html.phone-land .cad-body { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "pitch tabs" "pitch side"; grid-template-rows: auto 1fr; gap: 0 24px; align-items: start; }
+html.phone-land .cad-body > .cad-tabs { grid-area: tabs; }
+html.phone-land .pane-campo { grid-area: pitch; width: min(420px, calc((100vh - 250px) * .68)); }
+html.phone-land .pane-campo .pitch { width: 100% !important; min-width: 0; }
+html.phone-land .cad-side { grid-area: side; display: block; min-width: 0; padding-top: 12px; }
+html.phone-land .pane-campo .pitch { width: min(420px, calc((100vh - 250px) * .68)); }
+html.phone-land .cad-tabs .only-m { display: none; }
+html.phone-land .cad-tabs button.son { color: var(--ink); border-bottom-color: var(--accent); }
+html.phone-land .pane-campo { display: flex; position: sticky; top: 76px; }
+html.phone-land .cad-side .cad-pane { display: none; }
+html.phone-land .cad-side .cad-pane.son { display: flex; }
+html.phone-land .cad-head { grid-template-columns: auto 1fr auto; }
+html.phone-land .ticker { grid-column: auto; grid-row: 1; grid-column: 2; max-width: 420px; justify-self: center; width: 100%; }
+html.phone-land .mk-busca { display: grid; grid-template-columns: 270px 1fr; grid-template-areas: "fbox bar" "fbox res"; grid-template-rows: auto 1fr; gap: 10px 24px; align-items: start; }
+html.phone-land .mk-bar { grid-area: bar; }
+html.phone-land .mk-res { grid-area: res; }
+html.phone-land .mk-fbox { grid-area: fbox; position: sticky; top: 76px; max-height: calc(100vh - 92px); overflow-y: auto; padding-right: 16px; border-right: 1px solid var(--line); }
+html.phone-land .mk-fbox .mk-filters { grid-template-columns: 1fr; }
+html.phone-land .front { display: grid; gap: 0 28px; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    grid-template-areas: "lead tbl" "tabs tbl" "pane tbl"; grid-template-rows: auto auto 1fr; align-items: start; }
+html.phone-land .fp-lead { grid-area: lead; }
+html.phone-land .fp-tabs { grid-area: tabs; }
+html.phone-land .fp-next, html.phone-land .fp-mail, html.phone-land .fp-clube, html.phone-land .fp-news { grid-area: pane; display: none; padding-top: 14px; }
+html.phone-land .front .fp.son { display: flex; }
+html.phone-land .fp-tbl { grid-area: tbl; display: flex; border-left: 1px solid var(--line); padding-left: 24px; position: sticky; top: 76px; }
+html.phone-land .front .fp-tabs .only-m { display: none; }
+html.phone-land .front .fp-tabs button.son { color: var(--ink); border-bottom-color: var(--accent); }
+html.phone-land .front .fp-lead .jr-lead { padding-bottom: 6px; }
+html.phone-land .fp-clube { flex-direction: row !important; align-items: flex-start; }
+html.phone-land .fp-clube > * { flex: 1; min-width: 0; }
+html.phone-land .mk-fbox .mk-filters { grid-template-columns: 1fr 1fr; grid-auto-flow: row dense; gap: 8px 10px; }
+html.phone-land .mk-fbox .field { gap: 2px; }
+html.phone-land .mk-fbox .field .label { font-size: .64rem; }
+html.phone-land .mk-fbox .sel, html.phone-land .mk-fbox .num-in { min-height: 32px; height: 32px; padding: 2px 8px; font-size: .86rem; }
+html.phone-land .mk-fbox .field:has(.range) { grid-column: 1 / -1; display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 6px; }
+html.phone-land .mk-fbox .range { gap: 4px; }
+html.phone-land .mk-fbox .range span { font-size: .8rem; }
+html.phone-land .mk-fbox .cad-sub { margin-top: 0; }
+html.phone-land .mais-grid.on { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+html.phone-land .idx-list { columns: 2; column-gap: 32px; column-rule: 1px solid var(--line); }
+html.phone-land .idx-list li { break-inside: avoid; }
+html.phone-land .nav .nav-sub { display: flex; height: 36px; padding-left: 34px; font-size: .62rem; }
+html.phone-land .nav .nav-sub svg { width: 16px; height: 16px; }
+html.phone-land .tr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+html.phone-land .st-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+html.phone-land .fin-pane.on { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 16px; }
+html.phone-land .fin-pane .grid2 { display: contents; }
+html.phone-land .fin-pane > .budget-card { grid-column: 1 / -1; }
+html.phone-land .nav .nav-dot { position: static; margin-left: 6px; }
+html.phone-land .yb-body .plist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
+html.phone-land .hide-sm { display: table-cell; }
+html.phone-land .show-sm { display: none; }
+html.phone-land .nm-long { display: inline; }
+html.phone-land .others { grid-template-columns: 1fr 1fr; }
+html.phone-land .mg-stint { grid-template-columns: auto minmax(0, 1fr) auto; }
+html.phone-land .mg-rec { grid-column: auto; }
+html.phone-land .coach-pick { grid-template-columns: 1fr 1fr; }
+
 /* =========================================================================
    Celular deitado: layout de app (estilo "painel"), tela inteira sem rolar a página.
    Faixa de ícones à esquerda, barra fina em cima, conteúdo rola dentro do painel.
@@ -1699,3 +1776,7 @@ html.phone-land .tbl-card > .head h2 { display: none; }
 html.phone-land .nav button { height: 39px; min-height: 39px; }
 html.phone-land .nav .nav-sub { height: 30px; min-height: 30px; }
 html.phone-land .nav-radio { height: 39px; min-height: 39px; }
+
+/* deitado: manchete do gol só aparece uma vez (o redesenho a cada minuto não a repete) */
+html.phone-land .lv2 .lv-goal:not(.pop) { display: none; }
+html.phone-land .yb-body .msg { padding: 6px 10px; font-size: .85rem; }

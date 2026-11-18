@@ -344,7 +344,7 @@
     if (st.tab === 'elenco') {
       const list = Object.values(g.y.squad).sort((a, b) => b.potO - a.potO);
       const custom = (g.y.xi || []).length === 11;
-      body = `<p class="muted" style="margin:0 0 10px;font-size:.88rem">${list.length}/${P.YOUTH.maxSquad} jovens · força do time ${Math.round(P.youthStrength(g))} · escalação ${custom ? 'manual (11 escolhidos)' : 'automática'}. Aos 20 anos o jogador sobe ao profissional ou é dispensado.</p>
+      body = `<p class="muted hide-land" style="margin:0 0 10px;font-size:.88rem">${list.length}/${P.YOUTH.maxSquad} jovens · força do time ${Math.round(P.youthStrength(g))} · escalação ${custom ? 'manual (11 escolhidos)' : 'automática'}. Aos 20 anos o jogador sobe ao profissional ou é dispensado.</p>
         ${g.y.last ? `<div class="msg" style="margin-bottom:10px">Último jogo: ${g.y.last.home ? me.short : esc(club(g.y.last.opp).short)} ${g.y.last.home ? g.y.last.gf : g.y.last.ga} × ${g.y.last.home ? g.y.last.ga : g.y.last.gf} ${g.y.last.home ? esc(club(g.y.last.opp).short) : me.short}${g.y.last.scorers.length ? ' · gols: ' + esc(g.y.last.scorers.join(', ')) : ''}</div>` : ''}
         ${custom ? '<div style="margin-bottom:10px"><button class="btn sm" data-a="yXiReset">Voltar à escalação automática</button></div>' : ''}
         <div class="plist">${list.map((p) => yrow(p)).join('') || '<p class="empty">Nenhum jovem. Contrate pelos relatórios dos olheiros.</p>'}</div>`;
