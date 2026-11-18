@@ -16,7 +16,7 @@
     const nx = !g.over && P.userMatch(g, g.cal[g.week]);
     const lm = P.lastUserMatch ? P.lastUserMatch(g) : null;
     let last = null;
-    if (lm) { const m = lm.m, home = m.h === g.user; last = { op: P.club(g, home ? m.a : m.h).name, gf: home ? m.hg : m.ag, ga: home ? m.ag : m.hg, home, ko: !!lm.ko, pen: !!m.pen, won: m.w === g.user, derby: P.rivalry ? P.rivalry(g, m.h, m.a) : 0 }; }
+    if (lm) { const m = lm.m, home = m.h === g.user; last = { op: P.club(g, home ? m.a : m.h).name, opStad: P.club(g, home ? m.a : m.h).stadium || '', neutral: !!m.neutral, gf: home ? m.hg : m.ag, ga: home ? m.ag : m.hg, home, ko: !!lm.ko, pen: !!m.pen, won: m.w === g.user, derby: P.rivalry ? P.rivalry(g, m.h, m.a) : 0 }; }
     return {
       form: (r.form || []).slice(-5).join(''), tgt: g.board ? g.board.target : null, down: P.RULES ? tb.length - P.RULES.down : null, upTo: P.RULES && c.div > 1 ? P.RULES.playoff[1] : null,
       pos: r.j ? i + 1 : 0, pts: r.pts || 0, v: r.v || 0, e: r.e || 0, d: r.d || 0, sg: (r.gp || 0) - (r.gc || 0), n: tb.length,
