@@ -1442,7 +1442,8 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
    Celular deitado: layout de app (estilo "painel"), tela inteira sem rolar a página.
    Faixa de ícones à esquerda, barra fina em cima, conteúdo rola dentro do painel.
    ========================================================================= */
-html.phone-land, html.phone-land body { height: 100%; overflow: hidden; }
+/* só trava a rolagem da página dentro do jogo (com menu); capa, nova carreira e torneio rolam normalmente */
+html.phone-land:has(.app), html.phone-land body:has(.app) { height: 100%; overflow: hidden; }
 html.phone-land .app { display: grid; grid-template-columns: calc(64px + env(safe-area-inset-left, 0px)) 1fr; grid-template-rows: 50px 1fr; height: 100dvh; min-height: 0; }
 html.phone-land .top { grid-column: 1 / -1; position: static; height: 50px; padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px)); gap: 10px; }
 html.phone-land .top .who h1 { font-size: 1.05rem; }
