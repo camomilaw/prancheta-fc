@@ -1828,3 +1828,11 @@ html.phone-land .front .fp-next.son, html.phone-land .front .fp-mail.son, html.p
 html.phone-land .mk2 .mk-fbox, html.phone-land .mk2 .mk-res { align-self: stretch; }
 html.phone-land .mk2 .mk-busca { align-items: stretch; }
 html.phone-land .jr-lead .jr-dek { -webkit-line-clamp: 1; }
+/* Monitores estreitos (ex.: 1024 px): a coluna do conteúdo encolhe em vez de vazar para o lado */
+@media (min-width: 900px) { .app { grid-template-columns: 210px minmax(0, 1fr); } .main { min-width: 0; } }
+html.phone-land .app { grid-template-columns: calc(64px + env(safe-area-inset-left, 0px)) minmax(0, 1fr); }
+.cad-tabs, .tabs-x { max-width: 100%; }
+/* Monitores grandes: conteúdo mais largo e letra um pouco maior (2K/4K e ultrawide) */
+@media (min-width: 1700px) { .main { max-width: 1440px; } }
+@media (min-width: 2200px) { html:not(.phone-land) { font-size: 118%; } .main { max-width: 1680px; } }
+@media (min-width: 3000px) { html:not(.phone-land) { font-size: 135%; } .main { max-width: 2000px; } }
