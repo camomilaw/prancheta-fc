@@ -60,7 +60,7 @@
   // Aceita o nome de uma formação ou a tática do clube (com posições livres em t.xy)
   P.slots = (f) => {
     if (f && typeof f === 'object') {
-      if (f.xy && f.xy.length === 11) return f.xy.map((c, i) => ({ pos: P.posFromXY(c.x, c.y, i), x: c.x, y: c.y }));
+      if (f.xy && f.xy.length === 11) return f.xy.map((c, i) => ({ pos: (f.xyPos && f.xyPos[i]) || P.posFromXY(c.x, c.y, i), x: c.x, y: c.y }));
       f = f.f;
     }
     return (P.FORMATIONS[f] || P.FORMATIONS['4-4-2']).map(([pos, x, y]) => ({ pos, x, y }));

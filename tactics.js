@@ -312,10 +312,18 @@
   // Encaixe: o jogador solto no campo vai para o centro da posição mais próxima (grade fixa)
   const ROWS = [24, 42, 52, 64, 82];          // zaga/laterais, volantes, meio, meias/pontas, ataque
   const COLS = [14, 32, 50, 68, 86];
+  // os lugares das formações prontas também valem como encaixe (zagueiros e volantes mais juntos, como no 4-4-2)
+  let _ps = null;
+  const presetSpots = () => {
+    if (_ps) return _ps;
+    _ps = [];
+    for (const f of Object.values(P.FORMATIONS)) for (const [pos, x, y] of f) if (pos !== 'GOL' && !_ps.some((s) => Math.abs(s.x - x) < 3 && Math.abs(s.y - y) < 3)) _ps.push({ x, y });
+    return _ps;
+  };
   P.snapXY = function (x, y, xy, i) {
     if (i === 0) return { x: 50, y: 6 };     // goleiro fica no gol
-    const spots = [];
-    for (const ry of ROWS) for (const cx of COLS) spots.push({ x: cx, y: ry });
+    const spots = presetSpots().slice();
+    for (const ry of ROWS) for (const cx of COLS) if (!spots.some((s) => Math.abs(s.x - cx) < 6 && Math.abs(s.y - ry) < 5)) spots.push({ x: cx, y: ry });
     const taken = (s) => xy.some((c, j) => j !== i && j !== 0 && c && Math.abs(c.x - s.x) < 9 && Math.abs(c.y - s.y) < 8);
     spots.sort((a, b) => Math.hypot(a.x - x, (a.y - y) * 1.3) - Math.hypot(b.x - x, (b.y - y) * 1.3));
     return Object.assign({}, spots.find((s) => !taken(s)) || spots[0]);
@@ -346,8 +354,10 @@
     if (!d.moved) return; // toque simples vira clique (tSlot)
     A._noClick = Date.now();
     const g = A.g, t = g.tac[g.user];
-    if (!t.xy) { const out = []; P.slots(t.f).forEach((sl, i) => { out[i] = P.snapXY(sl.x, sl.y, out, i); }); t.xy = out; }
+    // a formação pronta vira personalizada sem mexer em quem não foi arrastado (posição e lugar continuam os da formação)
+    if (!t.xy) { const sl = P.slots(t.f); t.xy = sl.map((x) => ({ x: x.x, y: x.y })); t.xyPos = sl.map((x) => x.pos); }
     t.xy[d.i] = P.snapXY(d.x, d.y, t.xy, d.i); t.snap = true;
+    if (t.xyPos) t.xyPos[d.i] = null;
     A.save(); A.render();
   });
 
@@ -363,7 +373,7 @@
     tRole(d) { const t = A.g.tac[A.g.user]; t.roles = t.roles || []; t.roles[d.i] = Object.assign({}, t.roles[d.i], { fn: d.k }); A.save(); A.render(); P.tacSheet(Number(d.i)); },
     tPost(d) { const t = A.g.tac[A.g.user]; t.roles = t.roles || []; t.roles[d.i] = Object.assign({}, t.roles[d.i], { post: d.k }); A.save(); A.render(); P.tacSheet(Number(d.i)); },
     tSwap(d) { A.slotSheet(Number(d.i)); },
-    tReset() { const g = A.g, t = g.tac[g.user]; delete t.xy; t.xi = P.autoXI(g, g.user, t.f); A.save(); A.render(); A.toast('Formação ' + t.f + ' restaurada'); }
+    tReset() { const g = A.g, t = g.tac[g.user]; delete t.xy; delete t.xyPos; t.xi = P.autoXI(g, g.user, t.f); A.save(); A.render(); A.toast('Formação ' + t.f + ' restaurada'); }
   });
   Object.assign(A.CHG, {
     tSp(el) {
@@ -374,7 +384,7 @@
     tForm(el) {
       const g = A.g, t = g.tac[g.user];
       if (!P.FORMATIONS[el.value]) return;
-      t.f = el.value; delete t.xy; t.roles = [];
+      t.f = el.value; delete t.xy; delete t.xyPos; t.roles = [];
       t.xi = P.autoXI(g, g.user, t.f); A.save(); A.render(); A.toast('Formação ' + t.f);
     }
   });

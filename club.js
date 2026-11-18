@@ -126,7 +126,7 @@
   P.switchClub = function (g, cid) {
     const old = P.club(g, g.user), nc = P.club(g, cid), wasFired = !!g.fired;
     g.user = cid;
-    const t = g.tac[cid]; t.auto = true; delete t.xy; t.roles = [];
+    const t = g.tac[cid]; t.auto = true; delete t.xy; delete t.xyPos; t.roles = [];
     t.xi = P.autoXI(g, cid, t.f);
     g.y = null; P.ensureYouth(g);
     g.chem = {}; g.train = null; g.offers = []; g.fired = null; g.jobs = null;
