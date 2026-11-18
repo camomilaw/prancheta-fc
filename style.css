@@ -1884,3 +1884,45 @@ html:not(.phone-land) .setup.jr .cov-b > .pf-cta { order: 4; }
 .pf-cta span { display: flex; flex-direction: column; gap: 2px; text-align: left; }
 .pf-cta .pf-t { font-style: normal; font-size: 1.05rem; }
 .pf-cta small { font-style: italic; font-size: .8rem; color: var(--muted); }
+
+/* ---------- Capa estilo menu (PC e deitado) ---------- */
+.fm { display: none; }
+@media (min-width: 900px) { html:not(.phone-land) .setup.jr:has(.fm) .cov-a, html:not(.phone-land) .setup.jr:has(.fm) .cov-b { display: none; } html:not(.phone-land) .setup.jr:has(.fm) { display: flex !important; flex-direction: column; } html:not(.phone-land) .fm { display: grid; } }
+html.phone-land .setup.jr:has(.fm) .cov-a, html.phone-land .setup.jr:has(.fm) .cov-b { display: none !important; }
+html.phone-land .setup.jr:has(.fm) { display: flex !important; flex-direction: column; }
+html.phone-land .fm { display: grid; }
+.fm { grid-template-columns: minmax(240px, 0.85fr) minmax(0, 1.4fr); gap: 0 30px; align-items: start; }
+.fm-menu { display: flex; flex-direction: column; border-top: 3px double var(--ink); }
+.fm-item { display: flex; align-items: center; gap: 14px; padding: 12px 6px; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink); text-align: left; cursor: pointer; }
+.fm-item:hover, .fm-item.on { background: var(--hi); }
+.fm-item:first-child .fm-t b { color: var(--accent); }
+.fm-n { font-family: var(--f-display); font-weight: 900; font-size: 1.7rem; color: var(--accent); width: 1.3em; text-align: center; }
+.fm-t { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.fm-t b { font-family: var(--f-label); text-transform: uppercase; letter-spacing: .08em; font-size: 1.02rem; }
+.fm-t small { color: var(--muted); font-size: .8rem; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fm-go { font-size: 1.4rem; color: var(--muted); }
+.fm-right { border-left: 1px solid var(--line); padding-left: 30px; min-width: 0; }
+.fm-news { display: flex; flex-direction: column; gap: 8px; border-top: 3px double var(--ink); padding-top: 10px; }
+.fm-kick { font-family: var(--f-label); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.fm-head { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: clamp(1.6rem, 3vw, 2.5rem); line-height: 1.04; }
+.fm-by { font-size: .82rem; font-style: italic; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.fm-body { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
+.fm-crest svg { width: 72px; height: 72px; }
+.fm-dek { margin: 0; font-size: 1.02rem; line-height: 1.5; column-count: 1; }
+.fm-dek::first-letter { font-family: var(--f-display); font-weight: 900; font-size: 2.6em; float: left; line-height: .85; margin: 4px 6px 0 0; color: var(--accent); }
+.fm-act { margin-top: 6px; }
+html.phone-land .fm { gap: 0 22px; }
+html.phone-land .fm-item { padding: 6px 4px; }
+html.phone-land .fm-n { font-size: 1.3rem; }
+html.phone-land .fm-t b { font-size: .88rem; }
+html.phone-land .fm-head { font-size: 1.55rem; }
+html.phone-land .fm-dek { font-size: .9rem; }
+html.phone-land .fm-crest svg { width: 52px; height: 52px; }
+html.phone-land .fm-right { padding-left: 22px; }
+.setup.jr:has(.fm) { width: 100%; }
+@media (min-width: 900px) { html:not(.phone-land) .setup.jr:has(.fm) { max-width: 1100px; margin: 0 auto; } }
+.setup.jr:has(.fm) > .jr-mast { align-self: stretch; width: 100%; }
+html.phone-land .setup.jr:has(.fm) > .jr-mast h1 { font-size: 2.2rem; }
+html.phone-land .setup.jr:has(.fm) { gap: 10px; }
+.fm-slots { display: flex; flex-direction: column; gap: 10px; }
+.fm-slots .jr-sec > .jr-h { display: none; }

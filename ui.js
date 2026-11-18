@@ -161,6 +161,7 @@
         <h1>Prancheta FC</h1>
         <div class="jr-tag">Monte o time. Suba a pirâmide. Escreva a sua história.</div>
       </header>
+      ${P.frontMenu && !A.setup.importing && !A.setup.teamImp ? P.frontMenu() : ''}
       <div class="cov-a">
       ${P.slotsCard ? P.slotsCard() : ''}
       ${P.teamImportPanel ? P.teamImportPanel() : ''}
