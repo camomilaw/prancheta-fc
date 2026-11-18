@@ -127,13 +127,12 @@
     return `<div class="tac2 tr2">
       <header class="cad-head">
         <div class="cad-title"><span class="cad-kicker">Caderno de Treino</span><h2>Treinamento</h2></div>
-        <div class="cad-tools">${tabs}</div>
+        <div class="cad-tools">${sub ? '' : '<button class="btn sm" data-a="go" data-v="calendario">Planejar semanas</button>'}${tabs}<button class="btn sm ghost info-btn ${A.st.trInfo ? 'on' : ''}" data-a="trInfo" aria-label="Como funciona o treino">ⓘ</button></div>
         ${sub ? '' : `<div class="ticker"><span class="tk-l">Esta semana</span>
           <span class="tq"><small>Intensidade</small><b>${plan ? esc(P.TRAIN.int[plan.int].n) : '–'}</b></span>
           <span class="tq"><small>Foco</small><b>${plan && plan.int !== 'des' ? esc(P.TRAIN.foco[plan.foco].n) : '–'}</b></span>
           <span class="tq"><small>Quem decide</small><b>${plan && plan.auto ? 'Adjunto' : 'Você'}</b></span></div>`}
-        <p class="cad-fine" style="grid-column:1/-1">${intro} Toque num jogador para escolher o atributo dele e uma posição para treinar.</p>
-        ${sub ? '' : '<div style="grid-column:1/-1"><button class="btn sm" data-a="go" data-v="calendario">Planejar intensidade e foco por semana</button></div>'}
+        ${A.st.trInfo ? `<p class="cad-fine" style="grid-column:1/-1">${intro} Toque num jogador para escolher o atributo dele e uma posição para treinar.</p>` : ''}
       </header>
       <nav class="cad-tabs only-m" aria-label="Setores">${present.map(([line, name], i) => `<button class="${lnTab === line ? 'on' : ''}" data-a="trLn" data-k="${line}"><i>${LET[i]}</i>${name}</button>`).join('')}</nav>
       <div class="tr-grid">${groups || '<p class="empty">Nenhum jogador aqui.</p>'}</div></div>`;
@@ -172,6 +171,7 @@
   }
 
   Object.assign(A.ACT, {
+    trInfo() { A.st.trInfo = !A.st.trInfo; A.render(); },
     trLn(d) { A.st.trn.ln = d.k; A.render(); },
     trSq(d) { A.st.trn = { sq: d.k }; A.render(); },
     trOpen(d) { sheet(d.id); },

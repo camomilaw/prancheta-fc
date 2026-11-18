@@ -337,7 +337,8 @@
     const g = A.g;
     if (!g.y) P.ensureYouth(g);
     const st = A.st.yb || (A.st.yb = { tab: 'elenco' });
-    const tabs = `<div class="seg">${[['elenco', 'Elenco Sub-20'], ['tabela', 'Tabela'], ['olheiros', 'Olheiros'], ['rel', `Relatórios${g.y.reports.length ? ' (' + g.y.reports.length + ')' : ''}`]].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="yTab" data-k="${k}">${n}</button>`).join('')}</div>`;
+    const TB = [['elenco', 'A', 'Elenco'], ['tabela', 'B', 'Tabela'], ['olheiros', 'C', 'Olheiros'], ['rel', 'D', `Relatórios${g.y.reports.length ? ' (' + g.y.reports.length + ')' : ''}`]];
+    const tabs = `<nav class="cad-tabs cad-tabs-all" aria-label="Seções do Sub-20">${TB.map(([k, l, n]) => `<button class="${st.tab === k ? 'on son' : ''}" data-a="yTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>`;
     let body = '';
     const me = club(g.user);
     if (st.tab === 'elenco') {
@@ -350,7 +351,7 @@
     } else if (st.tab === 'tabela') {
       const tb = P.youthTable(g, me.div);
       body = `<div class="label" style="margin-bottom:8px">Ultraliga Sub-20 · ${me.div}ª divisão</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">P</th><th class="n">J</th><th class="n">V</th><th class="n">E</th><th class="n">D</th><th class="n">SG</th></tr></thead><tbody>
-        ${tb.map((r, i) => { const c = club(r.cid); return `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n">${i + 1}</td><td><span class="club">${P.badge(c, 18)}${esc(c.short)}</span></td><td class="n"><b>${r.pts}</b></td><td class="n">${r.j}</td><td class="n">${r.v}</td><td class="n">${r.e}</td><td class="n">${r.d}</td><td class="n">${r.gp - r.gc}</td></tr>`; }).join('')}
+        ${tb.map((r, i) => { const c = club(r.cid); return `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n">${i + 1}</td><td><span class="club">${P.badge(c, 18)}<span class="show-sm">${esc(c.short)}</span><span class="nm-long">${esc(c.name)}</span></span></td><td class="n"><b>${r.pts}</b></td><td class="n">${r.j}</td><td class="n">${r.v}</td><td class="n">${r.e}</td><td class="n">${r.d}</td><td class="n">${r.gp - r.gc}</td></tr>`; }).join('')}
         </tbody></table></div><p class="muted" style="font-size:.85rem">O Sub-20 joga na mesma divisão do time principal, nas semanas de liga.</p>`;
     } else if (st.tab === 'olheiros') {
       const scouts = g.y.staff.filter((s) => s.role === 'olheiro');
@@ -365,8 +366,17 @@
           <span class="potbox"><span class="pot">${p.lo}-${p.hi}</span>${p.signed ? '<span class="chip xi">Contratado</span>' : `<button class="btn sm" data-a="ySign" data-r="${rep.id}" data-id="${p.id}">${P.money(p.fee)}</button>`}</span></div>`).join('')}</div></div>`).join('')
         : `<p class="empty">Nenhum relatório ainda. Contrate um olheiro e envie-o numa missão: o relatório chega ao fim da missão (3, 6 ou 9 meses, você escolhe).</p>`;
     }
-    return `<div class="card"><div class="head"><h2>Sub-20</h2><button class="btn sm ghost" data-a="go" data-v="elenco">‹ Elenco</button></div>
-      <div style="margin-bottom:12px">${tabs}</div>${body}</div>`;
+    const yl = Object.values(g.y.squad), ytb = P.youthTable ? P.youthTable(g, me.div) : [], ypos = ytb.findIndex((r) => r.cid === g.user) + 1;
+    const scN = g.y.staff.filter((x) => x.role === 'olheiro').length;
+    return `<div class="tac2 yb2">
+      <header class="cad-head"><div class="cad-title"><span class="cad-kicker">Caderno da Base</span><h2>Sub-20</h2></div>
+        <div class="ticker"><span class="tk-l">Base</span>
+          <span class="tq"><small>Jovens</small><b>${yl.length}/${P.YOUTH.maxSquad}</b></span>
+          <span class="tq"><small>Força</small><b>${Math.round(P.youthStrength(g))}</b></span>
+          <span class="tq"><small>Tabela</small><b>${ypos ? ypos + 'º' : '–'}</b></span>
+          <span class="tq"><small>Olheiros</small><b>${scN}/${P.STAFF_ROLES.olheiro.max}</b></span></div>
+        <div class="cad-tools"><button class="btn sm ghost only-m" data-a="go" data-v="elenco">‹ Elenco</button></div></header>
+      ${tabs}<div class="yb-body">${body}</div></div>`;
   };
   // Formulário da missão: posição ou área, continente e país (só os do continente escolhido)
   const natOpts = (cont, cur) => `<option value="">${cont ? 'Todo o continente (' + esc(P.CONTINENTS[cont].n) + ')' : 'Qualquer país'}</option>` +

@@ -187,6 +187,7 @@
     return w;
   }
   A.ACT.tacTab = (d) => { A.st.tacTab = d.k; A.render(); };
+  A.ACT.spInfo = () => { A.st.spInfo = !A.st.spInfo; A.render(); };
   P.tacticsView = function () {
     const g = A.g, t = g.tac[g.user];
     if (!t.ins) t.ins = P.insOf(t);
@@ -232,7 +233,7 @@
     return `<div class="tac2 tacx">
       <header class="cad-head">
         <div class="cad-title"><span class="cad-kicker">Caderno de Tática</span><h2>Escalação</h2></div>
-        <div class="cad-tools"><select class="sel" data-c="tForm" aria-label="Formação">${t.xy ? '<option selected>Personalizada</option>' : ''}${Object.keys(P.FORMATIONS).map((f) => `<option ${!t.xy && t.f === f ? 'selected' : ''}>${f}</option>`).join('')}</select>
+        <div class="cad-tools"><select class="sel" data-c="tForm" aria-label="Formação">${t.xy ? '<option selected>Própria</option>' : ''}${Object.keys(P.FORMATIONS).map((f) => `<option ${!t.xy && t.f === f ? 'selected' : ''}>${f}</option>`).join('')}</select>
           <button class="btn sm only-d" data-a="bestXI">Escalar os melhores</button></div>
         <div class="ticker" title="Força de cada setor. 100 = nível de um setor de elite; entrosamento, moral, funções e instruções podem levar além disso."><span class="tk-l">Força do time</span>${strip}</div>
         ${warn.length ? `<div class="cad-note">${warn.map(esc).join(' · ')}</div>` : ''}
@@ -274,7 +275,8 @@
                 <option value="" ${!want || !xiP.some((p) => p.id === want) ? 'selected' : ''}>Automático${auto ? ' (' + esc(auto.name) + ')' : ''}</option>
                 ${opts.map((p) => `<option value="${p.id}" ${want === p.id ? 'selected' : ''}>${lbl(p)}</option>`).join('')}</select></div>`;
             }).join('')}
-            <p class="cad-fine">O número é a habilidade na função; ★ = característica ideal. Se o escolhido sair do jogo, o melhor em campo assume. O capitão melhora um pouco o time, e um <b>Líder</b> melhora mais.${capP ? ` Capitão agora: <b>${esc(capP.name)}</b>.` : ''}</p>
+            <button class="btn sm ghost info-btn ${A.st.spInfo ? 'on' : ''}" data-a="spInfo" style="align-self:flex-start">ⓘ Como funciona</button>
+            <p class="cad-fine" ${A.st.spInfo ? '' : 'hidden'}>O número é a habilidade na função; ★ = característica ideal. Se o escolhido sair do jogo, o melhor em campo assume. O capitão melhora um pouco o time, e um <b>Líder</b> melhora mais.${capP ? ` Capitão agora: <b>${esc(capP.name)}</b>.` : ''}</p>
           </section>
         </div>
       </div></div>`;

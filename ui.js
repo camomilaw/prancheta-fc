@@ -141,7 +141,7 @@
         ${P.calendarView ? `<button class="btn icon-btn" data-a="go" data-v="calendario" aria-label="Calendário" title="Calendário"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>` : ''}
         ${g.over ? '<button class="btn primary" data-a="newSeason">Nova temporada</button>' : `<button class="btn primary" data-a="play">${hasGame ? 'Jogar' : 'Avançar'}</button>`}
       </header>
-      <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic, sub]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''} ${sub ? 'nav-sub' : ''} ${k === 'elenco' && (active === 'treino' || active === 'base') ? 'on-m' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span>${k === 'inicio' && P.unread && P.unread(g) ? `<i class="nav-dot" aria-label="${P.unread(g)} e-mails não lidos">${P.unread(g)}</i>` : ''}</button>`).join('')}</nav>
+      <nav class="nav" aria-label="Seções">${nav.map(([k, n, ic, sub]) => `<button data-a="go" data-v="${k}" class="${active === k ? 'on' : ''} ${sub ? 'nav-sub' : ''} ${k === 'elenco' && (active === 'treino' || active === 'base') ? 'on-m' : ''}" aria-current="${active === k ? 'page' : 'false'}">${ic}<span>${n}</span>${k === 'inicio' && P.unread && P.unread(g) ? `<i class="nav-dot" aria-label="${P.unread(g)} e-mails não lidos">${P.unread(g)}</i>` : ''}</button>`).join('')}<button class="nav-radio" data-a="rdOpen" aria-label="Rádio Prancheta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="8" width="18" height="12" rx="2"/><circle cx="15" cy="14" r="3"/><path d="M7 12h3M7 16h3M6 8l11-5"/></svg><span>Rádio</span></button></nav>
       <main class="main" id="view">${viewHTML}</main>
     </div>`;
     // faixas de abas com rolagem: mostra a aba ativa
@@ -161,9 +161,11 @@
         <h1>Prancheta FC</h1>
         <div class="jr-tag">Monte o time. Suba a pirâmide. Escreva a sua história.</div>
       </header>
-      ${P.orientPicker ? P.orientPicker() : ''}
+      <div class="cov-a">
       ${P.slotsCard ? P.slotsCard() : ''}
       ${P.teamImportPanel ? P.teamImportPanel() : ''}
+      </div><div class="cov-b">
+      ${P.orientPicker ? P.orientPicker() : ''}
       <section class="jr-classif" aria-labelledby="h-new">
         <div class="jr-classif-h"><h2 id="h-new">Procura-se técnico</h2><span>Classificados</span></div>
         <p>Clube da Ultraliga contrata. 160 clubes, 17 países, 8 divisões. Paga-se em glória. Três passos: o técnico, a diretoria e o clube.</p>
@@ -172,6 +174,7 @@
         ${s.importing ? importBox() : ''}
       </section>
       ${P.tourEntry ? P.tourEntry() : ''}
+      </div>
     </div>`;
   }
   // Passo 3 da nova carreira: escolher (ou criar) o clube e assinar
@@ -353,10 +356,10 @@
     const un = P.unread ? P.unread(g) : 0;
     const tab = A.st.homeTab || 'next', side = tab === 'tbl' ? 'next' : tab;
     const on = (k) => `${tab === k ? 'on' : ''} ${side === k ? 'son' : ''}`;
-    const TABS = [['next', 'A', g.over ? 'Temporada' : 'Próximo jogo'], ['mail', 'B', `E-mails${un ? ' (' + un + ')' : ''}`], ['clube', 'C', 'Clube'], ['news', 'D', 'Notícias'], ['tbl', 'E', 'Tabela']];
+    const TABS = [['next', 'A', g.over ? 'Temporada' : 'Próximo jogo'], ['mail', 'B', `E-mails<span class="land-only"> e notícias</span>${un ? ' (' + un + ')' : ''}`], ['clube', 'C', 'Clube'], ['news', 'D', 'Notícias'], ['tbl', 'E', 'Tabela']];
     return `<div class="front">
       <div class="fp-lead">${lead}</div>
-      <nav class="cad-tabs fp-tabs" aria-label="Seções da capa">${TABS.map(([k, l, n]) => `<button class="${on(k)} ${k === 'tbl' ? 'only-m' : ''}" data-a="homeTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
+      <nav class="cad-tabs fp-tabs" aria-label="Seções da capa">${TABS.map(([k, l, n]) => `<button class="${on(k)} ${k === 'tbl' ? 'only-m' : ''} ${k === 'news' ? 'hide-land' : ''}" data-a="homeTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
       <div class="fp fp-next ${on('next')}">${top}</div>
       <div class="fp fp-mail ${on('mail')}">${(P.inboxCard && P.inboxCard(g)) || '<p class="empty">Nenhum e-mail novo.</p>'}</div>
       <div class="fp fp-tbl ${on('tbl')}">${tbl}</div>
@@ -433,7 +436,7 @@
     return `<div class="tac2 el2">
       <header class="cad-head">
         <div class="cad-title"><span class="cad-kicker">Caderno de Elenco</span><h2>Elenco</h2></div>
-        <div class="cad-tools"><button class="btn sm" data-a="go" data-v="treino">Treino</button><button class="btn sm" data-a="go" data-v="base">Sub-20</button></div>
+        <div class="cad-tools hide-land"><button class="btn sm" data-a="go" data-v="treino">Treino</button><button class="btn sm" data-a="go" data-v="base">Sub-20</button></div>
         <div class="ticker"><span class="tk-l">Plantel</span>
           <span class="tq"><small>Jogadores</small><b>${total.length}</b></span>
           <span class="tq"><small>Idade</small><b>${avgAge}</b></span>
@@ -682,8 +685,8 @@
         <div class="others">${rd.map((m) => m.done ? ogRow(m, m.hg, m.ag, { click: true, label: 'Rodada ' + (st.rd + 1) }) : ogRow(m, '', '')).join('')}</div>
         <p class="muted" style="font-size:.85rem">${d === me.div ? 'Toque num jogo disputado para ver o relatório.' : 'Relatórios completos ficam guardados só para a sua divisão.'}</p>`;
     }
-    return `<div class="card"><div class="head"><h2>Ultraliga ${g.season}</h2>${tabs}</div>
-      <div class="filters" style="margin-bottom:12px">${divSel(d, 'tblDiv')}${d !== me.div ? `<button class="btn sm ghost" data-a="myDiv">Minha divisão</button>` : ''}</div>${body}</div>`;
+    return `<div class="card tbl-card"><div class="head"><h2>Ultraliga ${g.season}</h2>${tabs}</div>
+      <div class="filters tbl-div" style="margin-bottom:12px">${divSel(d, 'tblDiv')}${d !== me.div ? `<button class="btn sm ghost" data-a="myDiv">Minha divisão</button>` : ''}</div>${body}</div>`;
   }
   function playoffView(g, d) {
     if (d === 1) return '';
