@@ -195,20 +195,22 @@
       const fresh = L._gh !== lastGoal; L._gh = lastGoal;
       goalHead = `<div class="lv-goal ${mineG ? 'mine' : 'theirs'} ${fresh ? 'pop' : ''}" role="status"><span class="lv-goal-k">${lastGoal.x ? '90+' + lastGoal.x : lastGoal.m}' · ${mineG ? 'é do seu time' : 'do adversário'}</span><b>Gol do ${esc(gc.name)}!</b><small>${gp ? esc(gp.name) : ''}${how}</small></div>`;
     }
-    el.innerHTML = `<div class="md-in">
-      <div class="row md-top"><h2>${esc(P.stepLabel(L.step))}</h2>${controls}</div>
+    el.innerHTML = `<div class="md-in lv2 ${L.pause ? 'paused' : ''} ${done ? 'done' : ''}">
+      <div class="lv-head"><div class="row md-top"><h2>${esc(P.stepLabel(L.step))}</h2>${controls}</div>
       ${goalHead}
-      ${A.boardHTML(m, st.goals[0] - L.hide[0], st.goals[1] - L.hide[1], clock, { pos: poss })}
+      ${A.boardHTML(m, st.goals[0] - L.hide[0], st.goals[1] - L.hide[1], clock, { pos: poss })}</div>
+      <div class="lv-left">
       ${L.hl ? `<div class="hl-wrap"><div class="row" style="gap:8px"><span class="label" style="flex:1">Melhores momentos · ${L.hl.x ? '90+' + L.hl.x : L.hl.m}'</span><button class="btn sm" data-a="lvHlSkip">Pular lance</button></div><div id="hl-slot"></div></div>` : ''}
       ${verdict}
       ${L.shoot ? '<div id="pen-slot"></div>' : ''}
       ${done && !L.shoot && A.ratingsHTML ? A.ratingsHTML(m) : ''}
       ${L.pause ? pausePanel(L) : ''}
-      ${A.matchStatsHTML(A.statsFrom({ pos: poss, sh: st.shots, sot: st.sot, xg: st.xg, fo: st.fouls, co: st.corners }, st.ev))}
-      <ul class="feed" aria-live="polite">${evs.map((e) => A.evLine(e, m)).join('')}</ul>
-      ${L.others.length ? `<div class="label">${label}</div><div class="others">${others}</div>` : ''}
-      ${done && P.teamTalkPanel ? P.teamTalkPanel() : ''}
-      ${done ? '<div class="row"><button class="btn" data-a="lvClose" data-v="tabela">Ver tabela</button><span class="spacer"></span><button class="btn primary" data-a="lvClose" data-v="inicio">Continuar</button></div>' : ''}
+      </div>
+      <div class="lv-st">${A.matchStatsHTML(A.statsFrom({ pos: poss, sh: st.shots, sot: st.sot, xg: st.xg, fo: st.fouls, co: st.corners }, st.ev))}</div>
+      <div class="lv-mid"><div class="label lv-only-land">Lances</div><ul class="feed" aria-live="polite">${evs.map((e) => A.evLine(e, m)).join('') || '<li class="muted">Bola rolando…</li>'}</ul></div>
+      ${L.others.length ? `<div class="lv-oth"><div class="label">${label}</div><div class="others">${others}</div></div>` : ''}
+      ${done && P.teamTalkPanel ? `<div class="lv-talk">${P.teamTalkPanel()}</div>` : ''}
+      ${done ? '<div class="row lv-end"><button class="btn" data-a="lvClose" data-v="tabela">Ver tabela</button><span class="spacer"></span><button class="btn primary" data-a="lvClose" data-v="inicio">Continuar</button></div>' : ''}
     </div>`;
     // disputa de pênaltis: o desenho continua vivo mesmo se a tela for redesenhada
     if (L.shoot) {

@@ -1520,3 +1520,87 @@ html.phone-land .tr-grid .tr-pane, html.phone-land .st-grid .st-pane { display: 
 html.phone-land .st-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
 html.phone-land .front .fp { display: none; } html.phone-land .front .fp.son, html.phone-land .front .fp-tbl { display: flex; }
 html.phone-land .mk-fbox { display: block !important; }
+
+/* ---------- Partida ao vivo: celular deitado (e telas largas e baixas) em colunas ---------- */
+.lv2 .lv-left, .lv2 .lv-st, .lv2 .lv-mid, .lv2 .lv-oth, .lv2 .lv-head { display: contents; }
+.lv-only-land { display: none; }
+html.phone-land .lv2 { max-width: none; height: 100dvh; overflow: hidden; display: grid; gap: 8px 14px; padding: 6px max(12px, env(safe-area-inset-right, 0px)) 6px max(12px, env(safe-area-inset-left, 0px));
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, .9fr); grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "head head head" "left mid st" "left mid oth" "foot foot foot"; }
+html.phone-land .lv2:not(:has(.lv-left > *)) { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "head head" "mid st" "mid oth" "foot foot"; }
+html.phone-land .lv2 > div { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; }
+html.phone-land .lv2 .lv-head { grid-area: head; position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; }
+html.phone-land .lv2 .lv-left { grid-area: left; overflow-y: auto; }
+html.phone-land .lv2 .lv-mid { grid-area: mid; overflow-y: auto; }
+html.phone-land .lv2 .lv-st { grid-area: st; overflow-y: auto; }
+html.phone-land .lv2 .lv-oth { grid-area: oth; overflow-y: auto; max-height: 34dvh; }
+html.phone-land .lv2 .lv-talk, html.phone-land .lv2 .lv-end { grid-area: foot; }
+html.phone-land .lv2 .lv-talk { max-height: 30dvh; overflow-y: auto; }
+html.phone-land .lv-only-land { display: block; }
+/* cabeçalho: título e controles à esquerda, placar compacto numa linha */
+html.phone-land .lv2 .md-top { flex-wrap: nowrap; border: 0; padding: 0; gap: 8px; }
+html.phone-land .lv2 .md-top h2 { flex: 0 0 auto; font-size: 1rem; }
+html.phone-land .lv2 .board { flex-direction: row; align-items: center; gap: 14px; padding: 6px 14px; border-radius: 0; }
+html.phone-land .lv2 .board .sc { flex: 1; grid-template-columns: 1fr auto 1fr; gap: 10px; }
+html.phone-land .lv2 .board .sc .t { flex-direction: row; gap: 8px; }
+html.phone-land .lv2 .board .sc .t:last-child { flex-direction: row-reverse; }
+html.phone-land .lv2 .board .sc .t svg, html.phone-land .lv2 .board .sc .t .badge { width: 28px !important; height: 28px !important; }
+html.phone-land .lv2 .board .sc .t b { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.phone-land .lv2 .board .score { font-size: 1.9rem; }
+html.phone-land .lv2 .board .clock { font-size: .85rem; }
+html.phone-land .lv2 .board .possess { width: 170px; flex: 0 0 auto; }
+/* manchete do gol: aparece por cima do placar e some */
+html.phone-land .lv2 .lv-goal { position: absolute; inset: 0; z-index: 3; background: var(--bg); padding: 2px; flex-direction: row; gap: 14px; justify-content: center; animation: lv-goal-fade 2.6s forwards; pointer-events: none; }
+html.phone-land .lv2 .lv-goal b { font-size: 1.9rem; }
+@keyframes lv-goal-fade { 0%, 75% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+/* lances e estatísticas mais compactos */
+html.phone-land .lv2 .feed li { padding: 4px 2px; font-size: .82rem; }
+html.phone-land .lv2 .mstats { gap: 5px; padding: 6px 8px; font-size: .82rem; }
+html.phone-land .lv2 .others { grid-template-columns: 1fr; gap: 2px; }
+html.phone-land .lv2 .others .og { padding: 3px 6px; font-size: .8rem; }
+html.phone-land .lv2 .hl-wrap svg, html.phone-land .lv2 #hl-slot > * { max-height: calc(100dvh - 140px); width: 100%; }
+/* pausa: campo e banco lado a lado, botões fixos embaixo */
+html.phone-land .lv2.paused { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); grid-template-areas: "head head" "left st" "left oth" "foot foot"; }
+html.phone-land .lv2.paused .lv-mid { display: none; }
+html.phone-land .lv2 .pause-card { flex: 1; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto; gap: 6px; padding: 8px 10px; }
+html.phone-land .lv2 .pause-card .lv-board { min-height: 0; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+html.phone-land .lv2 .pause-card .pitch.lv { height: 100%; width: auto; max-width: none; aspect-ratio: 60 / 100; }
+html.phone-land .lv2 .pause-card .lv-hint { font-size: .78rem; margin: 0; }
+html.phone-land .lv2 .pause-card > .row:last-child { position: sticky; bottom: 0; background: var(--surface); padding-top: 4px; }
+html.phone-land .lv2 .pause-card .opt { display: flex; align-items: center; gap: 10px; }
+html.phone-land .lv2 .board .possess { display: none; }
+html.phone-land .lv2 .md-top .seg button { padding: 4px 8px; }
+html.phone-land .lv2 .md-top .btn { padding: 4px 10px; min-height: 32px; }
+/* pausa: o lance some, fica só o painel de substituição */
+html.phone-land .lv2.paused .hl-wrap { display: none; }
+/* fim de jogo: notas | lances | conversa, estatísticas | outros jogos, botões embaixo */
+html.phone-land .lv2.done { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) minmax(0, .8fr) auto;
+  grid-template-areas: "head head head" "left mid talk" "left st oth" "end end end"; }
+html.phone-land .lv2.done .lv-talk { grid-area: talk; max-height: none; overflow-y: auto; }
+html.phone-land .lv2.done .lv-oth { max-height: none; }
+html.phone-land .lv2 .lv-end { grid-area: end; flex-direction: row; justify-content: flex-end; gap: 10px; }
+html.phone-land .lv2 .pause-card { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+html.phone-land .lv2 .pause-card > .row:first-child { grid-row: 1; }
+html.phone-land .lv2 .pause-card .opt { grid-row: 2; }
+html.phone-land .lv2 .pause-card .opt .muted { font-size: .8rem; }
+html.phone-land .lv2 .pause-card .lv-board { grid-row: 3; grid-template-columns: calc((100dvh - 190px) * .6) minmax(0, 1fr); }
+html.phone-land .lv2 .pause-card .pitch.lv { width: 100%; height: auto; }
+html.phone-land .lv2 .pause-card .lv-hint { display: none; }
+html.phone-land .lv2 .pause-card .msg { grid-row: 4; padding: 4px 8px; font-size: .8rem; }
+html.phone-land .lv2 .pause-card > .row:last-child { grid-row: 5; }
+html.phone-land .lv2.paused { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); }
+html.phone-land .lv2.paused { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "left" "left" "foot"; }
+html.phone-land .lv2.paused .lv-st, html.phone-land .lv2.paused .lv-oth { display: none; }
+html.phone-land .lv2 .pause-card { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; column-gap: 14px; }
+html.phone-land .lv2 .pause-card > .row:first-child { grid-row: 1; grid-column: 2; }
+html.phone-land .lv2 .pause-card .opt { grid-row: 1; grid-column: 1; flex-direction: row; justify-content: flex-start; }
+html.phone-land .lv2 .pause-card .opt .muted { display: none; }
+html.phone-land .lv2 .pause-card .lv-board { display: contents; }
+html.phone-land .lv2 .pause-card .pitch.lv { grid-row: 2 / 4; grid-column: 1; height: 100%; width: auto; aspect-ratio: 60 / 100; justify-self: start; }
+html.phone-land .lv2 .pause-card .lv-bench { grid-row: 2; grid-column: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 4px 8px; height: auto; min-height: 0; overflow-y: auto; }
+html.phone-land .lv2 .pause-card .lv-bench .label { grid-column: 1 / -1; }
+html.phone-land .lv2 .pause-card .msg { grid-row: 3; grid-column: 2; }
+html.phone-land .lv2 .pause-card > .row:last-child { grid-row: 3; grid-column: 2; align-self: end; }
+html.phone-land .lv2 .pause-card .bn-item { padding: 4px 6px; }
+html.phone-land .lv2 .pause-card .pitch.lv { aspect-ratio: 80 / 100; }
+.lv2.paused .hl-wrap { display: none; }
