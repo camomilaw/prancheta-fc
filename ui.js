@@ -164,16 +164,16 @@
       <div class="cov-a">
       ${P.slotsCard ? P.slotsCard() : ''}
       ${P.teamImportPanel ? P.teamImportPanel() : ''}
+      ${P.tourEntry ? P.tourEntry() : ''}
       </div><div class="cov-b">
-      ${P.orientPicker ? P.orientPicker() : ''}
       <section class="jr-classif" aria-labelledby="h-new">
         <div class="jr-classif-h"><h2 id="h-new">Procura-se técnico</h2><span>Classificados</span></div>
         <p>Clube da Ultraliga contrata. 160 clubes, 17 países, 8 divisões. Paga-se em glória. Três passos: o técnico, a diretoria e o clube.</p>
         <div class="row"><button class="btn primary" data-a="ncOpen">Começar nova carreira →</button></div>
-        <div class="jr-small"><button class="jr-link" data-a="setupEdit">editar o banco de dados</button> · <button class="jr-link" data-a="setupImport">importar arquivo (time, patch, banco ou carreira)</button></div>
+
         ${s.importing ? importBox() : ''}
       </section>
-      ${P.tourEntry ? P.tourEntry() : ''}
+      <button class="jr-found pf-cta" data-a="prefsOpen"><span><b class="pf-t">⚙ Preferências</b><small>Tema, tela do celular, rádio e banco de dados</small></span><b>Abrir →</b></button>
       </div>
     </div>`;
   }
@@ -920,12 +920,12 @@
     const IDX = [['financas', 'Finanças', `Saldo ${P.money(me.bal)} · receitas, despesas, folha e contratos`], ['clube', 'Clube e estrutura', 'Estádio, ingresso, base, centro de treinamento'],
       ['stats', 'Estatísticas', 'Artilheiros, garçons, notas da temporada e da carreira'], ['tecnico', 'Treinador', 'Seu perfil, clubes, títulos e Hall da Fama'],
       ['editor', 'Editor', 'Nomes, cores, atributos, jogadores e patches']];
-    const TABS = [['idx', 'A', 'Índice'], ['radio', 'B', 'Rádio'], ['save', 'C', 'Salvar'], ['car', 'D', 'Carreira'], ['help', 'E', 'Como funciona']];
+    const TABS = [['idx', 'A', 'Índice'], ['radio', 'B', 'Preferências'], ['save', 'C', 'Salvar'], ['car', 'D', 'Carreira'], ['help', 'E', 'Como funciona']];
     return `<div class="tac2 mais2">
       <header class="cad-head"><div class="cad-title"><span class="cad-kicker">Expediente</span><h2>Mais</h2></div></header>
       <nav class="cad-tabs cad-tabs-all" aria-label="Seções">${TABS.map(([k, l, n]) => `<button class="${on(k)}" data-a="maisTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
-      <div class="mais-pane ${on('idx')}">${P.orientPicker ? P.orientPicker() : ''}<ol class="idx-list">${IDX.map(([v, n, d], i) => `<li><button data-a="go" data-v="${v}"><span class="idx-n">${i + 1}</span><span class="idx-t"><b>${n}</b><small>${esc(d)}</small></span><span class="idx-go">›</span></button></li>`).join('')}</ol></div>
-      <div class="mais-pane ${on('radio')}">${P.radioCard ? P.radioCard() : ''}</div>
+      <div class="mais-pane ${on('idx')}"><ol class="idx-list">${IDX.map(([v, n, d], i) => `<li><button data-a="go" data-v="${v}"><span class="idx-n">${i + 1}</span><span class="idx-t"><b>${n}</b><small>${esc(d)}</small></span><span class="idx-go">›</span></button></li>`).join('')}</ol></div>
+      <div class="mais-pane ${on('radio')}">${P.prefsBody ? P.prefsBody(true) : (P.radioCard ? P.radioCard() : '')}</div>
       <div class="mais-pane mais-grid ${on('save')}">${P.backupCard ? P.backupCard() : ''}
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Meu time em arquivo</h2></div>
         <div class="row"><button class="btn" data-a="teamDownload">Baixar meu time (arquivo)</button></div>

@@ -1844,3 +1844,43 @@ html, body { overflow-x: clip; overscroll-behavior-x: none; }
 .cad-tabs, .tabs-x, .tbl-wrap, .seg { overscroll-behavior-x: contain; }
 .main img, .main svg, .main table { max-width: 100%; }
 @supports not (overflow-x: clip) { html, body { overflow-x: hidden; } }
+
+/* Tema escolhido nas preferências (sobrepõe o do sistema) */
+:root[data-theme="dark"] {
+    --bg: #17140f; --surface: #17140f; --surface-2: #221e17; --hi: #33291c; --ink: #ece3cf; --ink-2: #cfc4ad; --muted: #a3967f;
+    --line: #4a4234; --line-2: #3a3329; --accent: #e0645a; --accent-ink: #17140f; --press: #ece3cf; --press-ink: #17140f;
+    --pitch: #36583a; --pitch-2: #315135; --pitch-line: rgba(236, 227, 207, .45);
+    --good: #7cb87f; --warn: #d9a441; --bad: #e0645a; --info: #7fa6dc;
+    --shadow: 0 1px 0 rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+:root[data-theme="dark"] { --nav-bg: #0b0907; --nav-ink: #ece3cf; --pitch: #34483a; --pitch-2: #304334; }
+
+/* Preferências */
+.prefs { display: flex; flex-direction: column; gap: 14px; }
+.prefs section { display: flex; flex-direction: column; gap: 8px; }
+.pf-h { margin: 0; font-family: var(--f-label); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.pf-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pf-note { margin: 0; font-size: .8rem; color: var(--muted); font-style: italic; }
+.prefs .rd-card { border: 0; padding: 0; background: none; }
+.prefs .rd-card .head h2 { font-size: 1rem; }
+.pf-cta { margin-top: 4px; }
+/* capa: torneio compacto */
+.cov-a .tour-cta small { display: block; }
+/* capa em pé: carreiras, nova carreira, torneio, preferências */
+.setup.jr:has(.cov-a) { display: flex; flex-direction: column; }
+html:not(.phone-land) .setup.jr .cov-a > .jr-sec:has(.tour-cta) { order: 3; }
+html:not(.phone-land) .setup.jr .cov-b > .jr-classif { order: 2; }
+html:not(.phone-land) .setup.jr .cov-b > .pf-cta { order: 4; }
+@media (min-width: 900px) {
+  html:not(.phone-land) .setup.jr:has(.cov-a) { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-areas: "mast mast" "a b"; gap: 10px 32px; align-items: start; }
+  html:not(.phone-land) .setup.jr > .jr-mast { grid-area: mast; }
+  html:not(.phone-land) .cov-a { grid-area: a; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  html:not(.phone-land) .cov-b { grid-area: b; display: flex; flex-direction: column; gap: 14px; min-width: 0; border-left: 1px solid var(--line); padding-left: 28px; }
+}
+@media (min-width: 900px) { html:not(.phone-land) .setup.jr:has(.cov-a) { max-width: 1100px; margin: 0 auto; } }
+.cov-a .tour-cta { flex-direction: column; align-items: flex-start; gap: 10px; }
+.cov-a .tour-cta b { font-size: 1.15rem; }
+.pf-cta span { display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.pf-cta .pf-t { font-style: normal; font-size: 1.05rem; }
+.pf-cta small { font-style: italic; font-size: .8rem; color: var(--muted); }
