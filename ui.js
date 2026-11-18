@@ -161,6 +161,7 @@
         <h1>Prancheta FC</h1>
         <div class="jr-tag">Monte o time. Suba a pirâmide. Escreva a sua história.</div>
       </header>
+      ${P.orientPicker ? P.orientPicker() : ''}
       ${P.slotsCard ? P.slotsCard() : ''}
       ${P.teamImportPanel ? P.teamImportPanel() : ''}
       <section class="jr-classif" aria-labelledby="h-new">
@@ -920,7 +921,7 @@
     return `<div class="tac2 mais2">
       <header class="cad-head"><div class="cad-title"><span class="cad-kicker">Expediente</span><h2>Mais</h2></div></header>
       <nav class="cad-tabs cad-tabs-all" aria-label="Seções">${TABS.map(([k, l, n]) => `<button class="${on(k)}" data-a="maisTab" data-k="${k}"><i>${l}</i>${n}</button>`).join('')}</nav>
-      <div class="mais-pane ${on('idx')}"><ol class="idx-list">${IDX.map(([v, n, d], i) => `<li><button data-a="go" data-v="${v}"><span class="idx-n">${i + 1}</span><span class="idx-t"><b>${n}</b><small>${esc(d)}</small></span><span class="idx-go">›</span></button></li>`).join('')}</ol></div>
+      <div class="mais-pane ${on('idx')}">${P.orientPicker ? P.orientPicker() : ''}<ol class="idx-list">${IDX.map(([v, n, d], i) => `<li><button data-a="go" data-v="${v}"><span class="idx-n">${i + 1}</span><span class="idx-t"><b>${n}</b><small>${esc(d)}</small></span><span class="idx-go">›</span></button></li>`).join('')}</ol></div>
       <div class="mais-pane ${on('radio')}">${P.radioCard ? P.radioCard() : ''}</div>
       <div class="mais-pane mais-grid ${on('save')}">${P.backupCard ? P.backupCard() : ''}
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Meu time em arquivo</h2></div>

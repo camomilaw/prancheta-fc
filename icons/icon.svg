@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1.6" fill="#f1e9d8" opacity=".06"/></pattern>
+    <clipPath id="board"><rect x="136" y="128" width="240" height="300" rx="14"/></clipPath>
+  </defs>
+  <rect width="512" height="512" fill="#16130f"/>
+  <rect width="512" height="512" fill="url(#dots)"/>
+  <!-- prancheta -->
+  <rect x="120" y="108" width="272" height="336" rx="26" fill="#f1e9d8"/>
+  <g clip-path="url(#board)">
+    <rect x="136" y="128" width="240" height="300" fill="#2c6b3f"/>
+    <rect x="136" y="128" width="240" height="60" fill="#2f7344"/>
+    <rect x="136" y="248" width="240" height="60" fill="#2f7344"/>
+    <rect x="136" y="368" width="240" height="60" fill="#2f7344"/>
+    <g stroke="#f1e9d8" stroke-width="7" fill="none" opacity=".92">
+      <line x1="136" y1="278" x2="376" y2="278"/>
+      <circle cx="256" cy="278" r="44"/>
+      <path d="M196 128 v46 h120 v-46"/>
+      <path d="M196 428 v-46 h120 v46"/>
+    </g>
+  </g>
+  <!-- prendedor -->
+  <rect x="196" y="84" width="120" height="48" rx="12" fill="#f1e9d8" stroke="#16130f" stroke-width="8"/>
+  <rect x="232" y="70" width="48" height="26" rx="9" fill="#f1e9d8" stroke="#16130f" stroke-width="8"/>
+  <!-- jogada: setas de giz e a bola -->
+  <g fill="none" stroke="#f1e9d8" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 13">
+    <path d="M190 372 C 196 330, 214 314, 244 300"/>
+  </g>
+  <path d="M322 214 l18 18 m0 -18 l-18 18" stroke="#f1e9d8" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="256" cy="278" r="22" fill="#a3261c" stroke="#f1e9d8" stroke-width="7"/>
+</svg>
