@@ -16,15 +16,72 @@
     const nx = !g.over && P.userMatch(g, g.cal[g.week]);
     const lm = P.lastUserMatch ? P.lastUserMatch(g) : null;
     let last = null;
-    if (lm) { const m = lm.m, home = m.h === g.user; last = { op: P.club(g, home ? m.a : m.h).name, gf: home ? m.hg : m.ag, ga: home ? m.ag : m.hg }; }
+    if (lm) { const m = lm.m, home = m.h === g.user; last = { op: P.club(g, home ? m.a : m.h).name, gf: home ? m.hg : m.ag, ga: home ? m.ag : m.hg, home, ko: !!lm.ko, pen: !!m.pen, won: m.w === g.user, derby: P.rivalry ? P.rivalry(g, m.h, m.a) : 0 }; }
     return {
+      form: (r.form || []).slice(-5).join(''), tgt: g.board ? g.board.target : null, down: P.RULES ? tb.length - P.RULES.down : null, upTo: P.RULES && c.div > 1 ? P.RULES.playoff[1] : null,
       pos: r.j ? i + 1 : 0, pts: r.pts || 0, v: r.v || 0, e: r.e || 0, d: r.d || 0, sg: (r.gp || 0) - (r.gc || 0), n: tb.length,
       stad: c.stadium || '', city: c.city || '', bal: c.bal, conf: g.board ? g.board.conf : null, obj: P.expectation ? P.expectation(g, g.user) : '',
       top: top && (top.s.g + top.s.cg) ? { n: top.name, g: top.s.g + top.s.cg } : null, star: star ? { n: star.name, o: P.ovr(star), p: star.pos } : null,
-      next: nx ? { op: P.club(g, nx.m.h === g.user ? nx.m.a : nx.m.h).name, home: nx.m.h === g.user, lbl: P.stepLabel(g.cal[g.week]) } : null, last,
+      next: nx ? { op: P.club(g, nx.m.h === g.user ? nx.m.a : nx.m.h).name, home: nx.m.h === g.user, lbl: P.stepLabel(g.cal[g.week]), derby: P.rivalry ? P.rivalry(g, nx.m.h, nx.m.a) : 0 } : null, last,
       tx: (() => { const t = (g.tx || []).find((x) => x.s === g.season && (x.to === g.user || x.from === g.user)); return t ? { n: t.name, in: t.to === g.user, op: (P.club(g, t.to === g.user ? t.from : t.to) || {}).name || '', fee: t.fee, loan: t.kind === 'loan' } : null; })(),
       badgeL: P.badge(c, 140)
     };
+  };
+
+  // Texto da matéria: narrativo, sem números de sistema (confiança, força)
+  P.frontStory = function (m, x) {
+    let seed = (m.season || 0) * 97 + (m.week || 0) * 13 + (m.club || '').length;
+    const pk = (arr) => arr[(seed++ * 7919) % arr.length];
+    const C = esc(m.club), T = esc(m.mgr), out = [];
+    const L = x.last, conf = x.conf;
+    // 1. o último jogo e o que ele significa para o cargo
+    if (L) {
+      const res = L.ko && L.pen ? (L.won ? 'v' : 'd') : L.gf > L.ga ? 'v' : L.gf < L.ga ? 'd' : 'e';
+      const big = Math.abs(L.gf - L.ga) >= 3, op = esc(L.op), sc = `${L.gf} a ${L.ga}`;
+      const where = L.home ? 'diante da sua torcida' : 'longe de casa';
+      if (res === 'v') out.push(L.derby >= 1 ? pk([`Que noite: o ${C} venceu o clássico contra o ${op} por ${sc} e a cidade amanheceu em festa.`, `Clássico é clássico, e este foi do ${C}: ${sc} no ${op}.`])
+        : big ? pk([`O ${C} não tomou conhecimento do ${op}: ${sc}, ${where}.`, `Atropelo. O ${C} passou por cima do ${op} com um ${sc} ${where}.`])
+        : L.pen ? `Com o coração na boca, o ${C} passou pelo ${op} nos pênaltis.` : pk([`O ${C} venceu o ${op} por ${sc}, ${where}.`, `Três pontos no bolso: ${sc} sobre o ${op}, ${where}.`]));
+      else if (res === 'e') out.push(pk([`O ${C} ficou no ${sc} com o ${op}, ${where}.`, `Empate com o ${op}: ${sc}, num jogo que deixou gosto de pouco.`]));
+      else out.push(L.derby >= 1 ? pk([`Doeu: o ${C} perdeu o clássico para o ${op}, ${sc}, e a semana promete ser longa.`, `O clássico ficou com o ${op} (${sc}), e a torcida do ${C} não esconde a irritação.`])
+        : big ? pk([`Noite para esquecer: o ${C} levou ${sc} do ${op}.`, `Vexame ${where}: ${sc} para o ${op}.`])
+        : L.pen ? `Nos pênaltis, o ${C} caiu diante do ${op}.` : pk([`O ${C} perdeu para o ${op} por ${sc}, ${where}.`, `Tropeço diante do ${op}: ${sc}.`]));
+      // cargo do técnico, em palavras
+      if (conf != null) {
+        const band = conf < 25 ? 'fogo' : conf < 45 ? 'pressao' : conf < 70 ? 'ok' : 'alta';
+        const t = {
+          fogo: { v: [`Um alívio para ${T}, que vinha com o cargo por um fio.`, `A vitória dá fôlego a ${T}: nos bastidores, a demissão chegou a ser discutida.`], e: [`O empate não muda muito para ${T}, que segue na corda bamba.`, `Para ${T}, que balança no cargo, o ponto ajuda pouco.`], d: [`Um passo mais perto da degola: a paciência da diretoria com ${T} está no fim.`, `Nos corredores do clube, já se fala em substituto para ${T}.`] },
+          pressao: { v: [`${T} respira um pouco e ganha tempo com a diretoria.`, `Resultado importante para ${T}, que andava pressionado.`], e: [`${T} segue sob pressão: a diretoria quer mais.`, `O ponto não acalma a cobrança sobre ${T}.`], d: [`A pressão sobre ${T} aumenta, e a diretoria já cobra reação.`, `Mais uma derrota e o nome de ${T} começa a ser questionado.`] },
+          ok: { v: [`O trabalho de ${T} ganha corpo.`, `A diretoria gosta do que vê no trabalho de ${T}.`], e: [`Nada que abale o trabalho de ${T}.`, ''], d: [`Nada de pânico: a diretoria segue confiando em ${T}, mas quer resposta.`, `Um tropeço que acende o sinal amarelo, sem tirar o crédito de ${T}.`] },
+          alta: { v: [`${T} vive lua de mel com a diretoria e com a torcida.`, `Prestígio em alta: ${T} é tratado como unanimidade no clube.`], e: [`Com o crédito que tem, ${T} nem sente o empate.`, ''], d: [`Prestigiado, ${T} tem crédito de sobra para corrigir a rota.`, `A derrota não arranha o prestígio de ${T}.`] }
+        }[band][res];
+        const line = pk(t); if (line) out.push(line);
+      }
+    } else out.push(pk([`A bola ainda não rolou para o ${C} em ${m.season}, mas a expectativa já toma conta da torcida.`, `Começa a temporada ${m.season}, e o ${C} chega cheio de perguntas e de esperança.`]));
+    // 2. tabela e meta, em palavras
+    if (x.pos) {
+      const f = x.form || '', wins = (f.match(/V/g) || []).length, losses = (f.match(/D/g) || []).length;
+      const pos = x.pos, n = x.n || 20;
+      const zone = pos === 1 ? 'lider' : x.upTo && pos <= x.upTo ? 'acesso' : x.down && pos > x.down ? 'z' : pos <= Math.ceil(n / 3) ? 'cima' : pos <= Math.ceil(n * 2 / 3) ? 'meio' : 'baixo';
+      out.push({
+        lider: pk([`Na ${m.div}ª divisão, o time olha todos de cima: é o líder.`, `A liderança é do ${C}, e ninguém no clube quer largar o osso.`]),
+        acesso: pk([`Na tabela, o ${C} está na briga pelo acesso, em ${pos}º.`, `O sonho de subir segue vivo: ${pos}º lugar.`]),
+        cima: pk([`O time ocupa a parte de cima da tabela, em ${pos}º.`, `Em ${pos}º, o ${C} anda entre os primeiros.`]),
+        meio: pk([`No meio da tabela, em ${pos}º, o time ainda procura uma identidade.`, `O ${C} é o ${pos}º: nem lá, nem cá.`]),
+        baixo: pk([`O ${C} está na parte de baixo da tabela, em ${pos}º, e o sinal de alerta já acendeu.`, `Em ${pos}º, o time precisa de reação para não se complicar.`]),
+        z: pk([`O ${C} está na zona de rebaixamento, em ${pos}º, e o fantasma da queda ronda o clube.`, `Em ${pos}º, dentro da zona da degola, cada jogo vale como uma final.`])
+      }[zone]);
+      if (wins >= 4) out.push(pk(['A fase é ótima: o time não para de vencer.', 'A sequência de vitórias empolga a torcida.']));
+      else if (losses >= 3) out.push(pk(['A má fase preocupa: as derrotas se acumulam.', 'A sequência ruim já pesa no ambiente.']));
+      if (x.tgt && x.obj) out.push(pos <= x.tgt ? pk([`Por ora, o time cumpre o que a diretoria pediu: ${esc(x.obj.toLowerCase())}.`, `A meta de ${esc(x.obj.toLowerCase())} está sendo cumprida.`]) : pk([`A diretoria pediu ${esc(x.obj.toLowerCase())}, e o time ainda está devendo.`, `Para cumprir a meta (${esc(x.obj.toLowerCase())}), é preciso subir na tabela.`]));
+    }
+    // 3. destaque, mercado e próximo jogo
+    if (x.top && x.top.g >= 2) out.push(pk([`Nos gols, quem decide é ${esc(x.top.n)}, já com ${x.top.g} na temporada.`, `${esc(x.top.n)} vive fase artilheira, com ${x.top.g} gols.`]));
+    else if (x.star) out.push(`${esc(x.star.n)} segue como a principal referência técnica do elenco.`);
+    if (x.tx) out.push(x.tx.in ? `No mercado, a novidade é ${esc(x.tx.n)}${x.tx.op ? `, que chegou do ${esc(x.tx.op)}` : ''}${x.tx.loan ? ' por empréstimo' : ''}.` : `No mercado, a torcida ainda digere a saída de ${esc(x.tx.n)} para o ${esc(x.tx.op)}.`);
+    if (x.next) out.push(x.next.derby >= 1 ? pk([`Agora vem o clássico contra o ${esc(x.next.op)}, ${x.next.home ? 'em casa' : 'fora'}, e a cidade já não fala de outra coisa.`, `Semana de clássico: o ${esc(x.next.op)} vem aí${x.next.home ? ', em casa' : ''}.`])
+      : pk([`O próximo desafio é ${x.next.home ? 'em casa, contra o' : 'fora, diante do'} ${esc(x.next.op)}${x.next.home && x.stad ? `, no ${esc(x.stad)}` : ''}.`, `Na sequência, o ${C} ${x.next.home ? 'recebe' : 'visita'} o ${esc(x.next.op)}.`]));
+    return out.join(' ');
   };
 
   P.frontMenu = function () {
@@ -47,14 +104,7 @@
     } else if (m) {
       const x = m.x || {};
       const box = (k, v) => (v || v === 0 ? `<div><span>${k}</span><b>${v}</b></div>` : '');
-      const body = [
-        x.last ? `No último compromisso, o ${esc(m.club)} ${x.last.gf > x.last.ga ? 'venceu' : x.last.gf < x.last.ga ? 'perdeu para' : 'empatou com'} o ${esc(x.last.op)} por ${x.last.gf} a ${x.last.ga}.` : `A temporada ${m.season} ainda não teve bola rolando para o ${esc(m.club)}.`,
-        x.pos ? `Na tabela da ${m.div}ª divisão, o time é o ${x.pos}º colocado entre ${x.n}, com ${x.pts} pontos (${x.v} ${x.v === 1 ? 'vitória' : 'vitórias'}, ${x.e} ${x.e === 1 ? 'empate' : 'empates'} e ${x.d} ${x.d === 1 ? 'derrota' : 'derrotas'}) e saldo de ${x.sg > 0 ? '+' : ''}${x.sg}.` : '',
-        x.obj ? `A diretoria espera ${esc(x.obj.toLowerCase())}${x.conf != null ? ` e, por ora, dá nota ${x.conf} de 100 à confiança no técnico ${esc(m.mgr)}` : ''}.` : '',
-        x.top ? `${esc(x.top.n)} é o artilheiro do elenco, com ${x.top.g} ${x.top.g === 1 ? 'gol' : 'gols'}.` : x.star ? `${esc(x.star.n)} (${x.star.p}, força ${x.star.o}) é a principal referência do elenco.` : '',
-        x.tx ? (x.tx.in ? `No mercado, o clube trouxe ${esc(x.tx.n)}${x.tx.op ? ` do ${esc(x.tx.op)}` : ''}${x.tx.loan ? ' por empréstimo' : x.tx.fee ? ` por ${P.money(x.tx.fee)}` : ''}.` : `No mercado, ${esc(x.tx.n)} deixou o clube rumo ao ${esc(x.tx.op)}${x.tx.loan ? ' por empréstimo' : x.tx.fee ? ` por ${P.money(x.tx.fee)}` : ''}.`) : '',
-        x.next ? `O próximo desafio é ${x.next.home ? 'em casa, contra' : 'fora, diante d'}o ${esc(x.next.op)}, pela ${esc(x.next.lbl)}${x.next.home && x.stad ? `, no ${esc(x.stad)}` : ''}.` : ''
-      ].filter(Boolean).join(' ');
+      const body = P.frontStory(m, x);
       right = `<article class="fm-news fm-big">
         <div class="fm-kick">${m.div}ª divisão · Temporada ${m.season}${m.over ? ' · fim de temporada' : ''} · Espaço ${last}</div>
         <h2 class="fm-head">${esc(m.head || `${m.club}, de ${m.mgr}`)}</h2>
