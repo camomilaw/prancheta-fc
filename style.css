@@ -1512,3 +1512,11 @@ html.phone-land .tacx { grid-template-columns: calc((100dvh - 122px) * .68) minm
 html.phone-land .tacx .pane-campo { width: 100%; }
 html.phone-land .tacx .pane-campo .pitch { width: 100% !important; height: auto; }
 html.phone-land .tacx .pane-campo .btn { white-space: nowrap; }
+/* deitado: sempre o layout de PC, mesmo se a largura medida ficar abaixo de 900 (zoom/fonte do celular) */
+html.phone-land .only-d { display: revert !important; }
+html.phone-land .tbl-wrap.only-d { display: block !important; }
+html.phone-land .tr-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+html.phone-land .tr-grid .tr-pane, html.phone-land .st-grid .st-pane { display: block !important; }
+html.phone-land .st-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+html.phone-land .front .fp { display: none; } html.phone-land .front .fp.son, html.phone-land .front .fp-tbl { display: flex; }
+html.phone-land .mk-fbox { display: block !important; }
