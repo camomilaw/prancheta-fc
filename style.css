@@ -1926,3 +1926,37 @@ html.phone-land .setup.jr:has(.fm) > .jr-mast h1 { font-size: 2.2rem; }
 html.phone-land .setup.jr:has(.fm) { gap: 10px; }
 .fm-slots { display: flex; flex-direction: column; gap: 10px; }
 .fm-slots .jr-sec > .jr-h { display: none; }
+
+/* ---------- Capa no PC: menu centralizado e matéria de jornalzão ---------- */
+@media (min-width: 900px) {
+  html:not(.phone-land) .setup.jr:has(.fm) { min-height: 100vh; max-width: 1240px; }
+  html:not(.phone-land) .fm { flex: 1; grid-template-columns: minmax(260px, .7fr) minmax(0, 1.6fr); align-items: center; gap: 0 40px; padding-bottom: 24px; }
+  html:not(.phone-land) .fm-menu { align-self: center; }
+  html:not(.phone-land) .fm-right { align-self: stretch; display: flex; flex-direction: column; justify-content: center; padding-left: 40px; }
+  html:not(.phone-land) .fm-item { padding: 16px 8px; }
+  html:not(.phone-land) .fm-n { font-size: 2.1rem; }
+  html:not(.phone-land) .fm-t b { font-size: 1.12rem; }
+}
+.fm-big .fm-head { font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -.01em; }
+.fm-sub { margin: 0; font-family: var(--f-display); font-style: italic; font-size: 1.15rem; line-height: 1.35; color: var(--ink-2); }
+.fm-grid { display: grid; grid-template-columns: 170px minmax(0, 1fr) 200px; gap: 18px; align-items: start; margin-top: 6px; }
+.fm-photo { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 1px solid var(--line); background: var(--surface-2); }
+.fm-photo svg { width: 130px; height: 130px; }
+.fm-photo figcaption { font-size: .74rem; font-style: italic; color: var(--muted); text-align: center; }
+.fm-big .fm-text .fm-dek { column-count: 2; column-gap: 20px; column-rule: 1px solid var(--line); font-size: .98rem; text-align: justify; hyphens: auto; }
+.fm-box { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 8px 0; display: flex; flex-direction: column; gap: 4px; }
+.fm-box h4 { margin: 0 0 4px; font-family: var(--f-label); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.fm-box > div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted var(--line); padding: 3px 0; font-size: .88rem; }
+.fm-box > div span { color: var(--muted); }
+.fm-box > div b { font-family: var(--f-num); }
+.fm-box .fm-next { flex-direction: column; border-bottom: 0; }
+.fm-box .fm-next b { font-family: var(--f-display); }
+/* celular deitado: matéria mais enxuta */
+html.phone-land .fm-grid { grid-template-columns: 90px minmax(0, 1fr); }
+html.phone-land .fm-box, html.phone-land .fm-sub { display: none; }
+html.phone-land .fm-photo { padding: 6px; }
+html.phone-land .fm-photo svg { width: 70px; height: 70px; }
+html.phone-land .fm-photo figcaption { display: none; }
+html.phone-land .fm-big .fm-text .fm-dek { column-count: 1; font-size: .86rem; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+html.phone-land .fm-big .fm-head { font-size: 1.5rem; }
+html.phone-land .fm-big .fm-text .fm-dek { -webkit-line-clamp: 4; }
