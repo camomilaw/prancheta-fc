@@ -8,17 +8,19 @@
   const esc = P.esc;
   const COLUNISTAS = [
     {
-      nome: 'Otávio Bandeira', apelido: 'o engenheiro de obra pronta',
+      nome: 'Maurício Soraivo', apelido: 'o engenheiro de obra pronta',
       vitoria: ['Eu avisei na terça: {placar} era o placar mais óbvio do mundo. Só não escrevi porque ninguém pediu.', 'Vitória sobre o {adv}? Previsível. Desde a pré-temporada eu sabia que {tecnico} ia acertar a escalação justamente nesse jogo.'],
       empate: ['Empate. Exatamente como eu imaginei, mas preferi não dizer para não secar.', 'Qualquer um via que esse jogo ia terminar {placar}. Qualquer um que entendesse de futebol, claro.'],
       derrota: ['Estava na cara. Era só olhar o aquecimento: ali eu já sabia que o {adv} ia ganhar.', 'Eu teria mexido no time aos 12 do primeiro tempo. Agora é fácil falar, mas eu teria.'],
       semjogo: ['Ainda não começou, mas já sei como vai terminar. Conto depois.']
     },
     {
-      nome: 'Juvenal Abreu', apelido: 'o filósofo da arquibancada',
-      vitoria: ['O futebol é como a lasanha: as camadas importam, mas o queijo é o que gruda. O {clube} grudou.', 'Ganhar do {adv} é como achar o controle remoto no sofá: ninguém sabe como, mas todos celebram.'],
+      nome: 'Pazinha', apelido: 'o filósofo da arquibancada',
+      // "todas" vale para qualquer resultado
+      todas: ['O futebol é como a lasanha: as camadas importam, mas é o queijo que gruda.', 'O {clube} não tem esse jogador.', 'Restaurante que vende farofa não tem ventilador de teto.', 'É aquilo, depois das 4 da manhã, se for mulher é melhor.'],
+      vitoria: ['Ganhar do {adv} é como achar o controle remoto no sofá: ninguém sabe como, mas todos celebram.'],
       empate: ['O empate é o pão de forma do futebol: alimenta, mas ninguém tira foto.', '{placar}. Às vezes a bola não entra porque ela também tem seus dias, e quem somos nós para julgar a bola?'],
-      derrota: ['Perder é como o vento: não se vê, mas despenteia. Hoje o {clube} saiu despenteado.', 'O {adv} venceu, mas a vitória verdadeira é a amizade. Ou o saldo de gols. Uma das duas.'],
+      derrota: ['O {clube} vem numa fase tão ruim que se comprar um circo, o anão cresce.', 'Perder é como o vento: não se vê, mas despenteia. Hoje o {clube} saiu despenteado.'],
       semjogo: ['Toda temporada começa com um apito. E todo apito começa com um sopro. Pensem nisso.']
     },
     {
@@ -52,7 +54,7 @@
     const kind = !L ? 'semjogo' : (L.ko && L.pen ? (L.won ? 'vitoria' : 'derrota') : L.gf > L.ga ? 'vitoria' : L.gf < L.ga ? 'derrota' : 'empate');
     const seed = (ctx.season || 0) * 53 + (ctx.week || 0) * 11;
     const c = COLUNISTAS[seed % COLUNISTAS.length];
-    const lines = c[kind] || c.semjogo;
+    const lines = (c[kind] || c.semjogo || []).concat(c.todas || []);
     const v = {
       clube: ctx.club, tecnico: ctx.mgr, adv: L ? L.op : 'adversário', placar: L ? `${L.gf} a ${L.ga}` : '0 a 0',
       proximo: x.next ? x.next.op : 'próximo adversário', craque: (x.top && x.top.n) || (x.star && x.star.n) || 'o camisa 10', pos: x.pos ? x.pos + 'º' : 'mesmo'
