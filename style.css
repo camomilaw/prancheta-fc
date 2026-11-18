@@ -1437,3 +1437,69 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
   .jr-lead .jr-head { font-size: 1.6rem; }
 }
 @media (min-width: 900px) { .nav .nav-dot { position: static; margin-left: 6px; } }
+
+/* =========================================================================
+   Celular deitado: layout de app (estilo "painel"), tela inteira sem rolar a página.
+   Faixa de ícones à esquerda, barra fina em cima, conteúdo rola dentro do painel.
+   ========================================================================= */
+html.phone-land, html.phone-land body { height: 100%; overflow: hidden; }
+html.phone-land .app { display: grid; grid-template-columns: calc(64px + env(safe-area-inset-left, 0px)) 1fr; grid-template-rows: 50px 1fr; height: 100dvh; min-height: 0; }
+html.phone-land .top { grid-column: 1 / -1; position: static; height: 50px; padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px)); gap: 10px; }
+html.phone-land .top .who h1 { font-size: 1.05rem; }
+html.phone-land .top .who .meta { font-size: .68rem; -webkit-line-clamp: 1; }
+html.phone-land .top .btn.primary { min-height: 40px; padding: 0 22px; font-size: 1rem; background: var(--accent); color: #fff; border-color: var(--accent); }
+html.phone-land .nav { position: static; top: auto; height: auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 6px 6px 6px max(6px, env(safe-area-inset-left, 0px)); border-right: 1px solid var(--line); border-top: 0; }
+html.phone-land .nav button { height: 50px; min-height: 50px; padding: 0; flex-direction: column; justify-content: center; align-items: center; gap: 2px; border-radius: 6px; font-size: .52rem; }
+html.phone-land .nav button svg { width: 24px; height: 24px; }
+html.phone-land .nav button span { display: block; letter-spacing: .04em; }
+html.phone-land .nav .nav-sub { display: flex; height: 40px; min-height: 40px; padding: 0; }
+html.phone-land .nav .nav-sub svg { width: 18px; height: 18px; }
+html.phone-land .nav button.on::before { left: 0; right: auto; top: 8px; bottom: 8px; width: 3px; height: auto; }
+html.phone-land .nav .nav-dot { position: absolute; top: 3px; left: calc(50% + 6px); margin: 0; }
+html.phone-land .main { min-height: 0; height: 100%; overflow-y: auto; padding: 10px max(14px, env(safe-area-inset-right, 0px)) 16px 14px; max-width: none; gap: 10px; -webkit-overflow-scrolling: touch; }
+/* cabeçalhos de caderno numa linha só */
+html.phone-land .cad-head { grid-template-columns: auto 1fr auto; padding-bottom: 6px; gap: 4px 10px; }
+html.phone-land .cad-kicker { display: none; }
+html.phone-land .cad-title h2 { font-size: 1.15rem; }
+html.phone-land .ticker { grid-column: 2; grid-row: 1; max-width: 460px; justify-self: center; width: 100%; }
+html.phone-land .ticker .tk-l { font-size: .58rem; padding: 0 6px; }
+html.phone-land .ticker .tq { padding: 1px 2px; }
+html.phone-land .ticker .tq b { font-size: .82rem; }
+html.phone-land .cad-note, html.phone-land .cad-head > .cad-fine { grid-column: 1 / -1; }
+html.phone-land .cad-tabs button { padding: 6px 10px 5px; font-size: .72rem; }
+html.phone-land .only-m { display: none !important; }
+html.phone-land .only-d { display: initial; }
+/* sticky dentro do painel */
+html.phone-land .mk-fbox, html.phone-land .fp-tbl { top: 0; max-height: calc(100dvh - 76px); }
+/* Tática: campo ocupa a altura toda à esquerda; abas e seções à direita, rolando sozinhas */
+html.phone-land .main:has(.tacx) { overflow: hidden; padding-bottom: 8px; }
+html.phone-land .tacx { height: 100%; min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); grid-template-areas: "pitch head" "pitch tabs" "pitch side"; gap: 0 18px; }
+html.phone-land .tacx > .cad-head { grid-area: head; grid-template-columns: auto 1fr; border-bottom: 1px solid var(--ink); }
+html.phone-land .tacx > .cad-head .ticker { grid-column: 1 / -1; grid-row: 2; max-width: none; }
+html.phone-land .tacx .cad-title { display: none; }
+html.phone-land .tacx .cad-tools { grid-column: 1 / -1; justify-content: flex-start; }
+html.phone-land .tacx > .cad-body { display: contents; }
+html.phone-land .tacx .cad-body > .cad-tabs { grid-area: tabs; }
+html.phone-land .tacx .pane-campo { grid-area: pitch; position: static; display: flex !important; height: 100%; width: auto; min-height: 0; gap: 6px; align-items: center; }
+html.phone-land .tacx .pane-campo .pitch { height: calc(100% - 44px); width: auto !important; aspect-ratio: 68 / 100; min-width: 0; max-width: none; }
+html.phone-land .tacx .pane-campo .cad-fine { display: none; }
+html.phone-land .tacx .cad-side { grid-area: side; display: block; min-height: 0; overflow-y: auto; padding: 8px 2px 8px 0; }
+html.phone-land .tacx .cad-side .cad-pane { display: none; }
+html.phone-land .tacx .cad-side .cad-pane.son { display: flex; }
+html.phone-land .tacx .cad-tabs .only-m { display: none !important; }
+html.phone-land .tacx .cad-tabs button.son { color: var(--ink); border-bottom-color: var(--accent); }
+html.phone-land .tacx .cad-tabs button.on:not(.son) { color: var(--muted); border-bottom-color: transparent; }
+/* capa (Início) e listas: mesmas regras do PC, mais compactas */
+html.phone-land .jr-lead .jr-head { font-size: 1.5rem; }
+html.phone-land .jr-lead .jr-dek { font-size: .9rem; }
+html.phone-land .sheet { max-height: 92dvh; }
+html.phone-land .rd-pill { bottom: 12px; right: 12px; width: 44px; height: 44px; }
+html.phone-land .nav { gap: 0; padding-top: 4px; padding-bottom: 4px; }
+html.phone-land .nav button { height: 42px; min-height: 42px; }
+html.phone-land .nav button svg { width: 21px; height: 21px; }
+html.phone-land .nav .nav-sub { height: 32px; min-height: 32px; }
+html.phone-land .nav .nav-sub span { font-size: .48rem; }
+html.phone-land .tacx .slot .dot { width: 30px; height: 30px; font-size: .82rem; }
+html.phone-land .tacx .slot .dot::after { bottom: -5px; }
+html.phone-land .tacx .slot .nm { font-size: .58rem; margin-top: 4px; }
+html.phone-land .tacx .slot .ps { font-size: .5rem; }

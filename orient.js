@@ -8,7 +8,7 @@
   const A = P.app;
   const KEY = 'prancheta-fc:orient';
   const DEF_VP = 'width=device-width, initial-scale=1, viewport-fit=cover';
-  const LAND_W = 1000; // largura "de PC" usada quando o celular está deitado
+  const LAND_MIN = 900; // abaixo disso a página é levemente afastada para caber o layout de PC
   let pref = P.store.get(KEY) || 'auto';
 
   const isPhone = () => {
@@ -19,7 +19,8 @@
   function applyViewport() {
     const meta = document.querySelector('meta[name=viewport]'); if (!meta) return;
     const land = isPhone() && landscape();
-    const want = land ? `width=${LAND_W}, viewport-fit=cover` : DEF_VP;
+    const longSide = Math.max(screen.width, screen.height);
+    const want = land ? (longSide >= LAND_MIN ? DEF_VP : `width=${LAND_MIN}, viewport-fit=cover`) : DEF_VP;
     if (meta.getAttribute('content') !== want) meta.setAttribute('content', want);
     document.documentElement.classList.toggle('phone-land', land);
     document.documentElement.classList.toggle('is-phone', isPhone());
@@ -28,6 +29,14 @@
   addEventListener('orientationchange', () => setTimeout(applyViewport, 60));
   try { screen.orientation.addEventListener('change', () => setTimeout(applyViewport, 60)); } catch (e) { /* navegador antigo */ }
   applyViewport();
+  // deitado: a página não rola; quem rola é o painel do conteúdo. Volta ao topo ao trocar de tela.
+  let lastView = null;
+  const origRender = A.render;
+  A.render = function () {
+    const r = origRender.apply(this, arguments);
+    if (A.view !== lastView) { lastView = A.view; const m = document.querySelector('.main'); if (m) m.scrollTop = 0; }
+    return r;
+  };
 
   // Travar a rotação: no navegador só funciona em tela cheia e logo depois de um toque
   async function lock(kind) {

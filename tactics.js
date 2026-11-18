@@ -229,7 +229,7 @@
               <span class="nm">${esc(name)}</span><span class="ps">${sl.pos}</span></button>`;
           }).join('')}
         </div>`;
-    return `<div class="tac2">
+    return `<div class="tac2 tacx">
       <header class="cad-head">
         <div class="cad-title"><span class="cad-kicker">Caderno de Tática</span><h2>Escalação</h2></div>
         <div class="cad-tools"><select class="sel" data-c="tForm" aria-label="Formação">${t.xy ? '<option selected>Personalizada</option>' : ''}${Object.keys(P.FORMATIONS).map((f) => `<option ${!t.xy && t.f === f ? 'selected' : ''}>${f}</option>`).join('')}</select>
