@@ -19,8 +19,9 @@
   function applyViewport() {
     const meta = document.querySelector('meta[name=viewport]'); if (!meta) return;
     const land = isPhone() && landscape();
-    const longSide = Math.max(screen.width, screen.height);
-    const want = land ? (longSide >= LAND_MIN ? DEF_VP : `width=${LAND_MIN}, viewport-fit=cover`) : DEF_VP;
+    // deitado: se a largura real (já com zoom/tamanho de fonte do celular) ficar abaixo de 900, fixa 900
+    const cur = meta.getAttribute('content');
+    const want = !land ? DEF_VP : cur !== DEF_VP ? cur : (innerWidth >= LAND_MIN ? DEF_VP : `width=${LAND_MIN}, viewport-fit=cover`);
     if (meta.getAttribute('content') !== want) meta.setAttribute('content', want);
     document.documentElement.classList.toggle('phone-land', land);
     document.documentElement.classList.toggle('is-phone', isPhone());

@@ -1504,3 +1504,11 @@ html.phone-land .tacx .slot .dot { width: 30px; height: 30px; font-size: .82rem;
 html.phone-land .tacx .slot .dot::after { bottom: -5px; }
 html.phone-land .tacx .slot .nm { font-size: .58rem; margin-top: 4px; }
 html.phone-land .tacx .slot .ps { font-size: .5rem; }
+
+/* deitado: o painel ocupa a largura toda (sem centralizar pela largura do conteúdo) */
+html.phone-land .main { margin: 0; width: auto; min-width: 0; }
+/* Tática deitada: coluna do campo com largura fixa, calculada pela altura (não muda ao trocar de aba) */
+html.phone-land .tacx { grid-template-columns: calc((100dvh - 122px) * .68) minmax(0, 1fr); }
+html.phone-land .tacx .pane-campo { width: 100%; }
+html.phone-land .tacx .pane-campo .pitch { width: 100% !important; height: auto; }
+html.phone-land .tacx .pane-campo .btn { white-space: nowrap; }
