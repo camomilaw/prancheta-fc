@@ -2016,23 +2016,23 @@ html.phone-land .fm-right { align-self: center; }
 .nc1-right > .field { order: 1; margin-top: 0 !important; }
 .nc1-right > .jr-step { order: 0; }
 @media (min-width: 900px) {
-  html:not(.phone-land) .setup.jr:has(.nc1) { max-width: 1100px; }
+  html:not(.phone-land) .setup.jr.nc { max-width: 1100px; }
   html:not(.phone-land) .nc1-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.3fr); gap: 28px; }
   html:not(.phone-land) .nc1-right { border-left: 1px solid var(--line); padding-left: 28px; }
   html:not(.phone-land) .nc1-right .coach-pick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-html.phone-land .setup.jr:has(.nc1) { max-width: none; }
+html.phone-land .setup.jr.nc { max-width: none; }
 html.phone-land .nc1-grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr); gap: 20px; }
 html.phone-land .nc1-right { border-left: 1px solid var(--line); padding-left: 20px; }
 html.phone-land .nc1-right .coach-pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 html.phone-land .nc1-right .coach-st { padding: 6px 8px; }
 html.phone-land .nc1 .jr-classif-h h2 { font-size: 1.3rem; }
-html.phone-land .setup.jr:has(.nc1) .jr-mast h1 { font-size: 1.8rem; }
+html.phone-land .setup.jr.nc .jr-mast h1 { font-size: 1.8rem; }
 .nc1 .seg { flex-wrap: nowrap; }
 .nc1-row .seg button { white-space: nowrap; }
-html.phone-land .setup.jr:has(.nc1) { gap: 8px; padding-top: 6px; }
-html.phone-land .setup.jr:has(.nc1) .jr-mast .jr-mast-top { font-size: .6rem; }
-html.phone-land .setup.jr:has(.nc1) .jr-mast h1 { font-size: 1.4rem; margin: 0; }
+html.phone-land .setup.jr.nc { gap: 8px; padding-top: 6px; }
+html.phone-land .setup.jr.nc .jr-mast .jr-mast-top { font-size: .6rem; }
+html.phone-land .setup.jr.nc .jr-mast h1 { font-size: 1.4rem; margin: 0; }
 html.phone-land .nc1 { padding: 8px 12px; gap: 6px; }
 html.phone-land .nc1 .jr-classif-h { display: none; }
 html.phone-land .nc1 .jr-step { font-size: .66rem; }
@@ -2046,7 +2046,7 @@ html.phone-land .nc1-right .coach-pick { grid-template-columns: repeat(3, minmax
 html.phone-land .nc1-right .coach-st { padding: 4px 6px; }
 html.phone-land .nc1-right .coach-st b { font-size: .82rem; }
 html.phone-land .nc1-right .coach-st small { font-size: .64rem; line-height: 1.2; }
-html.phone-land .setup.jr:has(.nc1) > .row:last-child { margin-top: 0; }
+html.phone-land .setup.jr.nc > .row:last-child { margin-top: 0; }
 @media (max-width: 899px) {
   html:not(.phone-land) .nc1-right .coach-pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
   html:not(.phone-land) .nc1-right .coach-st { padding: 8px; }
@@ -2062,3 +2062,29 @@ html.phone-land .nc1-row .seg button, html.phone-land .nc1-row .sel { min-height
 html.phone-land .nc1-row .seg button { font-size: .78rem; }
 .nc1-row .sel { height: 41px; min-height: 0; }
 html.phone-land .nc1-row .sel { height: 33px; }
+
+/* Nova carreira: os três passos com o mesmo cabeçalho e a mesma largura */
+@media (min-width: 900px) { html:not(.phone-land) .setup.jr.nc { max-width: 1100px; } }
+.setup.jr.nc .jr-mast h1 { font-size: clamp(2.2rem, 9vw, 3rem); }
+@media (min-width: 900px) { html:not(.phone-land) .setup.jr.nc { gap: 16px; } }
+
+.jr-founds { display: flex; flex-direction: column; gap: 8px; }
+/* Passo 3 em tela larga (PC e celular deitado): atalhos lado a lado, clubes em colunas, assinatura numa faixa só */
+@media (min-width: 900px) {
+  .setup.jr.nc-s3 .jr-founds { flex-direction: row; gap: 24px; }
+  .setup.jr.nc-s3 .jr-founds .jr-found { flex: 1 1 0; min-width: 0; }
+  .setup.jr.nc-s3 .jr-clubs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 22px; }
+  .setup.jr.nc-s3 .jr-sign-bar { flex-direction: row; justify-content: center; gap: 22px; padding-top: 22px; }
+  .setup.jr.nc-s3 .jr-sigline { margin-bottom: 0; font-size: 2rem; min-width: 160px; max-width: 30%; }
+  .setup.jr.nc-s3 .jr-stamp { min-height: 46px; font-size: 1rem; }
+  .setup.jr.nc-s3 .jr-sign-bar .jr-note { max-width: 24ch; }
+}
+html.phone-land .setup.jr.nc-s3 .jr-founds .jr-found { min-height: 36px; }
+html.phone-land .setup.jr.nc-s3 .jr-found span { font-size: .92rem; }
+html.phone-land .setup.jr.nc-s3 .jr-clubs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html.phone-land .setup.jr.nc-s3 .jr-club { min-height: 0; padding-top: 4px; padding-bottom: 4px; }
+html.phone-land .setup.jr.nc-s3 .jr-sign-bar { padding: 10px 0 calc(4px + env(safe-area-inset-bottom, 0px)); gap: 16px; }
+html.phone-land .setup.jr.nc-s3 .jr-sigline { font-size: 1.5rem; }
+html.phone-land .setup.jr.nc-s3 .jr-stamp { min-height: 36px; font-size: .85rem; padding: 0 16px; }
+html.phone-land .setup.jr.nc-s3 .jr-h { padding-bottom: 2px; }
+html.phone-land .setup.jr.nc-s3 .jr-search { padding-top: 4px; padding-bottom: 4px; }

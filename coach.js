@@ -84,7 +84,7 @@
     if (step === 2) body = `<section class="jr-classif"><div class="jr-classif-h"><h2>Condições do contrato</h2><span>Classificados</span></div>
         ${P.setupExtra ? P.setupExtra() : ''}${P.slotPick ? P.slotPick() : ''}</section>`;
     if (step === 3) body = A.clubPickSection ? A.clubPickSection() : '';
-    return `<div class="setup jr">
+    return `<div class="setup jr nc nc-s${step}">
       <div class="row"><button class="btn" data-a="ncBack">‹ ${step === 1 ? 'Capa' : 'Voltar'}</button><span class="spacer"></span><span class="nc-steps">${dots}</span></div>
       <header class="jr-mast"><div class="jr-mast-top"><span>Classificados</span><span>Passo ${step} de 3</span><span>Procura-se técnico</span></div>
         <h1>${['', 'O técnico', 'A diretoria', 'O clube'][step]}</h1></header>
