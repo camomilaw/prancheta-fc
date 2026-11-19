@@ -2207,3 +2207,8 @@ html.phone-land .ed-setup { gap: 8px; padding-top: 6px; }
 html.phone-land .ed-top .btn { min-height: 32px; }
 html.phone-land .ed-tt h2 { font-size: 1.3rem; }
 html.phone-land .coach-st.clash b::after { content: " ✕"; }
+
+/* Aviso para virar o celular (padrão: deitado) */
+#or-hint { position: fixed; left: 12px; right: 12px; bottom: calc(var(--nav-h, 0px) + 14px + env(safe-area-inset-bottom, 0px)); z-index: 90; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 14px; background: var(--ink); color: var(--bg); font-family: var(--f-label); font-size: .85rem; letter-spacing: .04em; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,.35); pointer-events: none; animation: hl-pop .3s ease-out; }
+#or-hint span { font-size: 1.3rem; line-height: 1; }
+#or-hint small { font-family: var(--f-body); font-style: italic; font-size: .72rem; letter-spacing: 0; opacity: .8; }

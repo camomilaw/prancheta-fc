@@ -9,7 +9,8 @@
   const KEY = 'prancheta-fc:orient';
   const DEF_VP = 'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=overlays-content'; // teclado por cima, sem encolher a página
   const LAND_MIN = 900; // abaixo disso a página é levemente afastada para caber o layout de PC
-  let pref = P.store.get(KEY) || 'auto';
+  // padrão no celular: deitado (layout de PC). Dá para mudar para em pé em Mais › Preferências.
+  let pref = P.store.get(KEY) || 'land';
 
   const isPhone = () => {
     try { return matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) <= 600; } catch (e) { return false; }
@@ -74,6 +75,22 @@
     lock(pref === 'land' ? 'landscape' : 'portrait').then((ok) => { busy = false; if (ok) setTimeout(applyViewport, 250); else fails++; });
   };
   document.addEventListener('pointerdown', relock, true);
+  // aviso enquanto a tela ainda está em pé: o primeiro toque vira para deitado
+  function hint() {
+    let el = document.getElementById('or-hint');
+    const show = pref === 'land' && isPhone() && !landscape() && fails <= 3;
+    if (!show) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('div'); el.id = 'or-hint'; el.setAttribute('role', 'status');
+      const can = !!(screen.orientation && screen.orientation.lock);
+      el.innerHTML = `<span>↻</span> ${can ? 'Toque para jogar com a tela deitada' : 'Vire o celular de lado para jogar'}<small>Prefere em pé? Mude em Mais › Preferências.</small>`;
+      document.body.appendChild(el);
+    }
+  }
+  addEventListener('resize', hint);
+  try { screen.orientation.addEventListener('change', () => setTimeout(hint, 80)); } catch (e) { /* navegador antigo */ }
+  document.addEventListener('pointerdown', () => setTimeout(hint, 900), true);
+  setTimeout(hint, 300);
   document.addEventListener('click', relock, true);
   // de volta ao jogo (depois do seletor de arquivos ou de outro app): tenta já, sem esperar um toque
   const tryBack = () => { if (document.visibilityState !== 'visible' || pref === 'auto' || !isPhone()) return; try { const so = screen.orientation; if (so && so.lock && (document.fullscreenElement || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches)) so.lock(pref === 'land' ? 'landscape' : 'portrait').catch(() => {}); } catch (e) { /* sem trava */ } };
