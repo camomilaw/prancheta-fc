@@ -92,7 +92,24 @@
     BDI: { n: 'Burundi', lang: 'af' }, ZIM: { n: 'Zimbábue', lang: 'af' }, RSA: { n: 'África do Sul', lang: 'af' },
     ZAM: { n: 'Zâmbia', lang: 'af' }, BEN: { n: 'Benin', lang: 'af' }, TOG: { n: 'Togo', lang: 'af' },
     PAN: { n: 'Panamá', lang: 'es' }, CRC: { n: 'Costa Rica', lang: 'es' }, DOM: { n: 'Rep. Dominicana', lang: 'es' },
-    SLV: { n: 'El Salvador', lang: 'es' }, GUA: { n: 'Guatemala', lang: 'es' }, BOL: { n: 'Bolívia', lang: 'es' }
+    SLV: { n: 'El Salvador', lang: 'es' }, GUA: { n: 'Guatemala', lang: 'es' }, BOL: { n: 'Bolívia', lang: 'es' },
+    QAT: { n: 'Catar', lang: 'ar' }, UAE: { n: 'Emirados Árabes', lang: 'ar' }, IRQ: { n: 'Iraque', lang: 'ar' },
+    BLR: { n: 'Belarus', lang: 'sl' }, SMR: { n: 'San Marino', lang: 'it' }, TRI: { n: 'Trinidad e Tobago', lang: 'en' },
+    KEN: { n: 'Quênia', lang: 'af' }, UGA: { n: 'Uganda', lang: 'af' }, TAN: { n: 'Tanzânia', lang: 'af' },
+    LBR: { n: 'Libéria', lang: 'af' }, SLE: { n: 'Serra Leoa', lang: 'af' }, THA: { n: 'Tailândia', lang: 'kr' }
+  };
+  // Países extras trazidos por um patch ficam guardados no banco (db.countries) e valem também ao reabrir o save.
+  // Formato: { "XYZ": { "n": "Nome em português", "lang": "pt|es|en|..." } }
+  const LANGS = ['pt', 'es', 'en', 'de', 'it', 'fr', 'nl', 'tr', 'gr', 'sl', 'sc', 'af', 'ar', 'jp', 'kr', 'cn'];
+  P.registerCountries = function (map) {
+    if (!map || typeof map !== 'object') return 0;
+    let n = 0;
+    for (const [k, v] of Object.entries(map)) {
+      if (!/^[A-Z]{3}$/.test(k) || !v || !v.n || P.COUNTRIES[k]) continue;
+      P.COUNTRIES[k] = { n: String(v.n).slice(0, 40), lang: LANGS.includes(v.lang) ? v.lang : 'en' };
+      n++;
+    }
+    return n;
   };
   P.countryName = (c) => (P.COUNTRIES[c] ? P.COUNTRIES[c].n : c || '—');
 
@@ -427,6 +444,10 @@
   };
   P.applyPatch = function (db, patch, g) {
     if (!patch || !Array.isArray(patch.clubs)) throw new Error('Patch sem lista de clubes.');
+    if (patch.countries && typeof patch.countries === 'object') {
+      P.registerCountries(patch.countries);
+      db.countries = Object.assign(db.countries || {}, patch.countries);
+    }
     const r = P.rng(Date.now() % 100000);
     let n = 0, np = 0;
     for (const pc of patch.clubs) {

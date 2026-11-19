@@ -1055,6 +1055,7 @@
   // ---------- Importar/exportar ----------
   P.normalizeDb = function (db) {
     if (!db || !Array.isArray(db.clubs)) throw new Error('Isto não parece um banco de dados do jogo.');
+    if (P.registerCountries) P.registerCountries(db.countries);
     if (db.clubs.length !== P.DIVS * P.DIV_SIZE) throw new Error(`O banco precisa ter ${P.DIVS * P.DIV_SIZE} clubes (${P.DIVS} divisões de ${P.DIV_SIZE}). Este tem ${db.clubs.length}.`);
     const ids = new Set();
     db.clubs.forEach((c, i) => {
