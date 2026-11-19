@@ -54,4 +54,42 @@ c = open(colors, encoding='utf-8').read()
 if 'pfc_bg' not in c:
     c = c.replace('</resources>', '    <color name="pfc_bg">#16130F</color>\n</resources>')
 open(colors, 'w', encoding='utf-8').write(c)
+# tela cheia "imersiva": barra de status e botões do sistema somem e, se aparecerem
+# (print, deslizar o dedo, notificação), escondem-se sozinhos de novo
+act = os.path.join(A, 'java', 'com', 'pranchetafc', 'jogo', 'MainActivity.java')
+open(act, 'w', encoding='utf-8').write("""package com.pranchetafc.jogo;
+
+import android.os.Bundle;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        immersive();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        immersive();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) immersive();
+    }
+
+    private void immersive() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        c.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        c.hide(WindowInsetsCompat.Type.systemBars());
+    }
+}
+""")
 print('android ajustado')

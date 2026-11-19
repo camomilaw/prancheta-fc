@@ -4,7 +4,7 @@
  *    (PC: pasta "saves" ao lado do PranchetaFC.exe; Android: Documentos/PranchetaFC/saves).
  *    Ao abrir o jogo, arquivos novos ou mais recentes da pasta entram nos espaços de carreira,
  *    então dá para copiar saves entre computadores e celulares (ou receber de amigos).
- *  - Android: gira a tela pelo próprio sistema (deitado por padrão) e esconde a barra de status.
+ *  - Android: gira a tela pelo próprio sistema (deitado por padrão) e fica em tela cheia (a barra de status some sozinha depois de um print ou de puxar notificações).
  */
 (function (P) {
   const A = P.app;
@@ -45,8 +45,6 @@
     // tela: deitado por padrão, girada pelo sistema; barra de status escondida
     const SO = plug('ScreenOrientation');
     if (SO) P.nativeLock = async (kind) => { try { await SO.lock({ orientation: kind === 'portrait' ? 'portrait' : 'landscape' }); return true; } catch (e) { return false; } };
-    const SB = plug('StatusBar');
-    try { if (SB) SB.hide(); } catch (e) { /* ignora */ }
     if (P.nativeLock) { let pref = 'land'; try { pref = P.store.get('prancheta-fc:orient') || 'land'; } catch (e) { /* padrão */ } P.nativeLock(pref === 'port' ? 'portrait' : 'landscape'); }
     // botão voltar do Android: fecha a janela aberta em vez de sair do jogo
     const App = plug('App');
