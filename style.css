@@ -2052,3 +2052,13 @@ html.phone-land .setup.jr:has(.nc1) > .row:last-child { margin-top: 0; }
   html:not(.phone-land) .nc1-right .coach-st { padding: 8px; }
   html:not(.phone-land) .nc1-right .coach-st small { font-size: .7rem; line-height: 1.25; }
 }
+/* Idade + Você é: mesma altura, sem estourar a coluna */
+.nc1-row { align-items: start; grid-template-columns: minmax(80px, 110px) minmax(0, 1fr); }
+.nc1-row > .field { min-width: 0; }
+.nc1-row .seg { display: flex; width: 100%; max-width: 100%; overflow: hidden; }
+.nc1-row .seg button { flex: 1 1 0; min-width: 0; text-align: center; overflow: hidden; text-overflow: ellipsis; font-size: clamp(.72rem, 1.6vw, .9rem); padding: 0 4px; min-height: 40px; letter-spacing: .04em; }
+.nc1-row .sel { min-height: 40px; }
+html.phone-land .nc1-row .seg button, html.phone-land .nc1-row .sel { min-height: 32px; }
+html.phone-land .nc1-row .seg button { font-size: .78rem; }
+.nc1-row .sel { height: 41px; min-height: 0; }
+html.phone-land .nc1-row .sel { height: 33px; }
