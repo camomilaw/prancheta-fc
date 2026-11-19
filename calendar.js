@@ -141,8 +141,8 @@
       if (i != null && i === cs.sel) cls += ' sel';
       cells += `<button class="cal-cell${cls}" ${i != null ? `data-a="calSel" data-i="${i}"` : 'disabled'}><span class="dn">${dnum}</span>${inner}</button>`;
     }
-    return `<div class="card"><div class="head"><h2>Calendário ${g.season}</h2><button class="btn sm ghost" data-a="go" data-v="inicio">‹ Início</button></div>
-        <div class="row cal-nav"><button class="btn sm" data-a="calMonth" data-d="-1" ${month <= minM ? 'disabled' : ''} aria-label="Mês anterior">‹</button>
+    return `<div class="card cal-card"><div class="head cal-h"><h2>Calendário ${g.season}</h2><button class="btn sm ghost" data-a="go" data-v="inicio">‹ Início</button></div>
+        <div class="row cal-nav"><button class="btn sm ghost cal-back" data-a="go" data-v="inicio">‹ Início</button><button class="btn sm" data-a="calMonth" data-d="-1" ${month <= minM ? 'disabled' : ''} aria-label="Mês anterior">‹</button>
           <b class="cal-title">${MONTHS[month]} ${year}</b>
           <button class="btn sm" data-a="calMonth" data-d="1" ${month >= maxM ? 'disabled' : ''} aria-label="Próximo mês">›</button></div>
         <div class="cal-grid">${['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'].map((d) => `<div class="cal-wd">${d}</div>`).join('')}${cells}</div>
