@@ -1,7 +1,7 @@
 /* Prancheta FC — Rádio Prancheta
  * Toca música de fundo enquanto você joga, sem parar ao trocar de tela.
  * Duas fontes:
- *  - Spotify: a playlist oficial da rádio, pelo player oficial do Spotify (música inteira para quem
+ *  - Spotify: a playlist oficial da rádio (ou um link de playlist/álbum colado pelo jogador), pelo player oficial do Spotify (música inteira para quem
  *    está logado no Spotify naquele navegador; sem login, trechos de 30 s). Nenhum arquivo fica no jogo.
  *  - Minhas músicas: arquivos de áudio escolhidos no aparelho. Ficam guardados só neste navegador
  *    (IndexedDB) e nunca saem dele.
@@ -15,8 +15,8 @@
   const KEY = 'prancheta-fc:radio';
 
   // ---------- Preferências ----------
-  const R = Object.assign({ on: true, src: 'sp', live: 'cont', vol: 0.7, shuffle: true }, (() => { try { return JSON.parse(P.store.get(KEY)) || {}; } catch (e) { return {}; } })());
-  const saveR = () => P.store.set(KEY, JSON.stringify({ on: R.on, src: R.src, live: R.live, vol: R.vol, shuffle: R.shuffle }));
+  const R = Object.assign({ on: true, src: 'sp', live: 'cont', vol: 0.7, shuffle: true, uri: '' }, (() => { try { return JSON.parse(P.store.get(KEY)) || {}; } catch (e) { return {}; } })());
+  const saveR = () => P.store.set(KEY, JSON.stringify({ on: R.on, src: R.src, live: R.live, vol: R.vol, shuffle: R.shuffle, uri: R.uri }));
   const S = { open: false, started: false, userPaused: false, matchPaused: false, sp: null, spState: 'off', spPlaying: false, spTitle: '', tracks: [], order: [], idx: 0, audio: null, url: null };
   P.radioState = () => ({ R, S });
 
@@ -80,19 +80,32 @@
   function prev() { if (!S.tracks.length) return; S.idx = (S.idx - 1 + S.order.length) % S.order.length; playMine(true); }
 
   // ---------- Spotify ----------
+  // Link colado pelo jogador: playlist, álbum, música, artista ou podcast
+  const TYPES = { playlist: 'playlist', album: 'álbum', track: 'música', artist: 'artista', show: 'podcast', episode: 'episódio' };
+  P.spotifyUri = function (txt) {
+    const t = String(txt || '').trim();
+    let m = t.match(/^spotify:(playlist|album|track|artist|show|episode):([A-Za-z0-9]{10,40})$/);
+    if (m) return `spotify:${m[1]}:${m[2]}`;
+    m = t.match(/open\.spotify\.com\/(?:intl-[a-z-]+\/)?(?:embed\/)?(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]{10,40})/);
+    return m ? `spotify:${m[1]}:${m[2]}` : null;
+  };
+  const curUri = () => R.uri || PLAYLIST;
+  const uriUrl = (u) => { const [, ty, id] = u.split(':'); return `https://open.spotify.com/${ty}/${id}`; };
+  const uriKind = (u) => TYPES[u.split(':')[1]] || 'link';
+  function mountSpotify(API) {
+    const host = document.getElementById('rd-sp-pl'); if (!host) return;
+    const el = document.createElement('div'); host.innerHTML = ''; host.appendChild(el);
+    API.createController(el, { uri: curUri(), width: '100%', height: 152, theme: 'dark' }, (ctl) => {
+      S.sp = ctl; S.spState = 'ready';
+      ctl.addListener('playback_update', (e) => { const d = e && e.data; if (d) { S.spPlaying = !d.isPaused; drawPill(); } });
+      if (S.started && R.on && R.src === 'sp' && !S.userPaused) { try { ctl.play(); } catch (e) { /* ignora */ } }
+      draw();
+    });
+  }
   function loadSpotify() {
     if (S.spState !== 'off') return;
     S.spState = 'loading'; draw();
-    window.onSpotifyIframeApiReady = (API) => {
-      const host = document.getElementById('rd-sp'); if (!host) return;
-      const el = document.createElement('div'); host.innerHTML = ''; host.appendChild(el);
-      API.createController(el, { uri: PLAYLIST, width: '100%', height: 80, theme: 'dark' }, (ctl) => {
-        S.sp = ctl; S.spState = 'ready';
-        ctl.addListener('playback_update', (e) => { const d = e && e.data; if (d) { S.spPlaying = !d.isPaused; drawPill(); } });
-        if (S.started && R.on && R.src === 'sp' && !S.userPaused) { try { ctl.play(); } catch (e) { /* ignora */ } }
-        draw();
-      });
-    };
+    window.onSpotifyIframeApiReady = (API) => { S.api = API; mountSpotify(API); };
     const sc = document.createElement('script');
     sc.src = 'https://open.spotify.com/embed/iframe-api/v1'; sc.async = true;
     sc.onerror = () => { S.spState = 'fail'; draw(); };
@@ -151,8 +164,8 @@
         <section class="rd-panel" aria-label="Rádio Prancheta" aria-hidden="true">
           <div class="rd-head"><img src="${LOGO}" alt=""><div class="rd-id"><b>Rádio Prancheta</b><span id="rd-sub"></span></div>
             <button class="btn sm" data-a="rdClose" aria-label="Recolher a rádio">▾</button></div>
-          <div class="seg rd-src"><button data-a="rdSrc" data-k="sp">Playlist da rádio</button><button data-a="rdSrc" data-k="mine">Minhas músicas</button></div>
-          <div id="rd-sp" class="rd-sp"></div>
+          <div class="seg rd-src"><button data-a="rdSrc" data-k="sp">Spotify</button><button data-a="rdSrc" data-k="mine">Minhas músicas</button></div>
+          <div id="rd-sp" class="rd-sp"><div id="rd-sp-pl"></div><div id="rd-sp-x"></div></div>
           <div id="rd-mine" class="rd-mine"></div>
         </section>`;
       document.body.appendChild(el);
@@ -172,8 +185,18 @@
     sp.hidden = R.src !== 'sp'; mine.hidden = R.src !== 'mine';
     const sub = el.querySelector('#rd-sub');
     if (R.src === 'sp') {
-      sub.textContent = S.spState === 'ready' ? 'Playlist oficial no Spotify' : S.spState === 'fail' ? 'Sem conexão com o Spotify' : 'Conectando ao Spotify…';
-      if (S.spState === 'fail' && !sp.querySelector('.rd-fail')) sp.innerHTML = `<p class="rd-fail muted">Não deu para carregar o player do Spotify (sem internet ou bloqueado). <a href="${PLAYLIST_URL}" target="_blank" rel="noopener">Abrir a playlist no Spotify</a> ou use <b>Minhas músicas</b>.</p>`;
+      sub.textContent = S.spState === 'ready' ? (R.uri ? `Seu ${uriKind(R.uri)} no Spotify` : 'Playlist oficial no Spotify') : S.spState === 'fail' ? 'Sem conexão com o Spotify' : 'Conectando ao Spotify…';
+      const pl = sp.querySelector('#rd-sp-pl');
+      if (S.spState === 'fail' && pl && !pl.querySelector('.rd-fail')) pl.innerHTML = `<p class="rd-fail muted">Não deu para carregar o player do Spotify (sem internet ou bloqueado). <a href="${uriUrl(curUri())}" target="_blank" rel="noopener">Abrir no Spotify</a> ou use <b>Minhas músicas</b>.</p>`;
+      const x = sp.querySelector('#rd-sp-x');
+      if (x && x.dataset.u !== curUri() + S.spLogged) {
+        x.dataset.u = curUri() + S.spLogged;
+        x.innerHTML = `<form class="rd-link"><input id="rd-url" type="url" inputmode="url" placeholder="Cole o link de uma playlist ou álbum" aria-label="Link do Spotify"><button class="btn sm primary" data-a="rdLinkGo">Tocar</button></form>
+          <div class="rd-sp-act">${R.uri ? '<button class="btn sm ghost" data-a="rdLinkReset">Voltar à playlist da rádio</button>' : ''}
+            <button class="btn sm" data-a="rdLogin">${S.spLogged ? 'Recarregar após entrar' : 'Entrar no Spotify'}</button>
+            <a class="btn sm ghost" href="${uriUrl(curUri())}" target="_blank" rel="noopener">Abrir no app</a></div>
+          <p class="muted rd-note">Com o Spotify conectado neste navegador, as músicas tocam inteiras (no PC). No celular o Spotify costuma liberar só trechos: toque em <b>Abrir no app</b> e a música continua tocando enquanto você joga.</p>`;
+      }
       if (S.spState === 'off' && S.open) loadSpotify();
     } else {
       const t = curTrack(), on = !!(S.audio && !S.audio.paused);
@@ -200,6 +223,22 @@
       draw();
     },
     rdToggle() { toggle(); },
+    rdLinkGo() {
+      const inp = document.getElementById('rd-url'), u = P.spotifyUri(inp && inp.value);
+      if (!u) { A.toast('Cole um link do Spotify (playlist, álbum, música ou artista)'); return; }
+      R.uri = u; saveR(); S.started = true; S.userPaused = false;
+      if (S.sp && S.sp.loadUri) { try { S.sp.loadUri(u); setTimeout(() => { try { S.sp.play(); } catch (e) { /* ignora */ } }, 600); } catch (e) { /* ignora */ } } else loadSpotify();
+      A.toast(`Tocando seu ${uriKind(u)} na rádio`); draw();
+    },
+    rdLinkReset() { R.uri = ''; saveR(); if (S.sp && S.sp.loadUri) { try { S.sp.loadUri(PLAYLIST); setTimeout(() => { try { S.sp.play(); } catch (e) { /* ignora */ } }, 600); } catch (e) { /* ignora */ } } draw(); },
+    rdLogin() {
+      // 1º toque: abre o login do Spotify numa janela. Depois de entrar, o player é recarregado para tocar as músicas inteiras.
+      if (S.spLogged && S.api) { S.sp = null; S.spState = 'loading'; mountSpotify(S.api); draw(); return; }
+      const w = window.open('https://accounts.spotify.com/login?continue=' + encodeURIComponent('https://open.spotify.com/'), 'spotify-login', 'width=480,height=720');
+      S.spLogged = true; draw();
+      if (!w) { A.toast('Libere as janelas pop-up para entrar no Spotify'); return; }
+      const iv = setInterval(() => { if (w.closed) { clearInterval(iv); if (S.api) { S.sp = null; S.spState = 'loading'; mountSpotify(S.api); draw(); } A.toast('Spotify conectado: o player foi recarregado'); } }, 800);
+    },
     rdNext() { S.userPaused = false; S.started = true; next(); },
     rdPrev() { S.userPaused = false; S.started = true; prev(); },
     rdShuffle() { R.shuffle = !R.shuffle; saveR(); const cur = S.order[S.idx]; reorder(); const i = S.order.indexOf(cur); if (i > 0) { [S.order[0], S.order[i]] = [S.order[i], S.order[0]]; } S.idx = 0; draw(); },
@@ -229,10 +268,12 @@
       }).then(() => { if (!S.audio || S.audio.paused) { S.started = true; S.userPaused = false; reorder(); playMine(true); } });
   };
 
+  document.addEventListener('submit', (e) => { if (e.target.closest && e.target.closest('.rd-link')) { e.preventDefault(); A.ACT.rdLinkGo(); } }, true);
+
   // Cartão em Mais
   const prevMais = P.maisExtra;
   P.radioCard = () => `<div class="card rd-card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Rádio Prancheta</h2><img src="${LOGO}" alt="" width="44" height="44"></div>
-      <p class="muted" style="margin:0">Música de fundo enquanto você joga: a <a href="${PLAYLIST_URL}" target="_blank" rel="noopener">playlist da rádio no Spotify</a> ou músicas do seu aparelho.</p>
+      <p class="muted" style="margin:0">Música de fundo enquanto você joga: a <a href="${PLAYLIST_URL}" target="_blank" rel="noopener">playlist da rádio no Spotify</a>, qualquer playlist ou álbum seu (cole o link na rádio) ou músicas do seu aparelho.</p>
       <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ${R.on ? '' : 'primary'}" data-a="rdOnOff">${R.on ? 'Desligar a rádio' : 'Ligar a rádio'}</button>${R.on ? '<button class="btn" data-a="rdOpen">Abrir a rádio</button>' : ''}</div>
       <div><span class="label">Nas partidas ao vivo</span><div class="seg" style="margin-top:6px">${[['cont', 'Continua tocando'], ['baixa', 'Baixa o volume'], ['pausa', 'Pausa']].map(([k, n]) => `<button class="${R.live === k ? 'on' : ''}" data-a="rdLive" data-k="${k}">${n}</button>`).join('')}</div>
       ${R.live === 'baixa' ? '<small class="muted" style="font-size:.78rem">Baixar o volume só funciona em Minhas músicas: o Spotify não deixa o jogo mexer no volume dele.</small>' : ''}</div></div>`;

@@ -2160,3 +2160,11 @@ html.phone-land .ncc-s3, html.phone-land .ncc-top { gap: 6px; }
 html.phone-land .front .fp-lead .jr-lead.open { grid-template-columns: minmax(0, 1fr); grid-template-areas: "k" "h" "d"; }
 html.phone-land .jr-lead.open .jr-head { -webkit-line-clamp: unset; display: block; font-size: 1.2rem !important; }
 html.phone-land .jr-lead.open .jr-dek { -webkit-line-clamp: unset; display: block; font-size: .8rem; line-height: 1.35; }
+
+/* Rádio: link próprio do Spotify */
+.rd-sp { display: flex; flex-direction: column; gap: 8px; }
+.rd-link { display: flex; gap: 6px; margin: 0; }
+.rd-link input { flex: 1; min-width: 0; padding: 6px 8px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink); font-size: .85rem; }
+.rd-sp-act { display: flex; gap: 6px; flex-wrap: wrap; }
+.rd-sp-act a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+.rd-sp-act a.btn, .rd-sp-act a.btn:visited { color: var(--ink); }
