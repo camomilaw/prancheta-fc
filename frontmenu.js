@@ -109,7 +109,7 @@
         <div class="fm-kick">${m.div}ª divisão · Temporada ${m.season}${m.over ? ' · fim de temporada' : ''} · Espaço ${last}</div>
         <h2 class="fm-head">${esc(m.head || `${m.club}, de ${m.mgr}`)}</h2>
         <p class="fm-sub">${esc(m.dek || `${m.club} sob o comando de ${m.mgr}.`)}</p>
-        <div class="fm-by">Por ${esc(m.mgr)} · última edição ${ago(m.at)}</div>
+        <div class="fm-by"><span>Por ${esc(m.mgr)} · última edição ${ago(m.at)}</span><button class="btn primary land-only-btn" data-a="slotOpen" data-n="${last}">Continuar →</button></div>
         <div class="fm-grid">
           <figure class="fm-photo">${x.badgeL || m.badge || ''}<figcaption>${esc(m.club)}${x.stad ? ' · ' + esc(x.stad) : ''}</figcaption></figure>
           <div class="fm-text"><p class="fm-dek">${body}</p></div>
