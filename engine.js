@@ -143,7 +143,25 @@
   };
   P.capFromRep = (rep) => Math.round((4000 + rep * rep * 8) / 500) * 500;
   // Preenche dados de economia que faltarem (também atualiza saves antigos)
+  // Cotas de TV podem vir do banco (db.tv), calibradas por um patch com elencos fortes; senão, as padrão
+  P.ECON_TV0 = P.ECON.tv.slice();
+  P.applyEcon = (db) => { P.ECON.tv = db && Array.isArray(db.tv) && db.tv.length === P.ECON_TV0.length ? db.tv.slice() : P.ECON_TV0.slice(); };
+  // Folha anual / cota de TV de cada divisão no banco fictício: referência para calibrar patches
+  P.PAY_TV_RATIO = [1.63, 1.80, 2.17, 2.49, 3.11, 3.16, 3.18, 3.37];
+  P.calibrateTv = function (db) {
+    db.tv = P.ECON_TV0.map((base, i) => {
+      const cs = db.clubs.filter((c) => c.div === i + 1);
+      if (!cs.length) return base;
+      const ids = new Set(cs.map((c) => c.id));
+      let pay = 0;
+      for (const p of Object.values(db.players)) if (ids.has(p.clubId)) pay += (p.wage || P.wageFor(p)) * 12;
+      return Math.max(base, Math.round(pay / cs.length / (P.PAY_TV_RATIO[i] * 0.8) / 1e5) * 1e5); // 20% de folga: elencos reais são maiores
+    });
+    P.applyEcon(db);
+    return db.tv;
+  };
   P.ensureEconomy = function (g) {
+    P.applyEcon(g.db);
     for (const c of g.db.clubs) {
       if (!c.cap) c.cap = P.capFromRep(c.rep);
       if (c.bal == null) c.bal = Math.round(P.ECON.tv[c.div - 1] * (0.5 + c.rep / 200) / 1e4) * 1e4;
@@ -1054,6 +1072,7 @@
   // ---------- Novo jogo ----------
   const AI_FORMS = ['4-4-2', '4-3-3', '4-2-3-1', '4-1-2-1-2', '3-5-2', '4-4-2', '4-3-3', '4-2-3-1'];
   P.newGame = function (db, userCid, manager) {
+    if (P.applyEcon) P.applyEcon(db);
     const r = P.rng(Date.now() & 0xffffffff);
     const g = { version: P.VERSION, db, user: userCid, manager: manager || 'Técnico', season: 2027, tac: {}, news: [], hist: [] };
     for (const c of db.clubs) {

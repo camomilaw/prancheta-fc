@@ -482,6 +482,8 @@
       }
       n++;
     }
+    // elencos reais mais fortes que o padrão nas divisões de baixo: cotas de TV acompanham a folha salarial
+    if (np && P.calibrateTv) P.calibrateTv(db);
     if (g) P.ensureEconomy(g);
     return np ? `${n} clubes e ${np} jogadores` : n;
   };
