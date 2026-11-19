@@ -27,7 +27,7 @@
     const tabs = `<div class="seg"><button class="${ed.v !== 'db' ? 'on' : ''}" data-a="edGo" data-v="clubs">Clubes e jogadores</button><button class="${ed.v === 'db' ? 'on' : ''}" data-a="edGo" data-v="db">Banco e patches</button></div>`;
     const head = `<div class="row"><h2 style="flex:1">Editor</h2>${tabs}</div>`;
     if (setupMode) {
-      return `<div class="setup"><div class="row"><button class="btn" data-a="edExit">‹ Voltar</button><span class="muted">As mudanças valem para a nova carreira.</span></div>${head}${body}</div>`;
+      return `<div class="setup ed-setup"><div class="ed-top"><button class="btn" data-a="edExit">‹ Voltar</button><div class="ed-tt"><h2>Editor</h2><small class="muted">As mudanças valem para a nova carreira.</small></div><span class="spacer"></span>${tabs}</div>${body}</div>`;
     }
     return `${head}${body}`;
   };

@@ -2188,3 +2188,22 @@ html.phone-land .nav button.on-m:not(.on), html.phone-land .nav button.on-m:not(
   .fm-slots > .jr-sec { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 6px; }
 }
 html .setup.jr:has(.fm-slots) > .fm > .fm-right { align-self: stretch !important; max-height: 100%; overflow: hidden; }
+
+/* Técnico: estilo que contradiz o escolhido aparece apagado (escolher troca um pelo outro) */
+.coach-st.clash { opacity: .45; }
+.coach-st.clash b::after { content: " · não combina"; font-family: var(--f-label); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+/* Editor da nova carreira: topo mais enxuto */
+.ed-setup { gap: 12px; }
+.ed-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ed-tt { display: flex; flex-direction: column; min-width: 0; }
+.ed-tt h2 { margin: 0; line-height: 1; }
+.ed-tt small { font-size: .78rem; margin-top: 2px; }
+.ed-top .seg { margin-left: auto; }
+.ed-setup .crumbs { margin: 0; font-size: .9rem; }
+.ed-setup .create-cta { padding: 8px 12px; margin: 0; gap: 10px; }
+.ed-setup .create-cta .btn { min-height: 36px; }
+.ed-setup > .card:first-of-type, .ed-setup .card { margin-top: 0; }
+html.phone-land .ed-setup { gap: 8px; padding-top: 6px; }
+html.phone-land .ed-top .btn { min-height: 32px; }
+html.phone-land .ed-tt h2 { font-size: 1.3rem; }
+html.phone-land .coach-st.clash b::after { content: " ✕"; }

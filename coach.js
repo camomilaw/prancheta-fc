@@ -44,14 +44,23 @@
   // ---------- Escolha do estilo (usada no início de carreira e na aba do técnico) ----------
   P.coachPicker = function (cur, act) {
     const styles = (cur && cur.styles) || [], form = (cur && cur.form) || '4-4-2';
-    return `<div class="coach-pick">${Object.entries(P.COACH_STYLES).map(([k, s]) => `<button class="coach-st ${styles.includes(k) ? 'on' : ''}" data-a="${act}" data-k="${k}">
+    const clash = (k) => P.COACH_CLASH && P.COACH_CLASH[k] && styles.includes(P.COACH_CLASH[k]);
+    return `<div class="coach-pick">${Object.entries(P.COACH_STYLES).map(([k, s]) => `<button class="coach-st ${styles.includes(k) ? 'on' : ''} ${clash(k) ? 'clash' : ''}" data-a="${act}" data-k="${k}" ${clash(k) ? `title="Não combina com ${esc(P.COACH_STYLES[P.COACH_CLASH[k]].n)}"` : ''}>
         <b>${esc(s.n)}</b><small><span class="good">+ ${esc(s.good)}</span><span class="bad">− ${esc(s.bad)}</span></small></button>`).join('')}</div>
       <div class="field" style="margin-top:10px"><span class="jr-step">Formação preferida</span><select class="sel" data-c="${act}Form">${Object.keys(P.FORMATIONS).map((f) => `<option ${f === form ? 'selected' : ''}>${f}</option>`).join('')}</select>
       <small class="jr-note">Jogando nela (sem posições personalizadas), o time rende 3% a mais.</small></div>`;
   };
+  // estilos que se contradizem: escolher um tira o outro
+  const CLASH = { retranca: 'ofensivo', ofensivo: 'retranca', motivador: 'disciplinador', disciplinador: 'motivador' };
+  P.COACH_CLASH = CLASH;
   const toggle = (obj, k) => {
     const st = obj.styles || (obj.styles = []);
-    const i = st.indexOf(k);
+    const i = st.indexOf(k), opp = CLASH[k];
+    if (i < 0 && opp && st.includes(opp)) {
+      st.splice(st.indexOf(opp), 1, k);
+      A.toast(`${P.COACH_STYLES[k].n} e ${P.COACH_STYLES[opp].n} não combinam: trocado para ${P.COACH_STYLES[k].n}`);
+      return true;
+    }
     if (i >= 0) st.splice(i, 1);
     else if (st.length >= 2) { A.toast('Escolha no máximo 2 estilos'); return false; }
     else st.push(k);
