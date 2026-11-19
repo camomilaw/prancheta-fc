@@ -2000,3 +2000,10 @@ html.phone-land .fm-big .col-q { font-size: .8rem; line-height: 1.3; }
 .land-only-btn { display: none; }
 html.phone-land .land-only-btn { display: inline-flex; }
 html.phone-land .fm-big .fm-text .fm-dek { max-height: calc(1.4em * 4); }
+/* Capa deitada: cabeçalho completo de volta e conteúdo centralizado na altura */
+html.phone-land .setup.jr:has(.fm) { min-height: 100dvh; box-sizing: border-box; padding-bottom: 8px; }
+html.phone-land .setup.jr:has(.fm) > .jr-mast .jr-mast-top, html.phone-land .setup.jr:has(.fm) > .jr-mast .jr-tag { display: flex; font-size: .62rem; }
+html.phone-land .setup.jr:has(.fm) > .jr-mast .jr-tag { display: block; }
+html.phone-land .setup.jr:has(.fm) > .jr-mast h1 { font-size: 2.2rem; }
+html.phone-land .setup.jr:has(.fm) > .fm { flex: 1; align-items: center; align-content: center; }
+html.phone-land .fm-right { align-self: center; }
