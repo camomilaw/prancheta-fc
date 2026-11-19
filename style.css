@@ -2152,3 +2152,11 @@ html.phone-land .ncc-clubs .jr-club { min-height: 0; padding-top: 3px; padding-b
 html.phone-land .ncc .jr-note { font-size: .72rem; line-height: 1.3; }
 html.phone-land .ncc-s3, html.phone-land .ncc-top { gap: 6px; }
 .setup.ncc-s3 > .row:last-child { position: sticky; bottom: 0; z-index: 5; padding: 8px 0 calc(6px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, transparent, var(--bg) 30%); }
+
+/* Início: tocar na notícia abre o título e o subtítulo inteiros no lugar de posição/pontos/saldo */
+.jr-lead[data-a="leadTog"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.jr-lead.open .jr-3 { display: none; }
+.jr-lead.open .jr-dek { max-width: none; }
+html.phone-land .front .fp-lead .jr-lead.open { grid-template-columns: minmax(0, 1fr); grid-template-areas: "k" "h" "d"; }
+html.phone-land .jr-lead.open .jr-head { -webkit-line-clamp: unset; display: block; font-size: 1.2rem !important; }
+html.phone-land .jr-lead.open .jr-dek { -webkit-line-clamp: unset; display: block; font-size: .8rem; line-height: 1.35; }

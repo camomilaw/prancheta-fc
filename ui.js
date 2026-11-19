@@ -324,7 +324,7 @@
 
     const hl = P.headline(g);
     const sg = hl.sg > 0 ? '+' + hl.sg : String(hl.sg);
-    const lead = `<article class="jr-lead">
+    const lead = `<article class="jr-lead ${A.st.leadOpen ? 'open' : ''}" data-a="leadTog" role="button" tabindex="0" aria-expanded="${!!A.st.leadOpen}" title="Toque para ${A.st.leadOpen ? 'ver posição, pontos e saldo' : 'ler a notícia inteira'}">
         <span class="jr-kick">${esc(hl.kicker)}</span>
         <h2 class="jr-head">${esc(hl.head)}</h2>
         <p class="jr-dek">${esc(hl.dek)}</p>
@@ -1253,6 +1253,11 @@
       const ta = document.getElementById('imptext');
       try { const msg = A.importAny(ta.value, false); A.setup.importing = false; A.render(); A.toast(msg); }
       catch (e) { A.toast('Não deu para importar: ' + e.message); }
+    },
+    leadTog(d, el) {
+      A.st.leadOpen = !A.st.leadOpen;
+      const a = document.querySelector('.jr-lead[data-a="leadTog"]');
+      if (a) { a.style.minHeight = A.st.leadOpen && document.documentElement.classList.contains('phone-land') ? a.offsetHeight + 'px' : ''; a.classList.toggle('open', A.st.leadOpen); a.setAttribute('aria-expanded', String(A.st.leadOpen)); } else A.render();
     },
     createOpen() { A.setup.creating = true; A.render(); window.scrollTo(0, 0); },
     ccBack() { const f = A.setup.form; if (f && f.step > 1) { f.step--; A.render(); window.scrollTo(0, 0); } else A.ACT.createClose(); },
