@@ -1,4 +1,4 @@
-/* Prancheta FC — 3 espaços de carreira no mesmo aparelho
+/* Prancheta FC — 9 espaços de carreira no mesmo aparelho
  * As carreiras ficam no IndexedDB do navegador (cabe bem mais que o localStorage).
  * Um resumo de cada espaço (clube, técnico, temporada) fica no localStorage para a tela inicial.
  * Se o IndexedDB não existir, usa o localStorage (pode faltar espaço para 3 carreiras grandes).
@@ -6,7 +6,8 @@
  */
 (function (P) {
   const A = P.app, esc = P.esc;
-  const N = 3;
+  const N = 9;
+  P.SLOT_N = N;
   const OLD_KEY = 'prancheta-fc:save:v2';
   const META_KEY = 'prancheta-fc:slots';
   const LS_KEY = (n) => 'prancheta-fc:slot:' + n;
@@ -110,7 +111,7 @@
     const rows = [];
     for (let i = 1; i <= N; i++) {
       const m = meta.s[i];
-      if (!m) { rows.push(`<p class="jr-free">— Espaço ${i} livre para uma nova história —</p>`); continue; }
+      if (!m) continue;
       rows.push(`<article class="jr-story">
         <div class="jr-crest">${m.badge || ''}</div>
         <div class="jr-story-b">
@@ -123,13 +124,15 @@
         </div></article>`);
     }
     if (!Object.keys(meta.s).length) return '';
+    const free = N - Object.keys(meta.s).length;
+    if (free) rows.push(`<p class="jr-free">— ${free} ${free === 1 ? 'espaço livre' : 'espaços livres'} para uma nova história —</p>`);
     return `<section class="jr-sec"><h2 class="jr-h">Em andamento</h2>${rows.join('')}</section>`;
   };
   // Escolha do espaço para a nova carreira
   P.slotPick = function () {
     const cur = A.setup.slot || firstFree() || 1;
     const m = meta.s[cur];
-    return `<div class="field"><span class="jr-step">Salvar no espaço</span><div class="seg">${[1, 2, 3].map((i) => `<button class="${cur === i ? 'on' : ''}" data-a="slotPick" data-n="${i}">${i}${meta.s[i] ? ' · ocupado' : ''}</button>`).join('')}</div>
+    return `<div class="field"><span class="jr-step">Salvar no espaço</span><div class="slot-grid">${Array.from({ length: N }, (_, k) => k + 1).map((i) => `<button class="${cur === i ? 'on' : ''} ${meta.s[i] ? 'busy' : ''}" data-a="slotPick" data-n="${i}" aria-pressed="${cur === i}"><b>${i}</b><small>${meta.s[i] ? esc(meta.s[i].club) : 'livre'}</small></button>`).join('')}</div>
       ${m ? `<p class="jr-warn">Vai substituir a carreira ${esc(m.mgr)} · ${esc(m.club)}.</p>` : ''}</div>`;
   };
 

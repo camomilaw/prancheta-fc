@@ -94,7 +94,7 @@
     const menu = `<nav class="fm-menu" aria-label="Menu">
       ${m ? item('1', 'Continuar', `${esc(m.club)} · temporada ${m.season}`, 'slotOpen', `data-n="${last}"`, false) : ''}
       ${item(m ? '2' : '1', 'Nova carreira', 'Técnico, diretoria e clube em 3 passos', 'ncOpen')}
-      ${item(m ? '3' : '2', 'Carreiras salvas', `${ids.length} de 3 espaços em uso`, 'fmView', 'data-k="slots"', view === 'slots')}
+      ${item(m ? '3' : '2', 'Carreiras salvas', `${ids.length} de ${P.SLOT_N || 9} espaços em uso`, 'fmView', 'data-k="slots"', view === 'slots')}
       ${item(m ? '4' : '3', 'Modo torneio', 'Monte e simule de 3 a 64 times', 'tourOpen')}
       ${item(m ? '5' : '4', 'Preferências', 'Tema, tela, rádio e banco de dados', 'prefsOpen')}
     </nav>`;

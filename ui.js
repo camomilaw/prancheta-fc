@@ -937,7 +937,7 @@
         <div id="io-box">${st.io || ''}</div>
       </div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Trocar de carreira</h2></div>
-        <p class="muted" style="margin:0">Volta para a tela inicial, onde ficam seus 3 espaços de carreira. Esta carreira continua salva${A.slot ? ` no espaço ${A.slot}` : ''}.</p>
+        <p class="muted" style="margin:0">Volta para a tela inicial, onde ficam seus ${P.SLOT_N || 9} espaços de carreira. Esta carreira continua salva${A.slot ? ` no espaço ${A.slot}` : ''}.</p>
         <div><button class="btn" data-a="newGameYes">Ir para a tela inicial</button></div>
       </div>
       </div>
