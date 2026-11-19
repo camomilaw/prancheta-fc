@@ -2175,3 +2175,16 @@ html.phone-land .jr-lead.open .jr-dek { -webkit-line-clamp: unset; display: bloc
 .rd-list button small { font-size: .7rem; color: var(--muted); font-style: italic; }
 .rd-list button.on { box-shadow: inset 3px 0 0 var(--accent); padding-left: 10px; background: var(--hi); }
 html.phone-land .rd-list { max-height: 30vh; }
+/* Celular deitado: a barra lateral não marca o Elenco quando Treino/Sub-20 já aparecem nela */
+html.phone-land .nav button.on-m::before { display: none; }
+html.phone-land .nav button.on-m:not(.on), html.phone-land .nav button.on-m:not(.on) svg { color: inherit; }
+/* Carreiras salvas (capa, tela larga): o menu fica parado e só a lista de carreiras rola */
+@media (min-width: 900px) {
+  .setup.jr:has(.fm-slots) { height: 100dvh; min-height: 0 !important; box-sizing: border-box; overflow: hidden; }
+  .setup.jr:has(.fm-slots) > .fm { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch !important; padding-bottom: 8px; }
+  .setup.jr:has(.fm-slots) .fm-menu { align-self: center; }
+  .setup.jr:has(.fm-slots) .fm-right { min-height: 0; display: flex; flex-direction: column; justify-content: flex-start !important; }
+  .fm-right > .fm-slots { flex: 1 1 auto; min-height: 0; }
+  .fm-slots > .jr-sec { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 6px; }
+}
+html .setup.jr:has(.fm-slots) > .fm > .fm-right { align-self: stretch !important; max-height: 100%; overflow: hidden; }
