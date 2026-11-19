@@ -125,6 +125,7 @@
   const ytVol = () => Math.round(R.vol * 100 * (S.matchDuck ? 0.35 : 1));
   function loadYT() {
     const ref = ytRef(); if (!ref) { draw(); return; }
+    if (S.yt && S.ytKey === R.yt) return; // já montado com este link
     if (window.YT && window.YT.Player) { mountYT(ref); return; }
     if (S.ytState === 'loading') return;
     S.ytState = 'loading'; draw();
@@ -143,9 +144,10 @@
     const vars = { playsinline: 1, rel: 0, modestbranding: 1, origin: location.origin };
     if (ref.list) Object.assign(vars, { listType: 'playlist', list: ref.list });
     S.ytState = 'loading'; S.ytFails = 0;
-    S.yt = new window.YT.Player(host.firstChild, {
-      width: '100%', height: '100%', videoId: ref.list ? (ref.v || undefined) : ref.v, playerVars: vars,
-      events: {
+    const opts = { width: '100%', height: '100%', playerVars: vars };
+    S.ytKey = R.yt;
+    if (ref.v) opts.videoId = ref.v; // playlist sem vídeo escolhido: não manda videoId (o YouTube recusa vazio)
+    const evts = {
         onReady: (e) => {
           S.ytState = 'ready'; e.target.setVolume(ytVol());
           if (ref.list) { try { e.target.setShuffle(!!R.shuffle); e.target.setLoop(true); } catch (er) { /* ignora */ } }
@@ -163,8 +165,16 @@
           if (ref.list && S.ytFails < 8) { try { e.target.nextVideo(); } catch (er) { /* ignora */ } }
           else { S.ytBlocked = true; drawYT(); }
         }
-      }
-    });
+    };
+    try { S.yt = new window.YT.Player(host.firstChild, Object.assign(opts, { events: evts })); }
+    catch (e) {
+      // plano B: monta o player do jeito clássico (iframe pronto) e liga os controles nele
+      try {
+        const q = new URLSearchParams(Object.assign({ enablejsapi: 1 }, vars)).toString();
+        host.innerHTML = `<iframe allow="autoplay; encrypted-media" src="https://www.youtube.com/embed/${ref.list ? 'videoseries' : ref.v}?${q}"></iframe>`;
+        S.yt = new window.YT.Player(host.firstChild, { events: evts });
+      } catch (e2) { S.yt = null; S.ytState = 'fail'; A.toast('O YouTube não aceitou esse link. Confira se a playlist é pública.'); draw(); }
+    }
   }
   function drawYT() {
     const box = document.getElementById('rd-yt-now'); if (!box || !S.yt || !S.yt.getVideoData) return;
