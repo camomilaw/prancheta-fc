@@ -2107,3 +2107,48 @@ html.phone-land .setup.jr.nc > .row:last-child .btn { min-height: 36px; }
 .slot-grid button.on b { color: var(--accent); }
 @media (min-width: 900px) { .setup.jr.nc-s2 .slot-grid { grid-template-columns: repeat(9, minmax(0, 1fr)); } .setup.jr.nc-s2 .slot-grid button { flex-direction: column; gap: 0; } }
 html.phone-land .slot-grid button { min-height: 34px; padding: 2px 6px; }
+
+/* ---------- Fundar clube em 3 passos (mesmo cabeçalho da nova carreira) ---------- */
+.ncc .jr-classif { display: flex; flex-direction: column; gap: 10px; }
+.ncc-grid { display: flex; flex-direction: column; gap: 14px; }
+.ncc-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ncc-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.ncc-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ncc .field { margin: 0; min-width: 0; }
+.ncc input.sel { width: 100%; box-sizing: border-box; }
+.ncc input[type=color] { width: 100%; height: 42px; padding: 2px; background: transparent; border: 1px solid var(--ink); cursor: pointer; }
+.ncc-crest { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.ncc-crest #cc-badge svg, .ncc-crest #cc-badge img { width: 132px; height: 132px; }
+.ncc-up { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.ncc-name { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: end; }
+.ncc-s3 { display: flex; flex-direction: column; gap: 10px; }
+.ncc-top { display: flex; flex-direction: column; gap: 10px; }
+.ncc-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ncc-opts button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 8px; min-height: 44px; background: transparent; border: 1px solid var(--line); color: var(--ink); text-align: left; cursor: pointer; min-width: 0; }
+.ncc-opts button b { font-family: var(--f-display); font-size: .92rem; }
+.ncc-opts button small { font-size: .72rem; font-style: italic; color: var(--muted); line-height: 1.25; }
+.ncc-opts button.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--hi); }
+.ncc-clubs .jr-club { grid-template-columns: 6px minmax(0, 1fr) 40px; min-height: 46px; }
+.ncc .jr-h-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ncc .jr-h-row .jr-note { font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+@media (max-width: 899px) { html:not(.phone-land) .ncc-opts { grid-template-columns: 1fr; } html:not(.phone-land) .ncc-opts button { flex-direction: row; align-items: baseline; gap: 8px; } }
+@media (min-width: 900px) {
+  .ncc-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+  .ncc-grid > .ncc-col + .ncc-col, .ncc-grid > .ncc-crest + .ncc-col, .ncc-right { border-left: 1px solid var(--line); padding-left: 28px; }
+  .ncc-g1 { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-items: center; }
+  .ncc-top { display: grid; grid-template-columns: minmax(150px, .5fr) minmax(0, 2fr); gap: 20px; align-items: end; }
+  .ncc-clubs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 22px; }
+}
+html.phone-land .ncc-grid { gap: 20px; }
+html.phone-land .ncc-grid > .ncc-col + .ncc-col, html.phone-land .ncc-grid > .ncc-crest + .ncc-col, html.phone-land .ncc-right { padding-left: 20px; }
+html.phone-land .ncc .sel, html.phone-land .ncc input[type=color] { min-height: 0; height: 34px; padding-top: 0; padding-bottom: 0; }
+html.phone-land .ncc .ncc-col, html.phone-land .ncc .jr-classif { gap: 6px; }
+html.phone-land .ncc-crest #cc-badge svg, html.phone-land .ncc-crest #cc-badge img { width: 104px; height: 104px; }
+html.phone-land .ncc-crest { gap: 8px; }
+html.phone-land .ncc .btn { min-height: 34px; }
+html.phone-land .ncc-opts button { min-height: 0; padding: 3px 8px; }
+html.phone-land .ncc-clubs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html.phone-land .ncc-clubs .jr-club { min-height: 0; padding-top: 3px; padding-bottom: 3px; }
+html.phone-land .ncc .jr-note { font-size: .72rem; line-height: 1.3; }
+html.phone-land .ncc-s3, html.phone-land .ncc-top { gap: 6px; }
+.setup.ncc-s3 > .row:last-child { position: sticky; bottom: 0; z-index: 5; padding: 8px 0 calc(6px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, transparent, var(--bg) 30%); }

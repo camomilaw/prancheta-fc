@@ -1198,7 +1198,8 @@
   P.createClub = function (db, opts) {
     const c = db.clubs.find((x) => x.id === opts.replaceId);
     if (!c) throw new Error('Escolha qual clube será substituído.');
-    for (const p of Object.values(db.players)) if (p.clubId === c.id) delete db.players[p.id];
+    const keep = opts.squad === 'keep'; // herdar o elenco do clube que sai
+    if (!keep) for (const p of Object.values(db.players)) if (p.clubId === c.id) delete db.players[p.id];
     const divReps = P.divClubs(db, c.div).map((x) => x.rep);
     Object.assign(c, {
       name: opts.name, short: opts.short, city: opts.city, stadium: opts.stadium, country: opts.country,
@@ -1216,7 +1217,7 @@
           db.players[p.id] = p;
         }
       }
-    } else P.makeSquad(Math.random, db, c, used);
+    } else if (!keep) P.makeSquad(Math.random, db, c, used);
     return c;
   };
 })(window.PFC);

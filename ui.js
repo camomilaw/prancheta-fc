@@ -222,38 +222,69 @@
   // ---------- Criar clube ----------
   function renderCreate() {
     const s = A.setup, db = s.db;
-    const f = s.form || (s.form = { name: '', short: '', city: '', stadium: '', country: 'BRA', c1: '#1d6b3a', c2: '#ffffff', div: 8, replaceId: null, squad: 'auto' });
+    const f = s.form || (s.form = { name: '', short: '', city: '', stadium: '', country: 'BRA', c1: '#1d6b3a', c2: '#ffffff', div: 8, replaceId: null, squad: 'keep' });
+    if (P.createExtra) P.createExtra(f); // valores padrão de estrutura
+    const step = f.step || (f.step = 1);
     const ovrs = P.clubOvrs(db);
-    const divClubs = P.divClubs(db, f.div).sort((a, b) => ovrs[a.id] - ovrs[b.id]);
-    if (!f.replaceId || !divClubs.find((c) => c.id === f.replaceId)) f.replaceId = divClubs[0].id;
+    const divClubs = P.divClubs(db, f.div).sort((a, b) => ovrs[b.id] - ovrs[a.id]);
+    if (!f.replaceId || !divClubs.find((c) => c.id === f.replaceId)) f.replaceId = divClubs[divClubs.length - 1].id;
     const preview = { name: f.name || 'Meu Clube', short: (f.short || 'MEU').toUpperCase(), colors: [f.c1, f.c2], logo: f.logo };
-    const inp = (k, label, extra) => `<div class="field"><label class="label" for="cc-${k}">${label}</label><input id="cc-${k}" data-i="cc" data-k="${k}" value="${esc(f[k])}" ${extra || ''}></div>`;
-    return `<div class="setup">
-      <div class="row"><button class="btn" data-a="createClose">‹ Voltar</button></div>
-      <div class="card" style="display:flex;flex-direction:column;gap:16px">
-        <div class="row"><span id="cc-badge">${P.badge(preview, 56)}</span><div style="flex:1;min-width:0"><h2>Criar meu clube</h2><div class="muted">Ele entra na Ultraliga no lugar de um clube da divisão escolhida.</div></div></div>
-        <div class="form-grid">
-          ${inp('name', 'Nome do clube', 'maxlength="40" placeholder="Ex.: Esporte Clube Bairro Alto"')}
-          ${inp('short', 'Sigla (3 letras)', 'maxlength="3" placeholder="EBA" style="text-transform:uppercase"')}
-          ${inp('city', 'Cidade', 'maxlength="40"')}
-          ${inp('stadium', 'Estádio', 'maxlength="50"')}
-          <div class="field"><label class="label" for="cc-country">País</label><select id="cc-country" data-c="ccSel" data-k="country">${countryOpts(f.country)}</select></div>
-          <div class="field logo-field"><span class="label">Escudo (opcional)</span><label class="btn sm logo-btn"><input type="file" accept="image/*" data-c="ccLogo" hidden>${f.logo ? 'Trocar imagem' : 'Enviar imagem'}</label>${f.logo ? '<button class="btn sm ghost" data-a="ccLogoDel">Usar o escudo padrão</button>' : '<small class="muted">Sem imagem, o escudo é desenhado com as cores e a sigla.</small>'}</div>
-          <div class="field"><label class="label" for="cc-c1">Cor principal</label><input id="cc-c1" type="color" data-i="cc" data-k="c1" value="${esc(f.c1)}"></div>
-          <div class="field"><label class="label" for="cc-c2">Cor secundária</label><input id="cc-c2" type="color" data-i="cc" data-k="c2" value="${esc(f.c2)}"></div>
-        </div>
-        <div class="form-grid">
-          <div class="field"><label class="label" for="cc-div">Divisão inicial</label>${divSel(f.div, 'ccDiv', 'Divisão inicial').replace('<select', '<select id="cc-div"')}</div>
-          <div class="field"><label class="label" for="cc-rep">Entra no lugar de</label><select id="cc-rep" data-c="ccSel" data-k="replaceId">${divClubs.map((c) => `<option value="${c.id}" ${f.replaceId === c.id ? 'selected' : ''}>${esc(c.name)} (força ${ovrs[c.id]})</option>`).join('')}</select></div>
-        </div>
-        ${P.createExtra ? P.createExtra(f) : ''}
-        <fieldset class="radio"><legend class="label">Elenco inicial</legend>
-          <label><input type="radio" name="squad" value="auto" data-c="ccSel" data-k="squad" ${f.squad === 'auto' ? 'checked' : ''}> <span><b>Gerado automaticamente</b><br><span class="muted">26 jogadores com nomes do país do clube, no nível da divisão.</span></span></label>
-          <label><input type="radio" name="squad" value="generic" data-c="ccSel" data-k="squad" ${f.squad === 'generic' ? 'checked' : ''}> <span><b>Jogadores genéricos</b><br><span class="muted">"Jogador 01" a "Jogador 26", para você renomear e ajustar um por um.</span></span></label>
-        </fieldset>
-        <p class="muted" style="margin:0;font-size:.88rem">Depois de criar, você pode editar cada jogador e trazer atletas de outros clubes pelo editor.</p>
-        <div class="row"><span class="spacer"></span><button class="btn primary" data-a="createDo">Criar clube</button></div>
-      </div></div>`;
+    const inp = (k, label, extra) => `<div class="field"><label class="jr-step" for="cc-${k}">${label}</label><input id="cc-${k}" class="sel" data-i="cc" data-k="${k}" value="${esc(f[k])}" ${extra || ''}></div>`;
+    const dots = [1, 2, 3].map((i) => `<span class="nc-dot ${i === step ? 'on' : i < step ? 'done' : ''}">${i}</span>`).join('<i></i>');
+    let body = '', next = '';
+    if (step === 1) {
+      body = `<section class="jr-classif ncc-sec"><div class="ncc-grid ncc-g1">
+          <div class="ncc-crest"><span id="cc-badge" data-sz="132">${P.badge(preview, 132)}</span>
+            <div class="ncc-up"><label class="btn logo-btn"><input type="file" accept="image/*" data-c="ccLogo" hidden>${f.logo ? 'Trocar imagem' : 'Carregar imagem'}</label>${f.logo ? '<button class="btn ghost" data-a="ccLogoDel">Tirar imagem</button>' : ''}</div></div>
+          <div class="ncc-col">
+            <p class="jr-note">${f.logo ? 'Seu escudo está pronto. A sigla e as cores ainda aparecem no uniforme e nas tabelas.' : 'Sem imagem? Sem problema: o escudo é desenhado com a sigla e as cores. É só pular.'}</p>
+            ${inp('short', 'Sigla (3 letras)', 'maxlength="3" placeholder="MEU" style="text-transform:uppercase"')}
+            <div class="ncc-two">
+              <div class="field"><label class="jr-step" for="cc-c1">Cor principal</label><input id="cc-c1" type="color" data-i="cc" data-k="c1" value="${esc(f.c1)}"></div>
+              <div class="field"><label class="jr-step" for="cc-c2">Cor secundária</label><input id="cc-c2" type="color" data-i="cc" data-k="c2" value="${esc(f.c2)}"></div>
+            </div>
+          </div></div></section>`;
+      next = f.logo ? 'Próximo →' : 'Pular →';
+    }
+    if (step === 2) {
+      const lv = (k, label) => `<div class="field"><span class="jr-step">${label}</span><select class="sel" data-c="ccSel" data-k="${k}">${[1, 2, 3, 4, 5].map((n) => `<option ${Number(f[k]) === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`;
+      body = `<section class="jr-classif ncc-sec"><div class="ncc-grid">
+          <div class="ncc-col">
+            <div class="ncc-name"><span id="cc-badge" data-sz="44">${P.badge(preview, 44)}</span>${inp('name', 'Nome do clube', 'maxlength="40" placeholder="Ex.: Esporte Clube Bairro Alto"')}</div>
+            <div class="ncc-two">${inp('city', 'Cidade', 'maxlength="40"')}<div class="field"><label class="jr-step" for="cc-country">País</label><select id="cc-country" class="sel" data-c="ccSel" data-k="country">${countryOpts(f.country)}</select></div></div>
+            <div class="ncc-two">${inp('stadium', 'Estádio', 'maxlength="50" placeholder="Estádio da cidade"')}<div class="field"><label class="jr-step" for="cc-cap">Lugares</label><input id="cc-cap" class="sel" type="number" min="1000" max="150000" step="500" data-c="ccSel" data-k="cap" value="${esc(f.cap)}"></div></div>
+          </div>
+          <div class="ncc-col ncc-right"><span class="jr-step">Estrutura (1 a 5)</span>
+            <div class="ncc-three">${lv('base', 'Base')}${lv('ct', 'Treino')}${lv('sede', 'Sede')}</div>
+            <div class="field"><label class="jr-step" for="cc-bal">Saldo inicial (R$ milhões)</label><input id="cc-bal" class="sel" type="number" min="0" step="0.5" data-c="ccSel" data-k="bal" value="${esc(f.bal)}" placeholder="Padrão da divisão"></div>
+            <p class="jr-note">Base faz jovens melhores, Treino faz o elenco evoluir mais rápido e Sede traz mais dinheiro.</p>
+          </div></div></section>`;
+      next = 'Próximo →';
+    }
+    if (step === 3) {
+      const SQ = [['keep', 'Herdar o elenco', 'Fica com os jogadores do clube que sai.'], ['auto', 'Sortear jogadores', 'Elenco novo do seu país, no nível da divisão.'], ['generic', 'Montar um por um', '"Jogador 01" a "26" para você editar.']];
+      const rep = divClubs.find((c) => c.id === f.replaceId);
+      const cnt = {}; for (const p of Object.values(db.players)) if (p.clubId) cnt[p.clubId] = (cnt[p.clubId] || 0) + 1;
+      body = `<section class="ncc-s3">
+          <div class="ncc-top">
+            <div class="field"><span class="jr-step">Divisão</span>${divSel(f.div, 'ccDiv', 'Divisão inicial')}</div>
+            <div class="field ncc-sq"><span class="jr-step">Elenco</span><div class="ncc-opts">${SQ.map(([k, n, d]) => `<button class="${f.squad === k ? 'on' : ''}" data-a="ccSquad" data-k="${k}" aria-pressed="${f.squad === k}"><b>${n}</b><small>${d}</small></button>`).join('')}</div></div>
+          </div>
+          <div class="jr-h jr-h-row"><h2>Entra no lugar de</h2><span class="jr-note">${rep ? esc(rep.name) : ''}</span></div>
+          <div class="jr-clubs ncc-clubs" role="list">${divClubs.map((c) => `<button class="jr-club ${f.replaceId === c.id ? 'on' : ''}" role="listitem" data-a="ccRep" data-id="${c.id}" aria-pressed="${f.replaceId === c.id}">
+            <span class="jr-strip" style="background:${esc(c.colors[0])};border-right-color:${esc(c.colors[1])}"></span>
+            <span class="jr-club-n"><b>${esc(c.name)}</b><small>${esc(P.countryName(c.country))} · ${cnt[c.id] || 0} jogadores</small></span>
+            <span class="jr-ovr">${ovrs[c.id]}</span></button>`).join('')}</div>
+        </section>`;
+      next = f.squad === 'generic' ? 'Fundar e montar elenco →' : 'Fundar o clube →';
+    }
+    return `<div class="setup jr nc ncc ncc-s${step}">
+      <div class="row"><button class="btn" data-a="ccBack">‹ Voltar</button><span class="spacer"></span><span class="nc-steps">${dots}</span></div>
+      <header class="jr-mast"><div class="jr-mast-top"><span>Classificados</span><span>Fundação ${step} de 3</span><span>Novo clube</span></div>
+        <h1>${['', 'O escudo', 'O nome', 'A vaga'][step]}</h1></header>
+      ${body}
+      <div class="row"><span class="spacer"></span><button class="btn primary" data-a="${step < 3 ? 'ccNext' : 'createDo'}">${next}</button></div>
+    </div>`;
   }
 
   // ---------- Início ----------
@@ -1224,20 +1255,29 @@
       catch (e) { A.toast('Não deu para importar: ' + e.message); }
     },
     createOpen() { A.setup.creating = true; A.render(); window.scrollTo(0, 0); },
+    ccBack() { const f = A.setup.form; if (f && f.step > 1) { f.step--; A.render(); window.scrollTo(0, 0); } else A.ACT.createClose(); },
+    ccNext() {
+      const f = A.setup.form;
+      if (f.step === 2 && !f.name.trim()) { A.toast('Dê um nome ao clube'); const el = document.getElementById('cc-name'); if (el) el.focus(); return; }
+      f.step = (f.step || 1) + 1; A.render(); window.scrollTo(0, 0);
+    },
+    ccSquad(d) { A.setup.form.squad = d.k; A.render(); },
+    ccRep(d) { A.setup.form.replaceId = d.id; A.render(); },
     createClose() { A.setup.creating = false; if (A.setup.newc) A.setup.newc = 3; A.render(); window.scrollTo(0, 0); },
     createDo() {
       const f = A.setup.form;
-      if (!f.name.trim()) { A.toast('Dê um nome ao clube'); document.getElementById('cc-name').focus(); return; }
+      if (!f.name.trim()) { A.toast('Dê um nome ao clube'); f.step = 2; A.render(); return; }
       const short = (f.short.trim() || f.name.trim().slice(0, 3)).toUpperCase().slice(0, 3);
       const c = P.createClub(A.setup.db, {
         replaceId: f.replaceId, name: f.name.trim(), short, city: f.city.trim() || f.name.trim(),
         stadium: f.stadium.trim() || 'Estádio ' + (f.city.trim() || f.name.trim()), country: f.country, c1: f.c1, c2: f.c2, squad: f.squad, logo: f.logo || null
       });
       if (P.applyCreateExtra) P.applyCreateExtra(c, f);
+      const manual = f.squad === 'generic';
       A.setup.club = c.id; A.setup.divF = c.div; A.setup.q = ''; A.setup.creating = false; A.setup.form = null; A.setup.newc = 3;
-      A.st.ed = { v: 'club', cid: c.id }; A.setup.editing = true;
+      if (manual) { A.st.ed = { v: 'club', cid: c.id }; A.setup.editing = true; }
       A.render(); window.scrollTo(0, 0);
-      A.toast(`${c.name} criado! Ajuste o elenco e depois volte para começar.`);
+      A.toast(manual ? `${c.name} fundado! Ajuste os jogadores e depois volte para assinar.` : `${c.name} fundado! Agora é só assinar o contrato.`);
     }
   });
 
@@ -1270,7 +1310,7 @@
     cc(el) {
       const f = A.setup.form; f[el.dataset.k] = el.value;
       const b = document.getElementById('cc-badge');
-      if (b) b.innerHTML = P.badge({ name: f.name, short: (f.short || 'MEU').toUpperCase(), colors: [f.c1, f.c2], logo: f.logo }, 56);
+      if (b) b.innerHTML = P.badge({ name: f.name, short: (f.short || 'MEU').toUpperCase(), colors: [f.c1, f.c2], logo: f.logo }, Number(b.dataset.sz) || 56);
     }
   });
 
