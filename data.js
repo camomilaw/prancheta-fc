@@ -463,16 +463,18 @@
         made.forEach((p) => { db.players[p.id] = p; });
         // completa posições que faltarem (mínimo 22 jogadores) com genéricos do nível do elenco
         const avg = made.map((p) => P.ovrAt(p, p.pos)).sort((a, b) => b - a).slice(0, 14);
-        const lvl = lvlFor(avg.reduce((s, x) => s + x, 0) / Math.max(1, avg.length)) - 1.5;
+        // completados: jovens (17–21) e bem abaixo dos titulares — reservas e promessas, sem tirar vaga dos reais
+        const lvl = lvlFor(avg.reduce((s, x) => s + x, 0) / Math.max(1, avg.length)) - 1;
+        const young = () => 17 + Math.floor(r() * 5);
         const count = (pos) => Object.values(db.players).filter((p) => p.clubId === c.id && p.pos === pos).length;
         const total = () => Object.values(db.players).filter((p) => p.clubId === c.id).length;
         for (const pos of Object.keys(P.SQUAD_TEMPLATE)) {
           const need = pos === 'GOL' ? 2 : Math.min(1, P.SQUAD_TEMPLATE[pos]);
-          for (let i = count(pos); i < need; i++) { const p = P.makePlayer(r, { pos, level: lvl, clubId: c.id, country: c.country }); db.players[p.id] = p; }
+          for (let i = count(pos); i < need; i++) { const p = P.makePlayer(r, { pos, level: lvl, clubId: c.id, country: c.country, age: young() }); db.players[p.id] = p; }
         }
         while (total() < 22) {
           const pos = Object.keys(P.SQUAD_TEMPLATE).find((ps) => count(ps) < P.SQUAD_TEMPLATE[ps]) || 'MC';
-          const p = P.makePlayer(r, { pos, level: lvl, clubId: c.id, country: c.country, age: 18 + Math.floor(r() * 4) });
+          const p = P.makePlayer(r, { pos, level: lvl, clubId: c.id, country: c.country, age: young() });
           db.players[p.id] = p;
         }
         np += made.length;
