@@ -7,7 +7,7 @@
 (function (P) {
   const A = P.app;
   const KEY = 'prancheta-fc:orient';
-  const DEF_VP = 'width=device-width, initial-scale=1, viewport-fit=cover';
+  const DEF_VP = 'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=overlays-content'; // teclado por cima, sem encolher a página
   const LAND_MIN = 900; // abaixo disso a página é levemente afastada para caber o layout de PC
   let pref = P.store.get(KEY) || 'auto';
 
@@ -21,7 +21,7 @@
     const land = isPhone() && landscape();
     // deitado: se a largura real (já com zoom/tamanho de fonte do celular) ficar abaixo de 900, fixa 900
     const cur = meta.getAttribute('content');
-    const want = !land ? DEF_VP : cur !== DEF_VP ? cur : (innerWidth >= LAND_MIN ? DEF_VP : `width=${LAND_MIN}, viewport-fit=cover`);
+    const want = !land ? DEF_VP : cur !== DEF_VP ? cur : (innerWidth >= LAND_MIN ? DEF_VP : `width=${LAND_MIN}, viewport-fit=cover, interactive-widget=overlays-content`);
     if (meta.getAttribute('content') !== want) meta.setAttribute('content', want);
     document.documentElement.classList.toggle('phone-land', land);
     document.documentElement.classList.toggle('is-phone', isPhone());
