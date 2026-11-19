@@ -1,0 +1,7 @@
+PASTA DE SAVES DO PRANCHETA FC
+
+Aqui ficam as suas carreiras: carreira-1.json a carreira-9.json (um arquivo por espaço).
+
+- Para levar uma carreira para outro computador: copie o arquivo para a pasta "saves" do outro Prancheta FC.
+- Ao abrir o jogo, ele traz desta pasta as versões mais recentes.
+- Para fazer backup, basta copiar esta pasta inteira.

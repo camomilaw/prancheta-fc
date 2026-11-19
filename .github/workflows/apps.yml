@@ -1,0 +1,101 @@
+# Compila o Prancheta FC para PC (Windows, .zip com o .exe) e Android (.apk)
+# e publica os dois na página "Releases" do GitHub.
+# Roda ao criar uma tag v* (ex.: v1.0.0) ou pelo botão "Run workflow" na aba Actions.
+name: Apps (PC e Android)
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  www:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Montar o jogo (com fontes offline)
+        run: node app/prepare-www.mjs app/www
+      - uses: actions/upload-artifact@v4
+        with: { name: www, path: app/www, retention-days: 3 }
+
+  android:
+    needs: www
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: www, path: app/android/www }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - name: Versão
+        id: v
+        run: |
+          V="${GITHUB_REF_NAME#v}"; [[ "$V" =~ ^[0-9]+\.[0-9]+ ]] || V="1.0.${GITHUB_RUN_NUMBER}"
+          echo "name=$V" >> $GITHUB_OUTPUT
+      - name: Projeto Android (Capacitor)
+        working-directory: app/android
+        env: { VERSION_CODE: '${{ github.run_number }}', VERSION_NAME: '${{ steps.v.outputs.name }}' }
+        run: |
+          command -v convert || (sudo apt-get update && sudo apt-get install -y imagemagick)
+          npm install --no-audit --no-fund
+          npx cap add android
+          python3 patch-android.py
+          npx cap sync android
+      - name: Compilar o APK
+        working-directory: app/android/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon -q
+          mkdir -p ../../../out
+          cp app/build/outputs/apk/debug/app-debug.apk "../../../out/PranchetaFC-${{ steps.v.outputs.name }}-Android.apk"
+      - uses: actions/upload-artifact@v4
+        with: { name: android, path: out/*.apk, retention-days: 7 }
+
+  windows:
+    needs: www
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: www, path: app/desktop/www }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Compilar o app de PC (Electron)
+        working-directory: app/desktop
+        shell: bash
+        run: |
+          V="${GITHUB_REF_NAME#v}"; [[ "$V" =~ ^[0-9]+\.[0-9]+ ]] || V="1.0.${GITHUB_RUN_NUMBER}"
+          npm pkg set version="$V"
+          npm install --no-audit --no-fund --save-dev electron@33 electron-builder@25
+          npx electron-builder --win zip --x64 --publish never
+          mkdir -p ../../out && cp dist/*.zip ../../out/
+      - uses: actions/upload-artifact@v4
+        with: { name: windows, path: out/*.zip, retention-days: 7 }
+
+  release:
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true, pattern: '{android,windows}' }
+      - name: Nome da versão
+        id: v
+        run: |
+          T="${GITHUB_REF_NAME}"; [[ "$T" == v* ]] || T="build-${GITHUB_RUN_NUMBER}"
+          echo "tag=$T" >> $GITHUB_OUTPUT
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.v.outputs.tag }}
+          name: Prancheta FC ${{ steps.v.outputs.tag }}
+          prerelease: ${{ !startsWith(github.ref_name, 'v') || contains(github.ref_name, '-') }}
+          files: out/*
+          body: |
+            **PC (Windows):** baixe o `.zip`, extraia a pasta e abra `PranchetaFC.exe`. Os saves ficam na pasta `saves`, ao lado do .exe.
+            **Android:** baixe o `.apk` no celular e abra para instalar (o Android vai pedir para permitir "instalar apps desta fonte"). Os saves ficam em Documentos/PranchetaFC/saves.

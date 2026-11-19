@@ -42,6 +42,7 @@
 
   // Travar a rotação: no navegador só funciona em tela cheia e logo depois de um toque
   async function lock(kind) {
+    if (P.nativeLock) return P.nativeLock(kind); // app Android: o próprio sistema gira a tela
     const so = screen.orientation;
     if (!so || !so.lock) return false;
     try {
@@ -66,7 +67,7 @@
   const needLock = () => {
     if (pref === 'auto' || !isPhone() || busy || fails > 3) return false; // navegador que não deixa travar: desiste
     const ok = pref === 'land' ? landscape() : !landscape();
-    const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+    const standalone = !!P.nativeLock || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
     return !ok || (!standalone && !document.fullscreenElement);
   };
   const relock = () => {

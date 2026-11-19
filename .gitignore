@@ -1,2 +1,9 @@
 jogo-completo.html
 dist/
+app/www/
+app/android/www/
+app/android/android/
+app/android/node_modules/
+app/desktop/www/
+app/desktop/node_modules/
+app/desktop/dist/

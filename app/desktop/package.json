@@ -1,0 +1,41 @@
+{
+  "name": "prancheta-fc",
+  "productName": "Prancheta FC",
+  "version": "1.0.0",
+  "description": "Jogo de técnico de futebol com cara de jornal.",
+  "main": "main.js",
+  "author": "Prancheta FC",
+  "license": "UNLICENSED",
+  "build": {
+    "appId": "com.pranchetafc.jogo",
+    "productName": "Prancheta FC",
+    "executableName": "PranchetaFC",
+    "files": [
+      "main.js",
+      "preload.js",
+      "www/**/*"
+    ],
+    "asar": false,
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "www/icons/icon-512.png"
+    },
+    "artifactName": "PranchetaFC-${version}-Windows.${ext}",
+    "extraFiles": [
+      {
+        "from": "extra/saves",
+        "to": "saves"
+      }
+    ]
+  }
+}

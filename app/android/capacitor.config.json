@@ -1,0 +1,8 @@
+{
+  "appId": "com.pranchetafc.jogo",
+  "appName": "Prancheta FC",
+  "webDir": "www",
+  "backgroundColor": "#16130f",
+  "android": { "allowMixedContent": false, "captureInput": true, "webContentsDebuggingEnabled": false },
+  "plugins": { "StatusBar": { "overlaysWebView": true, "style": "DARK", "backgroundColor": "#00000000" } }
+}

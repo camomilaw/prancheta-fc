@@ -55,7 +55,8 @@
   function flush() {
     if (busy || !pending) return;
     const { n, text } = pending; pending = null; busy = true;
-    put(n, text).catch(() => A.toast('Não deu para salvar neste navegador. Baixe um backup em Mais.'))
+    put(n, text).then(() => { if (P.onSlotSaved) P.onSlotSaved(n, text, meta.s[n]); })
+      .catch(() => A.toast('Não deu para salvar neste navegador. Baixe um backup em Mais.'))
       .then(() => { busy = false; flush(); });
   }
   A.slot = null;
@@ -85,8 +86,10 @@
   };
   A.deleteSlot = function (n) {
     delete meta.s[n]; if (meta.active === n) meta.active = null;
-    writeMeta(); return del(n);
+    writeMeta(); if (P.onSlotDeleted) P.onSlotDeleted(n); return del(n);
   };
+  // usado pelo app (PC/Android) para trazer carreiras da pasta de saves
+  P.slotsRaw = { put, get, meta: () => meta, writeMeta };
 
   // Primeira vez com espaços: leva o save antigo para o espaço 1
   P.slotsInit = function () {
