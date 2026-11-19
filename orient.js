@@ -59,14 +59,26 @@
     }
     setTimeout(() => { applyViewport(); A.render(); }, 250);
   };
-  // escolha salva: no primeiro toque, tenta travar de novo (o navegador esquece ao recarregar)
-  let tried = false;
-  document.addEventListener('pointerdown', () => {
-    if (tried || pref === 'auto' || !isPhone()) return; tried = true;
-    const want = pref === 'land' ? 'landscape' : 'portrait';
+  // Escolha salva: vale até você mudar. O navegador solta a trava quando sai da tela cheia
+  // (ex.: ao abrir a lista de arquivos para importar), então a cada toque conferimos e travamos de novo.
+  let busy = false, fails = 0;
+  const needLock = () => {
+    if (pref === 'auto' || !isPhone() || busy || fails > 3) return false; // navegador que não deixa travar: desiste
     const ok = pref === 'land' ? landscape() : !landscape();
-    if (!ok || !document.fullscreenElement) lock(want);
-  }, true);
+    const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+    return !ok || (!standalone && !document.fullscreenElement);
+  };
+  const relock = () => {
+    if (!needLock()) return;
+    busy = true;
+    lock(pref === 'land' ? 'landscape' : 'portrait').then((ok) => { busy = false; if (ok) setTimeout(applyViewport, 250); else fails++; });
+  };
+  document.addEventListener('pointerdown', relock, true);
+  document.addEventListener('click', relock, true);
+  // de volta ao jogo (depois do seletor de arquivos ou de outro app): tenta já, sem esperar um toque
+  const tryBack = () => { if (document.visibilityState !== 'visible' || pref === 'auto' || !isPhone()) return; try { const so = screen.orientation; if (so && so.lock && (document.fullscreenElement || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches)) so.lock(pref === 'land' ? 'landscape' : 'portrait').catch(() => {}); } catch (e) { /* sem trava */ } };
+  document.addEventListener('visibilitychange', tryBack);
+  addEventListener('focus', tryBack);
 
   const phoneSvg = (land) => land
     ? '<svg viewBox="0 0 64 40" aria-hidden="true"><rect x="2" y="4" width="60" height="32" rx="6" fill="none" stroke="currentColor" stroke-width="3"/><rect x="10" y="9" width="44" height="22" fill="currentColor" opacity=".18"/><circle cx="57" cy="20" r="1.8" fill="currentColor"/></svg>'
