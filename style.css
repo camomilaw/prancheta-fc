@@ -2088,3 +2088,11 @@ html.phone-land .setup.jr.nc-s3 .jr-sigline { font-size: 1.5rem; }
 html.phone-land .setup.jr.nc-s3 .jr-stamp { min-height: 36px; font-size: .85rem; padding: 0 16px; }
 html.phone-land .setup.jr.nc-s3 .jr-h { padding-bottom: 2px; }
 html.phone-land .setup.jr.nc-s3 .jr-search { padding-top: 4px; padding-bottom: 4px; }
+/* Passo 2 deitado: cabe numa tela mesmo com letra grande no celular */
+html.phone-land .setup.jr.nc .jr-classif-h { display: none; }
+html.phone-land .setup.jr.nc .jr-classif { padding: 8px 12px; gap: 8px; }
+html.phone-land .setup.jr.nc { padding-bottom: 6px; min-height: 0; }
+html.phone-land .setup.jr.nc > .row:first-child .btn { min-height: 34px; padding-top: 2px; padding-bottom: 2px; }
+html.phone-land .setup.jr.nc-s2 .sel { min-height: 34px; height: 36px; padding-top: 0; padding-bottom: 0; }
+html.phone-land .setup.jr.nc-s2 .seg button { min-height: 32px; padding-top: 2px; padding-bottom: 2px; }
+html.phone-land .setup.jr.nc > .row:last-child .btn { min-height: 36px; }
