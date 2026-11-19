@@ -15,8 +15,8 @@
   const KEY = 'prancheta-fc:radio';
 
   // ---------- Preferências ----------
-  const R = Object.assign({ on: true, src: 'sp', live: 'cont', vol: 0.7, shuffle: true, uri: '' }, (() => { try { return JSON.parse(P.store.get(KEY)) || {}; } catch (e) { return {}; } })());
-  const saveR = () => P.store.set(KEY, JSON.stringify({ on: R.on, src: R.src, live: R.live, vol: R.vol, shuffle: R.shuffle, uri: R.uri }));
+  const R = Object.assign({ on: true, src: 'sp', live: 'cont', vol: 0.7, shuffle: true, uri: '', yt: '' }, (() => { try { return JSON.parse(P.store.get(KEY)) || {}; } catch (e) { return {}; } })());
+  const saveR = () => P.store.set(KEY, JSON.stringify({ on: R.on, src: R.src, live: R.live, vol: R.vol, shuffle: R.shuffle, uri: R.uri, yt: R.yt }));
   const S = { open: false, started: false, userPaused: false, matchPaused: false, sp: null, spState: 'off', spPlaying: false, spTitle: '', tracks: [], order: [], idx: 0, audio: null, url: null };
   P.radioState = () => ({ R, S });
 
@@ -113,16 +113,78 @@
     setTimeout(() => { if (S.spState === 'loading') { S.spState = 'fail'; draw(); } }, 15000);
   }
 
+  // ---------- YouTube: playlist ou vídeo colado pelo jogador ----------
+  P.youtubeRef = function (txt) {
+    const t = String(txt || '').trim();
+    let m = t.match(/[?&]list=([A-Za-z0-9_-]{10,64})/);
+    if (m) { const v = t.match(/[?&]v=([A-Za-z0-9_-]{11})/); return { list: m[1], v: v ? v[1] : null }; }
+    m = t.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([A-Za-z0-9_-]{11})/);
+    return m ? { list: null, v: m[1] } : null;
+  };
+  const ytRef = () => { try { return R.yt ? JSON.parse(R.yt) : null; } catch (e) { return null; } };
+  const ytVol = () => Math.round(R.vol * 100 * (S.matchDuck ? 0.35 : 1));
+  function loadYT() {
+    const ref = ytRef(); if (!ref) { draw(); return; }
+    if (window.YT && window.YT.Player) { mountYT(ref); return; }
+    if (S.ytState === 'loading') return;
+    S.ytState = 'loading'; draw();
+    const prevReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (prevReady) try { prevReady(); } catch (e) { /* ignora */ } mountYT(ytRef()); };
+    const sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api'; sc.async = true;
+    sc.onerror = () => { S.ytState = 'fail'; draw(); };
+    document.head.appendChild(sc);
+    setTimeout(() => { if (S.ytState === 'loading') { S.ytState = 'fail'; draw(); } }, 15000);
+  }
+  function mountYT(ref) {
+    if (!ref) return;
+    const host = document.getElementById('rd-yt-pl'); if (!host) return;
+    if (S.yt) { try { S.yt.destroy(); } catch (e) { /* ignora */ } S.yt = null; }
+    host.innerHTML = '<div></div>';
+    const vars = { playsinline: 1, rel: 0, modestbranding: 1, origin: location.origin };
+    if (ref.list) Object.assign(vars, { listType: 'playlist', list: ref.list });
+    S.ytState = 'loading'; S.ytFails = 0;
+    S.yt = new window.YT.Player(host.firstChild, {
+      width: '100%', height: '100%', videoId: ref.list ? (ref.v || undefined) : ref.v, playerVars: vars,
+      events: {
+        onReady: (e) => {
+          S.ytState = 'ready'; e.target.setVolume(ytVol());
+          if (ref.list) { try { e.target.setShuffle(!!R.shuffle); e.target.setLoop(true); } catch (er) { /* ignora */ } }
+          if (S.started && R.on && R.src === 'yt' && !S.userPaused) e.target.playVideo();
+          draw();
+        },
+        onStateChange: (e) => {
+          S.ytPlaying = e.data === 1; if (e.data === 1) S.ytFails = 0;
+          if (e.data === 0 && !ref.list) e.target.playVideo(); // vídeo único: repete
+          drawPill(); drawYT();
+        },
+        onError: (e) => {
+          // vídeo que não pode tocar fora do YouTube (o dono bloqueou): pula para o próximo
+          S.ytFails = (S.ytFails || 0) + 1;
+          if (ref.list && S.ytFails < 8) { try { e.target.nextVideo(); } catch (er) { /* ignora */ } }
+          else { S.ytBlocked = true; drawYT(); }
+        }
+      }
+    });
+  }
+  function drawYT() {
+    const box = document.getElementById('rd-yt-now'); if (!box || !S.yt || !S.yt.getVideoData) return;
+    let t = ''; try { t = S.yt.getVideoData().title || ''; } catch (e) { /* ignora */ }
+    box.innerHTML = `<span class="label">${S.ytPlaying ? 'Tocando' : 'Pausado'}</span><b>${esc(t || '…')}</b>`;
+    const tg = document.getElementById('rd-yt-tog'); if (tg) tg.textContent = S.ytPlaying ? '❚❚ Pausar' : '▶ Tocar';
+  }
+
   // ---------- Controle geral ----------
-  const playing = () => (R.src === 'sp' ? S.spPlaying : !!(S.audio && !S.audio.paused));
+  const playing = () => (R.src === 'sp' ? S.spPlaying : R.src === 'yt' ? !!S.ytPlaying : !!(S.audio && !S.audio.paused));
   function start() {
     if (!R.on) return;
     if (R.src === 'sp') { if (S.sp) { try { S.sp.play(); } catch (e) { /* ignora */ } } else loadSpotify(); }
+    else if (R.src === 'yt') { if (S.yt && S.yt.playVideo) { try { S.yt.playVideo(); } catch (e) { /* ignora */ } } else loadYT(); }
     else playMine(false);
   }
   function stop() {
     if (S.sp) { try { S.sp.pause(); } catch (e) { /* ignora */ } }
     if (S.audio) S.audio.pause();
+    if (S.yt && S.yt.pauseVideo) { try { S.yt.pauseVideo(); } catch (e) { /* ignora */ } }
   }
   function toggle() {
     if (playing()) { S.userPaused = true; stop(); }
@@ -142,12 +204,12 @@
     document.body.classList.add('in-match');
     S.open = false; draw();
     if (R.live === 'pausa' && playing()) { S.matchPaused = true; stop(); }
-    if (R.live === 'baixa' && R.src === 'mine') { S.matchDuck = true; if (S.audio) S.audio.volume = mineVol(); }
+    if (R.live === 'baixa' && (R.src === 'mine' || R.src === 'yt')) { S.matchDuck = true; if (S.audio) S.audio.volume = mineVol(); if (S.yt && S.yt.setVolume) S.yt.setVolume(ytVol()); }
   }
   function matchOff() {
     document.body.classList.remove('in-match');
     if (S.matchPaused) { S.matchPaused = false; if (!S.userPaused) start(); }
-    if (S.matchDuck) { S.matchDuck = false; if (S.audio) S.audio.volume = mineVol(); }
+    if (S.matchDuck) { S.matchDuck = false; if (S.audio) S.audio.volume = mineVol(); if (S.yt && S.yt.setVolume) S.yt.setVolume(ytVol()); }
     draw();
   }
   const wrap = (name, after) => { const o = A.ACT[name]; if (!o) return; A.ACT[name] = function () { const r = o.apply(this, arguments); after(); return r; }; };
@@ -164,8 +226,9 @@
         <section class="rd-panel" aria-label="Rádio Prancheta" aria-hidden="true">
           <div class="rd-head"><img src="${LOGO}" alt=""><div class="rd-id"><b>Rádio Prancheta</b><span id="rd-sub"></span></div>
             <button class="btn sm" data-a="rdClose" aria-label="Recolher a rádio">▾</button></div>
-          <div class="seg rd-src"><button data-a="rdSrc" data-k="sp">Spotify</button><button data-a="rdSrc" data-k="mine">Minhas músicas</button></div>
+          <div class="seg rd-src"><button data-a="rdSrc" data-k="sp">Spotify</button><button data-a="rdSrc" data-k="yt">YouTube</button><button data-a="rdSrc" data-k="mine">Minhas músicas</button></div>
           <div id="rd-sp" class="rd-sp"><div id="rd-sp-pl"></div><div id="rd-sp-x"></div></div>
+          <div id="rd-yt" class="rd-yt"><div class="rd-yt-box"><div id="rd-yt-pl"></div></div><div id="rd-yt-x"></div></div>
           <div id="rd-mine" class="rd-mine"></div>
         </section>`;
       document.body.appendChild(el);
@@ -182,7 +245,8 @@
     const pn = el.querySelector('.rd-panel'); pn.setAttribute('aria-hidden', S.open ? 'false' : 'true'); pn.inert = !S.open;
     el.querySelectorAll('.rd-src button').forEach((b) => b.classList.toggle('on', b.dataset.k === R.src));
     const sp = el.querySelector('#rd-sp'), mine = el.querySelector('#rd-mine');
-    sp.hidden = R.src !== 'sp'; mine.hidden = R.src !== 'mine';
+    const yt = el.querySelector('#rd-yt');
+    sp.hidden = R.src !== 'sp'; mine.hidden = R.src !== 'mine'; yt.hidden = R.src !== 'yt';
     const sub = el.querySelector('#rd-sub');
     if (R.src === 'sp') {
       sub.textContent = S.spState === 'ready' ? (R.uri ? `Seu ${uriKind(R.uri)} no Spotify` : 'Playlist oficial no Spotify') : S.spState === 'fail' ? 'Sem conexão com o Spotify' : 'Conectando ao Spotify…';
@@ -198,6 +262,24 @@
           <p class="muted rd-note">Com o Spotify conectado neste navegador, as músicas tocam inteiras (no PC). No celular o Spotify costuma liberar só trechos: toque em <b>Abrir no app</b> e a música continua tocando enquanto você joga.</p>`;
       }
       if (S.spState === 'off' && S.open) loadSpotify();
+    } else if (R.src === 'yt') {
+      const ref = ytRef();
+      sub.textContent = !ref ? 'Cole o link de uma playlist do YouTube' : S.ytState === 'fail' ? 'Sem conexão com o YouTube' : S.ytState === 'ready' ? (ref.list ? 'Sua playlist do YouTube' : 'Seu vídeo do YouTube') : 'Conectando ao YouTube…';
+      yt.querySelector('.rd-yt-box').hidden = !ref;
+      const x = yt.querySelector('#rd-yt-x');
+      const typed = (x.querySelector('#rd-yt-url') || {}).value || '', hadFocus = document.activeElement && document.activeElement.id === 'rd-yt-url';
+      x.innerHTML = `${ref && S.ytState === 'ready' ? `<div class="rd-now" id="rd-yt-now"></div>
+          <div class="rd-ctl"><button class="btn sm" data-a="rdYtPrev" aria-label="Anterior">⏮</button><button class="btn sm primary" id="rd-yt-tog" data-a="rdToggle">▶ Tocar</button><button class="btn sm" data-a="rdYtNext" aria-label="Próxima">⏭</button>
+            ${ref.list ? `<button class="btn sm ${R.shuffle ? 'on' : ''}" data-a="rdShuffle" aria-pressed="${R.shuffle}" title="Ordem aleatória">🔀</button>` : ''}</div>
+          <label class="rd-vol"><span class="label">Volume</span><input type="range" min="0" max="100" value="${Math.round(R.vol * 100)}" data-i="rdVol"></label>` : ''}
+        ${S.ytState === 'fail' ? '<p class="rd-fail muted">Não deu para carregar o YouTube (sem internet ou bloqueado).</p>' : ''}
+        ${S.ytBlocked ? '<p class="rd-fail muted">Alguns vídeos desta lista não deixam tocar fora do YouTube (o dono bloqueou). Eles são pulados.</p>' : ''}
+        <form class="rd-link rd-ytlink"><input id="rd-yt-url" type="url" inputmode="url" placeholder="Cole o link de uma playlist do YouTube" aria-label="Link do YouTube"><button class="btn sm primary" data-a="rdYtGo">Tocar</button></form>
+        <p class="muted rd-note">Playlists públicas ou não listadas tocam completas, com o jogo aberto. Pode aparecer anúncio do YouTube.</p>`;
+      if (typed) x.querySelector('#rd-yt-url').value = typed;
+      if (hadFocus) x.querySelector('#rd-yt-url').focus();
+      drawYT();
+      if (ref && S.open && !S.yt && S.ytState !== 'loading' && S.ytState !== 'fail') loadYT();
     } else {
       const t = curTrack(), on = !!(S.audio && !S.audio.paused);
       sub.textContent = S.tracks.length ? `${S.tracks.length} música${S.tracks.length === 1 ? '' : 's'} neste aparelho` : 'Nenhuma música adicionada';
@@ -219,6 +301,7 @@
       if (R.src === d.k) return;
       stop(); R.src = d.k; saveR();
       if (R.src === 'sp') loadSpotify();
+      if (R.src === 'yt') loadYT();
       if (S.started && !S.userPaused) start();
       draw();
     },
@@ -239,9 +322,18 @@
       if (!w) { A.toast('Libere as janelas pop-up para entrar no Spotify'); return; }
       const iv = setInterval(() => { if (w.closed) { clearInterval(iv); if (S.api) { S.sp = null; S.spState = 'loading'; mountSpotify(S.api); draw(); } A.toast('Spotify conectado: o player foi recarregado'); } }, 800);
     },
+    rdYtGo() {
+      const inp = document.getElementById('rd-yt-url'), ref = P.youtubeRef(inp && inp.value);
+      if (!ref) { A.toast('Cole um link do YouTube (playlist ou vídeo)'); return; }
+      R.yt = JSON.stringify(ref); saveR(); S.started = true; S.userPaused = false; S.ytBlocked = false;
+      if (window.YT && window.YT.Player) mountYT(ref); else loadYT();
+      A.toast(ref.list ? 'Tocando sua playlist do YouTube' : 'Tocando seu vídeo do YouTube'); draw();
+    },
+    rdYtNext() { if (S.yt && S.yt.nextVideo) { S.userPaused = false; S.yt.nextVideo(); } },
+    rdYtPrev() { if (S.yt && S.yt.previousVideo) { S.userPaused = false; S.yt.previousVideo(); } },
     rdNext() { S.userPaused = false; S.started = true; next(); },
     rdPrev() { S.userPaused = false; S.started = true; prev(); },
-    rdShuffle() { R.shuffle = !R.shuffle; saveR(); const cur = S.order[S.idx]; reorder(); const i = S.order.indexOf(cur); if (i > 0) { [S.order[0], S.order[i]] = [S.order[i], S.order[0]]; } S.idx = 0; draw(); },
+    rdShuffle() { R.shuffle = !R.shuffle; saveR(); if (R.src === 'yt' && S.yt && S.yt.setShuffle) { try { S.yt.setShuffle(R.shuffle); } catch (e) { /* ignora */ } draw(); return; } const cur = S.order[S.idx]; reorder(); const i = S.order.indexOf(cur); if (i > 0) { [S.order[0], S.order[i]] = [S.order[i], S.order[0]]; } S.idx = 0; draw(); },
     rdClear() {
       if (!confirm('Apagar todas as músicas da rádio neste aparelho?')) return;
       stop(); if (S.audio) S.audio.removeAttribute('src'); S.curId = null;
@@ -254,7 +346,7 @@
     },
     rdLive(d) { R.live = d.k; saveR(); A.render(); }
   });
-  A.INP.rdVol = (el) => { R.vol = Number(el.value) / 100; saveR(); if (S.audio) S.audio.volume = mineVol(); };
+  A.INP.rdVol = (el) => { R.vol = Number(el.value) / 100; saveR(); if (S.audio) S.audio.volume = mineVol(); if (S.yt && S.yt.setVolume) S.yt.setVolume(ytVol()); };
   A.CHG.rdFiles = (el) => {
     const files = [...(el.files || [])].filter((f) => /^audio\//.test(f.type) || /\.(mp3|m4a|aac|ogg|oga|opus|wav|flac|webm)$/i.test(f.name));
     if (!files.length) { A.toast('Escolha arquivos de áudio (MP3, M4A, OGG…)'); return; }
@@ -268,19 +360,20 @@
       }).then(() => { if (!S.audio || S.audio.paused) { S.started = true; S.userPaused = false; reorder(); playMine(true); } });
   };
 
-  document.addEventListener('submit', (e) => { if (e.target.closest && e.target.closest('.rd-link')) { e.preventDefault(); A.ACT.rdLinkGo(); } }, true);
+  document.addEventListener('submit', (e) => { if (e.target.closest && e.target.closest('.rd-link')) { e.preventDefault(); if (e.target.closest('.rd-ytlink')) A.ACT.rdYtGo(); else A.ACT.rdLinkGo(); } }, true);
 
   // Cartão em Mais
   const prevMais = P.maisExtra;
   P.radioCard = () => `<div class="card rd-card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Rádio Prancheta</h2><img src="${LOGO}" alt="" width="44" height="44"></div>
-      <p class="muted" style="margin:0">Música de fundo enquanto você joga: a <a href="${PLAYLIST_URL}" target="_blank" rel="noopener">playlist da rádio no Spotify</a>, qualquer playlist ou álbum seu (cole o link na rádio) ou músicas do seu aparelho.</p>
+      <p class="muted" style="margin:0">Música de fundo enquanto você joga: a <a href="${PLAYLIST_URL}" target="_blank" rel="noopener">playlist da rádio no Spotify</a>, qualquer playlist ou álbum seu do Spotify ou do YouTube (cole o link na rádio) ou músicas do seu aparelho.</p>
       <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ${R.on ? '' : 'primary'}" data-a="rdOnOff">${R.on ? 'Desligar a rádio' : 'Ligar a rádio'}</button>${R.on ? '<button class="btn" data-a="rdOpen">Abrir a rádio</button>' : ''}</div>
       <div><span class="label">Nas partidas ao vivo</span><div class="seg" style="margin-top:6px">${[['cont', 'Continua tocando'], ['baixa', 'Baixa o volume'], ['pausa', 'Pausa']].map(([k, n]) => `<button class="${R.live === k ? 'on' : ''}" data-a="rdLive" data-k="${k}">${n}</button>`).join('')}</div>
-      ${R.live === 'baixa' ? '<small class="muted" style="font-size:.78rem">Baixar o volume só funciona em Minhas músicas: o Spotify não deixa o jogo mexer no volume dele.</small>' : ''}</div></div>`;
+      ${R.live === 'baixa' ? '<small class="muted" style="font-size:.78rem">Baixar o volume funciona no YouTube e em Minhas músicas: o Spotify não deixa o jogo mexer no volume dele.</small>' : ''}</div></div>`;
   P.maisExtra = () => P.radioCard() + (prevMais ? prevMais() : '');
 
   // Início
   loadTracks();
   if (R.on && R.src === 'sp') loadSpotify();
+  if (R.on && R.src === 'yt') loadYT();
   draw();
 })(window.PFC);
