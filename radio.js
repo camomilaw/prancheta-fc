@@ -62,7 +62,8 @@
     a.addEventListener('play', draw); a.addEventListener('pause', draw);
     a.addEventListener('timeupdate', drawTime);
     a.addEventListener('error', () => { if (items(R.src).length > 1 && S.curKey) { S.errs = (S.errs || 0) + 1; if (S.errs < 5) next(); } });
-    a.addEventListener('playing', () => { S.errs = 0; });
+    a.addEventListener('playing', () => { S.errs = 0; S.loading = false; S.want = false; clearTimeout(S.dog); draw(); });
+    a.addEventListener('waiting', () => { S.loading = true; drawLabel(); });
     return a;
   }
   const vol = () => R.vol * (S.matchDuck ? 0.35 : 1);
@@ -70,9 +71,14 @@
     const t = cur(); if (!t) { draw(); return; }
     const a = audio(); a.volume = vol();
     const k = keyOf(t);
-    if (!restart && a.src && S.curKey === k) { a.play().catch(() => {}); return; }
+    if (!restart && a.src && S.curKey === k) {
+      // faixa travada ou com erro: carrega de novo em vez de só "despausar"
+      if (a.error || a.readyState < 2) { const pos = a.currentTime; a.load(); if (pos) { try { a.currentTime = pos; } catch (e) { /* ignora */ } } }
+      S.loading = true; tryPlay(); draw(); return;
+    }
     const go = (src) => {
-      S.curKey = k; a.src = src; a.volume = vol(); a.play().catch(() => {});
+      S.curKey = k; a.src = src; a.volume = vol(); S.loading = true; S.tries = 0;
+      tryPlay();
       meta(t); draw();
     };
     if (R.src === 'of') go('musicas/' + t.f);
@@ -81,6 +87,20 @@
       if (S.url) URL.revokeObjectURL(S.url);
       S.url = URL.createObjectURL(rec.blob); go(S.url);
     });
+  }
+  // Toca e fica de olho: se a faixa não começar em 8 s (internet lenta, arquivo travado), recarrega; na 3ª, pula
+  function tryPlay() {
+    const a = S.audio; if (!a) return;
+    S.want = true;
+    a.play().catch((e) => { if (e && e.name === 'NotAllowedError') { S.want = false; S.loading = false; clearTimeout(S.dog); draw(); } });
+    clearTimeout(S.dog);
+    S.dog = setTimeout(() => {
+      if (!S.audio || !S.audio.paused || S.userPaused || !S.want) return;
+      S.tries = (S.tries || 0) + 1;
+      if (S.tries >= 3) { S.tries = 0; A.toast('Esta faixa não carregou. Pulando para a próxima.'); next(); return; }
+      const t = S.audio.currentTime; S.audio.load(); if (t) { try { S.audio.currentTime = t; } catch (er) { /* ignora */ } }
+      tryPlay();
+    }, 8000);
   }
   function meta(t) {
     if (!('mediaSession' in navigator)) return;
@@ -102,10 +122,11 @@
   // ---------- Controle geral ----------
   const playing = () => !!(S.audio && !S.audio.paused);
   function start() { if (R.on) play(false); }
-  function stop() { if (S.audio) S.audio.pause(); }
+  function stop() { clearTimeout(S.dog); S.loading = false; S.want = false; if (S.audio) S.audio.pause(); }
   function toggle() {
-    if (playing()) { S.userPaused = true; stop(); }
+    if (playing() || S.want) { S.userPaused = true; stop(); } // tocando ou tentando tocar: o toque pausa
     else { S.userPaused = false; S.started = true; start(); }
+    draw();
   }
 
   // primeiro toque na página: liga a rádio (regra dos navegadores)
@@ -154,6 +175,7 @@
     const el = document.getElementById('radio'); if (!el) return;
     el.classList.toggle('on', R.on); el.classList.toggle('open', S.open); el.classList.toggle('playing', playing());
   }
+  function drawLabel() { const l = document.querySelector('#radio .rd-now .label'); if (l) l.textContent = playing() ? 'Tocando' : S.want ? 'Carregando…' : 'Pausado'; }
   function drawTime() {
     const a = S.audio, bar = document.getElementById('rd-seek'), tm = document.getElementById('rd-tm'); if (!a || !bar) return;
     const d = a.duration || (cur() && cur().d) || 0;
@@ -168,9 +190,9 @@
     const sub = el.querySelector('#rd-sub'), body = el.querySelector('#rd-body');
     const list = items(R.src), t = cur(), on = playing();
     sub.textContent = R.src === 'of' ? `${OFICIAL.length} faixas · covers de estúdio` : list.length ? `${list.length} música${list.length === 1 ? '' : 's'} neste aparelho` : 'Nenhuma música adicionada';
-    const player = t ? `<div class="rd-now"><span class="label">${on ? 'Tocando' : 'Pausado'}</span><b>${esc(t.t)}</b>${t.a ? `<small>${esc(t.a)}</small>` : ''}</div>
+    const player = t ? `<div class="rd-now"><span class="label">${on ? 'Tocando' : S.want ? 'Carregando…' : 'Pausado'}</span><b>${esc(t.t)}</b>${t.a ? `<small>${esc(t.a)}</small>` : ''}</div>
         <div class="rd-time"><input id="rd-seek" type="range" min="0" max="1000" value="0" data-i="rdSeek" aria-label="Posição na música"><span id="rd-tm">0:00 / ${mmss(t.d || 0)}</span></div>
-        <div class="rd-ctl"><button class="btn sm" data-a="rdPrev" aria-label="Anterior">⏮</button><button class="btn sm primary" data-a="rdToggle">${on ? '❚❚ Pausar' : '▶ Tocar'}</button><button class="btn sm" data-a="rdNext" aria-label="Próxima">⏭</button>
+        <div class="rd-ctl"><button class="btn sm" data-a="rdPrev" aria-label="Anterior">⏮</button><button class="btn sm primary" data-a="rdToggle">${on || S.want ? '❚❚ Pausar' : '▶ Tocar'}</button><button class="btn sm" data-a="rdNext" aria-label="Próxima">⏭</button>
           <button class="btn sm ${R.shuffle ? 'on' : ''}" data-a="rdShuffle" aria-pressed="${R.shuffle}" title="Ordem aleatória">🔀</button></div>
         <label class="rd-vol"><span class="label">Volume</span><input type="range" min="0" max="100" value="${Math.round(R.vol * 100)}" data-i="rdVol"></label>` : '';
     if (R.src === 'of') {
