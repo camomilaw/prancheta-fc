@@ -102,8 +102,8 @@
   }
   function fire(g) {
     g.fired = { from: g.user, offers: jobOffers(g, false) };
-    if (P.flash) P.flash(g, { pri: 5, ttl: 2, kicker: 'Bastidores', head: `${g.manager} é demitido do ${P.club(g, g.user).name}`, dek: 'A diretoria perdeu a confiança no trabalho e encerrou o ciclo do técnico.' });
-    P.news(g, `A diretoria do ${P.club(g, g.user).name} perdeu a confiança e demitiu ${g.manager}.`, 'bad');
+    if (P.flash) P.flash(g, { pri: 5, ttl: 2, kicker: 'Bastidores', head: `${g.manager} é ${P.cw ? P.cw(g).demitido : 'demitido'} do ${P.club(g, g.user).name}`, dek: 'A diretoria perdeu a confiança no trabalho e encerrou o ciclo ' + (P.cw ? P.cw(g).do + ' ' + P.cw(g).tec : 'do técnico') + '.' });
+    P.news(g, `A diretoria do ${P.club(g, g.user).name} perdeu a confiança e ${P.cw && P.cw(g).o === 'a' ? 'demitiu a técnica' : 'demitiu'} ${g.manager}.`, 'bad');
   }
   P.boardSeasonEnd = function (g) {
     if (!g.board) P.boardReset(g);

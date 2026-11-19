@@ -1064,7 +1064,7 @@
     P.buildSeason(g);
     P.ensureEconomy(g);
     const club = P.club(g, userCid);
-    P.news(g, `${g.manager} é o novo técnico do ${club.name}, na ${club.div}ª divisão. A diretoria quer: ${P.expectation(g, userCid).toLowerCase()}.`, 'good');
+    P.news(g, `${g.manager} é ${P.cw ? P.cw(g).o + ' ' + P.cw(g).novo + ' ' + P.cw(g).tec : 'o novo técnico'} do ${club.name}, na ${club.div}ª divisão. A diretoria quer: ${P.expectation(g, userCid).toLowerCase()}.`, 'good');
     return g;
   };
 

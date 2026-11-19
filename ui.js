@@ -1212,7 +1212,7 @@
     start() {
       const s = A.setup; if (!s.club) return;
       A.g = P.newGame(s.db, s.club, (s.manager || '').trim() || 'Técnico');
-      if (s.coach && (s.coach.styles.length || s.coach.form)) A.g.coach = { styles: s.coach.styles.slice(), form: s.coach.form };
+      if (s.coach) A.g.coach = { styles: (s.coach.styles || []).slice(), form: s.coach.form, age: s.coach.age || 40, nat: s.coach.nat || 'BRA', gender: s.coach.gender || 'm', since: A.g.season }; if (A.g.coach.gender === 'f') A.g.news.forEach((n) => { n.txt = n.txt.replace('é o novo técnico', 'é a nova técnica'); });
       s.newc = 0;
       A.save(); A.view = 'inicio'; A.st.div = null; A.render(); window.scrollTo(0, 0);
     },

@@ -29,6 +29,18 @@
     return f;
   };
 
+  // País do técnico: compatriotas assinam mais fácil (salário menor, aceitam descer mais divisões)
+  const origDemand = P.playerDemand;
+  if (origDemand) P.playerDemand = function (g, p, toCid) {
+    const same = g && g.coach && g.coach.nat && toCid === g.user && p.nat === g.coach.nat;
+    let d = origDemand.apply(this, arguments);
+    if (!same) return d;
+    if (d == null) { const from = p.clubId ? P.club(g, p.clubId) : null, to = P.club(g, toCid); if (from && to.div - from.div <= 4) d = Math.round(P.wageFor(p) * 1.8 / 500) * 500; else return d; }
+    return Math.round(d * 0.9 / 500) * 500;
+  };
+  // palavras conforme o gênero escolhido
+  P.cw = (g) => (g && g.coach && g.coach.gender === 'f' ? { tec: 'técnica', o: 'a', do: 'da', no: 'na', demitido: 'demitida', novo: 'nova' } : { tec: 'técnico', o: 'o', do: 'do', no: 'no', demitido: 'demitido', novo: 'novo' });
+
   // ---------- Escolha do estilo (usada no início de carreira e na aba do técnico) ----------
   P.coachPicker = function (cur, act) {
     const styles = (cur && cur.styles) || [], form = (cur && cur.form) || '4-4-2';
@@ -49,12 +61,26 @@
   // ---------- Nova carreira em 3 passos ----------
   P.newCareerView = function () {
     const s = A.setup, step = s.newc;
-    const c = s.coach || (s.coach = { styles: [], form: '4-4-2' });
+    const c = s.coach || (s.coach = { styles: [], form: '4-4-2', age: 40, nat: 'BRA', gender: 'm' });
     const dots = [1, 2, 3].map((i) => `<span class="nc-dot ${i === step ? 'on' : i < step ? 'done' : ''}">${i}</span>`).join('<i></i>');
     let body = '';
-    if (step === 1) body = `<section class="jr-classif"><div class="jr-classif-h"><h2>Ficha de inscrição</h2><span>Classificados</span></div>
-        <div class="field"><label class="jr-step" for="mgr">Seu nome</label><input id="mgr" class="jr-sign" data-i="mgr" value="${esc(s.manager)}" placeholder="assine aqui" maxlength="30"></div>
-        <div><span class="jr-step">Estilo (até 2)</span>${P.coachPicker(c, 'ncStyle')}</div></section>`;
+    if (step === 1) {
+      const nats = Object.entries(P.COUNTRIES).sort((a, b) => a[1].n.localeCompare(b[1].n));
+      const ages = []; for (let a = 28; a <= 72; a++) ages.push(a);
+      body = `<section class="jr-classif nc1"><div class="jr-classif-h"><h2>Ficha de inscrição</h2><span>Classificados</span></div>
+        <div class="nc1-grid">
+          <div class="nc1-left">
+            <div class="field"><label class="jr-step" for="mgr">Seu nome</label><input id="mgr" class="jr-sign" data-i="mgr" value="${esc(s.manager)}" placeholder="assine aqui" maxlength="30"></div>
+            <div class="nc1-row">
+              <div class="field"><label class="jr-step" for="nc-age">Idade</label><select id="nc-age" class="sel" data-c="ncMeta" data-k="age">${ages.map((a) => `<option ${a === (c.age || 40) ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+              <div class="field"><span class="jr-step">Você é</span><div class="seg">${[['m', 'Técnico'], ['f', 'Técnica']].map(([k, n]) => `<button class="${(c.gender || 'm') === k ? 'on' : ''}" data-a="ncGender" data-k="${k}">${n}</button>`).join('')}</div></div>
+            </div>
+            <div class="field"><label class="jr-step" for="nc-nat">País</label><select id="nc-nat" class="sel" data-c="ncMeta" data-k="nat">${nats.map(([k, v]) => `<option value="${k}" ${k === (c.nat || 'BRA') ? 'selected' : ''}>${esc(v.n)}</option>`).join('')}</select>
+              <small class="jr-note">Jogadores do seu país pedem salário menor e aceitam descer mais divisões para trabalhar com você. Estrangeiros do seu país (ou que falam a sua língua) se adaptam mais rápido ao clube.</small></div>
+          </div>
+          <div class="nc1-right"><span class="jr-step">Formação e estilo (até 2)</span>${P.coachPicker(c, 'ncStyle')}</div>
+        </div></section>`;
+    }
     if (step === 2) body = `<section class="jr-classif"><div class="jr-classif-h"><h2>Condições do contrato</h2><span>Classificados</span></div>
         ${P.setupExtra ? P.setupExtra() : ''}${P.slotPick ? P.slotPick() : ''}</section>`;
     if (step === 3) body = A.clubPickSection ? A.clubPickSection() : '';
@@ -76,11 +102,13 @@
       s.newc = Math.min(3, s.newc + 1); A.render(); window.scrollTo(0, 0);
     },
     ncStyle(d) { if (toggle(A.setup.coach, d.k)) A.render(); },
+    ncGender(d) { A.setup.coach.gender = d.k; A.render(); },
     // aba do técnico (carreiras antigas ou mudança de estilo no fim da temporada)
     cStyle(d) { const g = A.g; g.coach = g.coach || { styles: [], form: '4-4-2' }; if (toggle(g.coach, d.k)) { A.save(); A.render(); } }
   });
   Object.assign(A.CHG, {
     ncStyleForm(el) { A.setup.coach.form = el.value; },
+    ncMeta(el) { const v = el.dataset.k === 'age' ? Number(el.value) : el.value; A.setup.coach[el.dataset.k] = v; },
     cStyleForm(el) { const g = A.g; g.coach = g.coach || { styles: [], form: '4-4-2' }; g.coach.form = el.value; A.save(); }
   });
 

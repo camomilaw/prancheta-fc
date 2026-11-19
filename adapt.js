@@ -64,7 +64,7 @@
     const mates = allMine(g).filter((x) => x.id !== p.id);
     const comp = mates.filter((x) => x.nat === p.nat);
     const speak = mates.filter((x) => x.nat !== p.nat && langOf(x.nat) === lang);
-    const staff = (g.y && g.y.staff) || [];
+    const staff = ((g.y && g.y.staff) || []).concat(g.coach && g.coach.nat ? [{ nat: g.coach.nat, coach: true }] : []);
     const stComp = staff.filter((s) => s.nat === p.nat);
     const stLang = staff.filter((s) => s.nat !== p.nat && langOf(s.nat) === lang);
     return { comp, speak, stComp, stLang };
