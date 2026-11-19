@@ -1,11 +1,12 @@
 # Compila o Prancheta FC para PC (Windows, .zip com o .exe) e Android (.apk)
 # e publica os dois na página "Releases" do GitHub.
-# Roda ao criar uma tag v* (ex.: v1.0.0) ou pelo botão "Run workflow" na aba Actions.
+# Roda quando o arquivo app/VERSION muda (ex.: 1.0.0) ou pelo botão "Run workflow" na aba Actions.
 name: Apps (PC e Android)
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+    paths: ['app/VERSION']
   workflow_dispatch:
 
 permissions:
@@ -37,8 +38,7 @@ jobs:
       - name: Versão
         id: v
         run: |
-          V="${GITHUB_REF_NAME#v}"; [[ "$V" =~ ^[0-9]+\.[0-9]+ ]] || V="1.0.${GITHUB_RUN_NUMBER}"
-          echo "name=$V" >> $GITHUB_OUTPUT
+          echo "name=$(tr -d ' \r\n' < app/VERSION)" >> $GITHUB_OUTPUT
       - name: Projeto Android (Capacitor)
         working-directory: app/android
         env: { VERSION_CODE: '${{ github.run_number }}', VERSION_NAME: '${{ steps.v.outputs.name }}' }
@@ -71,7 +71,7 @@ jobs:
         working-directory: app/desktop
         shell: bash
         run: |
-          V="${GITHUB_REF_NAME#v}"; [[ "$V" =~ ^[0-9]+\.[0-9]+ ]] || V="1.0.${GITHUB_RUN_NUMBER}"
+          V="$(tr -d ' \r\n' < ../VERSION)"
           npm pkg set version="$V"
           npm install --no-audit --no-fund --save-dev electron@33 electron-builder@25
           npx electron-builder --win zip --x64 --publish never
@@ -83,18 +83,18 @@ jobs:
     needs: [android, windows]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { path: out, merge-multiple: true, pattern: '{android,windows}' }
       - name: Nome da versão
         id: v
-        run: |
-          T="${GITHUB_REF_NAME}"; [[ "$T" == v* ]] || T="build-${GITHUB_RUN_NUMBER}"
-          echo "tag=$T" >> $GITHUB_OUTPUT
+        run: echo "tag=v$(tr -d ' \r\n' < app/VERSION)" >> $GITHUB_OUTPUT
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.v.outputs.tag }}
           name: Prancheta FC ${{ steps.v.outputs.tag }}
-          prerelease: ${{ !startsWith(github.ref_name, 'v') || contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(steps.v.outputs.tag, '-') }}
+          target_commitish: ${{ github.sha }}
           files: out/*
           body: |
             **PC (Windows):** baixe o `.zip`, extraia a pasta e abra `PranchetaFC.exe`. Os saves ficam na pasta `saves`, ao lado do .exe.
