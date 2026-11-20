@@ -79,7 +79,7 @@
   const durOf = (m) => P.MISSION_DUR[(m && m.dur) || 3] || P.MISSION_DUR[3];
   P.missionWeeks = (g, m) => Math.round(((m && m.dur) || 3) * g.cal.length / 12);
 
-  // Teto do Sub-20: na base ninguém passa de 80 de força (o resto do potencial aparece no profissional)
+  // Teto de geração: nenhum garoto já nasce na base com mais de 80 de força (depois, treinando, pode passar)
   P.capYouth = function (p) {
     const max = P.YOUTH.maxOvr;
     if (P.ovr(p) <= max) return p;
@@ -266,7 +266,6 @@
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, pts / 5 * (1 + P.gauss(r) * 0.3)), 1, 20);
       }
-      P.capYouth(p);
     }
   }
   P.youthTable = function (g, d) {

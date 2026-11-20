@@ -183,7 +183,7 @@
     const dates = P.stepDates(A.g);
     A.openSheet(`<div class="bar-top"><h2>Simular até ${P.fmtDate(dates[i])}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       <p class="muted" style="margin:0">O adjunto comanda o clube até a véspera. Treinos sem plano ficam com ele. Você só poderá cancelar.</p>
-      ${radio('renew', { t: 'Contratos acabando', o: [['yes', 'Renovar automaticamente', 'Renova por 2 anos os úteis ao time que pedirem no máximo 15% a mais.'], ['no', 'Deixar como estão']] })}
+      ${radio('renew', { t: 'Contratos acabando', o: [['yes', 'Renovar automaticamente', 'Renova por 2 anos todos que aceitarem, com aumento de no máximo 10%.'], ['no', 'Deixar como estão']] })}
       ${radio('offers', { t: 'Propostas por jogadores', o: [['reject', 'Recusar todas'], ['accept', 'Aceitar todas'], ['listed', 'Aceitar só pelos jogadores listados', 'Vende quem está à venda, empresta quem está na lista de empréstimo e recusa o resto.'], ['value', 'Aceitar só acima do valor de mercado']] })}
       ${radio('lineup', { t: 'Escalação', o: [['keep', 'Manter a atual sempre que possível', 'Troca só quem estiver lesionado ou suspenso.'], ['best', 'Sempre o melhor time', 'Considera a condição física de cada jogador.']] })}
       <div class="row"><span class="spacer"></span><button class="btn primary" data-a="simStart" data-i="${i}">Começar simulação</button></div>`);
@@ -213,29 +213,24 @@
       ${s.last ? `<div class="msg">${esc(s.last)}</div>` : ''}
       <button class="btn danger" data-a="simCancel">${s.cancel ? 'Cancelando...' : 'Cancelar'}</button></div>`;
   }
-  // Renovação automática com juízo: só renova quem pede até 15% a mais e é útil ao elenco
-  // (titular, jovem ou acima da média); os outros ficam para você decidir na ficha do jogador
-  function autoRenew(g, s) {
-    const sq = P.squad(g, g.user), ovs = sq.map(P.ovr).sort((a, b) => b - a), avg = ovs.slice(0, 18).reduce((t, x) => t + x, 0) / Math.max(1, Math.min(18, ovs.length));
-    const xi = new Set((g.tac[g.user] && g.tac[g.user].xi) || []);
-    s.renewSkip = s.renewSkip || {};
-    const done = [], skip = [];
-    for (const p of sq) {
-      if (p.ctr > g.season || p.loan || s.renewSkip[p.id]) continue;
-      const o = P.renewOffer(g, p);
-      const useful = xi.has(p.id) || p.age <= 23 || P.ovr(p) >= avg - 2;
-      if (!useful || o.wage > p.wage * 1.15) { s.renewSkip[p.id] = 1; skip.push(`${p.name} (pede ${P.money(o.wage)})`); continue; }
-      if (P.renew(g, p, 2)) done.push(p.name);
+  // Renovação automática: renova todos que aceitarem, por 2 anos, com aumento de no máximo 10%
+  function autoRenew(g) {
+    const done = [];
+    for (const p of P.squad(g, g.user)) {
+      if (p.ctr > g.season || p.loan) continue;
+      const o = P.renewOffer(g, p); if (!o.willing) continue;
+      p.wage = Math.max(500, Math.round(P.clamp(o.wage, p.wage * 0.8, p.wage * 1.1) / 500) * 500);
+      p.ctr = g.season + 2; delete p.rc;
+      done.push(p.name);
     }
     if (done.length) P.news(g, `Renovação automática: ${done.join(', ')} renovaram por 2 anos.`, 'good');
-    if (skip.length) P.news(g, `Não renovados automaticamente (salário alto ou pouco usados): ${skip.join(', ')}. Decida na ficha de cada um.`, 'warn');
   }
   function simStep() {
     const s = A.sim, g = A.g;
     if (!s) return;
     if (s.cancel || g.over || g.week >= s.target) return simEnd();
     // antes da semana: contratos
-    if (s.opts.renew === 'yes') autoRenew(g, s);
+    if (s.opts.renew === 'yes') autoRenew(g);
     const res = P.playWeek(g);
     // resultado do meu time
     const mine = res && res.anim.find((x) => x.h === g.user || x.a === g.user);

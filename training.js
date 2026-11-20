@@ -77,7 +77,6 @@
         progress(g, p, 'nor', done);
         const potF = P.ovr(p) / 5 < p.pot ? 1 : 0.25;
         for (const [k, w] of P.trainList(g, p, null, true)) if (p.a[k] < 20 && r() < 0.012 * w * potF * tsub * (P.adF ? P.adF(g, p) : 1) * (P.coachHas && P.coachHas(g, 'formador') ? 1.2 : 1)) p.a[k]++;
-        if (P.capYouth) P.capYouth(p);
       }
     }
     if (done.length) P.news(g, done.join('. ') + '.', 'good');
