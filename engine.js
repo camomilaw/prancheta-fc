@@ -6,11 +6,13 @@
 (function (P) {
   P.TUNING = {
     attackPerMin: 0.2,      // chance de um ataque acontecer a cada minuto
-    chanceBase: 0.40,       // chance de um ataque virar finalização (times iguais)
+    chanceBase: 0.43,       // chance de um ataque virar finalização (times iguais)
     goalBase: 0.55,         // conversão base (chances claras; os chutes de longe usam longShotQ)
     longShot: 0.8,          // chance de um ataque sem chance clara terminar em chute de longe
     longShotQ: 0.11,        // qualidade (xG) desses chutes em relação a uma chance clara
     homeBonus: 1.12,        // vantagem de jogar em casa
+    possExp: 3.5,           // quanto o meio-campo melhor domina a posse (era 2)
+    chanceExp: 2.2,         // quanto o ataque melhor que a defesa vira chance (era 1.1): o favorito vence mais
     yellowPerMin: 0.0175,   // por time (era 0.02)
     redPerMin: 0.0002,      // vermelho direto (era 0.0003)
     bookedCare: 0.7,        // quem já tem amarelo se cuida: leva menos o segundo
@@ -184,11 +186,14 @@
   };
   P.payroll = (g, cid) => P.squad(g, cid).reduce((s, p) => s + p.wage, 0);
   // Renovação: o jogador pede aumento; com moral baixa ele recusa
-  P.renewOffer = (g, p) => ({
+  P.renewOffer = (g, p) => {
     // o salário acompanha a força e a idade de agora: pode cair até 20% (veterano em queda aceita ganhar menos)
-    wage: Math.max(Math.round(p.wage * 0.8 / 500) * 500, Math.round(P.wageFor(p) * (p.mor >= 60 ? 1.05 : P.coachHas && P.coachHas(g, 'motivador') ? 1.2 : 1.15) / 500) * 500),
-    willing: p.mor >= 35
-  });
+    // e sobe no máximo 30% por renovação (quem ganha pouco para a força pede aumento, mas não o dobro)
+    const ask = Math.round(P.wageFor(p) * (p.mor >= 60 ? 1.05 : P.coachHas && P.coachHas(g, 'motivador') ? 1.2 : 1.15) / 500) * 500;
+    const cur = Math.max(500, p.wage || 0);
+    const wage = Math.round(P.clamp(ask, cur * 0.8, cur * 1.3) / 500) * 500;
+    return { wage: Math.max(500, wage), willing: p.mor >= 35 };
+  };
   P.renew = function (g, p, years) {
     const o = P.renewOffer(g, p);
     if (!o.willing) return false;
@@ -507,14 +512,14 @@
     while (st.min < last) {
       const min = ++st.min;
       const evStart = ev.length;
-      const pH = Math.pow(S[0].mid, 2) / (Math.pow(S[0].mid, 2) + Math.pow(S[1].mid, 2));
+      const pH = Math.pow(S[0].mid, T.possExp) / (Math.pow(S[0].mid, T.possExp) + Math.pow(S[1].mid, T.possExp));
       posAcc[0] += pH; posAcc[1] += 1 - pH;
       if (min === 46) ev.push({ m: 45, x: 0, t: 'int' });
 
       if (rnd() < T.attackPerMin) {
         const side = rnd() < pH ? 0 : 1, o = 1 - side;
         const ratio = S[side].att / Math.max(0.1, S[o].def);
-        let cp = T.chanceBase * Math.pow(ratio, 1.1);
+        let cp = T.chanceBase * Math.pow(ratio, T.chanceExp);
         const insS = P.insOf(L[side].t);
         if (insS.pass === 'dir') cp *= 1.08;
         if (insS.pass === 'cur') cp *= 0.95;

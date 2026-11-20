@@ -2236,3 +2236,4 @@ html.phone-land .cal-cell { min-height: 44px; }
 .wm-all.on { color: var(--ink); border-color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
 html.phone-land .wm svg { max-height: 150px; }
 @media (max-width: 520px) { .wm-c text { font-size: 30px; } }
+.chip.lst { color: var(--accent); }

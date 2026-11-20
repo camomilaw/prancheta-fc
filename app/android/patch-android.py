@@ -68,8 +68,29 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(RadioPlugin.class);
         super.onCreate(savedInstanceState);
         immersive();
+    }
+
+    // rádio tocando: a página continua viva com o app em segundo plano ou a tela apagada
+    private void keepAlive() {
+        if (RadioPlugin.playing && getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().onResume();
+            getBridge().getWebView().resumeTimers();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        keepAlive();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        keepAlive();
     }
 
     @Override
@@ -92,4 +113,102 @@ public class MainActivity extends BridgeActivity {
     }
 }
 """)
+# rádio em segundo plano: serviço de mídia do Android + ponte com o jogo
+pkg = os.path.join(A, 'java', 'com', 'pranchetafc', 'jogo')
+open(os.path.join(pkg, 'RadioPlugin.java'), 'w', encoding='utf-8').write("""package com.pranchetafc.jogo;
+
+import android.content.Intent;
+import androidx.core.content.ContextCompat;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+
+@CapacitorPlugin(name = "PfcRadio")
+public class RadioPlugin extends Plugin {
+    public static volatile boolean playing = false;
+
+    @PluginMethod
+    public void start(PluginCall call) {
+        playing = true;
+        Intent i = new Intent(getContext(), RadioService.class);
+        i.putExtra("title", call.getString("title", "Rádio Prancheta"));
+        try { ContextCompat.startForegroundService(getContext(), i); } catch (Exception e) { /* sem serviço: toca só com o app aberto */ }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void stop(PluginCall call) {
+        playing = false;
+        getContext().stopService(new Intent(getContext(), RadioService.class));
+        call.resolve();
+    }
+}
+""")
+open(os.path.join(pkg, 'RadioService.java'), 'w', encoding='utf-8').write("""package com.pranchetafc.jogo;
+
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.content.pm.ServiceInfo;
+import android.os.Build;
+import android.os.IBinder;
+import android.os.PowerManager;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
+
+public class RadioService extends Service {
+    private static final String CH = "radio";
+    private PowerManager.WakeLock lock;
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        String title = intent != null && intent.getStringExtra("title") != null ? intent.getStringExtra("title") : "Rádio Prancheta";
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationChannel ch = new NotificationChannel(CH, "Rádio Prancheta", NotificationManager.IMPORTANCE_LOW);
+            ch.setShowBadge(false);
+            ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);
+        }
+        Intent open = new Intent(this, MainActivity.class);
+        open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification n = new NotificationCompat.Builder(this, CH)
+            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentTitle("Rádio Prancheta")
+            .setContentText(title)
+            .setContentIntent(pi)
+            .setOngoing(true)
+            .setSilent(true)
+            .build();
+        int type = Build.VERSION.SDK_INT >= 29 ? ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK : 0;
+        ServiceCompat.startForeground(this, 1, n, type);
+        if (lock == null) {
+            lock = ((PowerManager) getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "PranchetaFC:radio");
+            lock.setReferenceCounted(false);
+        }
+        lock.acquire(6 * 60 * 60 * 1000L);
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        if (lock != null && lock.isHeld()) lock.release();
+        super.onDestroy();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) { return null; }
+}
+""")
+m = open(man, encoding='utf-8').read()
+for perm in ['FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_MEDIA_PLAYBACK', 'POST_NOTIFICATIONS', 'WAKE_LOCK']:
+    tag = f'<uses-permission android:name="android.permission.{perm}" />'
+    if tag not in m:
+        m = m.replace('</manifest>', '    ' + tag + '\n</manifest>')
+if 'RadioService' not in m:
+    m = m.replace('</application>', '        <service android:name=".RadioService" android:exported="false" android:foregroundServiceType="mediaPlayback" />\n    </application>')
+open(man, 'w', encoding='utf-8').write(m)
 print('android ajustado')

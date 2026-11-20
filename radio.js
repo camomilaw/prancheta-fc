@@ -62,7 +62,8 @@
     a.addEventListener('play', draw); a.addEventListener('pause', draw);
     a.addEventListener('timeupdate', drawTime);
     a.addEventListener('error', () => { if (items(R.src).length > 1 && S.curKey) { S.errs = (S.errs || 0) + 1; if (S.errs < 5) next(); } });
-    a.addEventListener('playing', () => { S.errs = 0; S.loading = false; S.want = false; clearTimeout(S.dog); draw(); });
+    a.addEventListener('playing', () => { S.errs = 0; S.loading = false; S.want = false; clearTimeout(S.dog); draw(); bg(true); });
+    a.addEventListener('pause', () => { if (!a.ended) bg(false); });
     a.addEventListener('waiting', () => { S.loading = true; drawLabel(); });
     return a;
   }
@@ -87,6 +88,18 @@
       if (S.url) URL.revokeObjectURL(S.url);
       S.url = URL.createObjectURL(rec.blob); go(S.url);
     });
+  }
+  // App Android: avisa o sistema que tem música tocando, para não parar com o app em segundo plano
+  // ou a tela apagada (aparece a notificação "Rádio Prancheta"). No navegador não faz nada.
+  let bgOn = false, bgT = null;
+  function bg(on) {
+    const Cap = window.Capacitor;
+    if (!Cap || !Cap.isNativePlatform || !Cap.isNativePlatform()) return;
+    const R2 = (Cap.Plugins && Cap.Plugins.PfcRadio) || (Cap.registerPlugin ? Cap.registerPlugin('PfcRadio') : null);
+    if (!R2) return;
+    clearTimeout(bgT);
+    if (on) { const t = cur(); if (!bgOn) { bgOn = true; } try { R2.start({ title: t ? `${t.t}${t.a ? ' · ' + t.a : ''}` : 'Rádio Prancheta' }); } catch (e) { /* ignora */ } }
+    else bgT = setTimeout(() => { if (S.audio && !S.audio.paused) return; bgOn = false; try { R2.stop(); } catch (e) { /* ignora */ } }, 1500); // troca de faixa não derruba o serviço
   }
   // Toca e fica de olho: se a faixa não começar em 8 s (internet lenta, arquivo travado), recarrega; na 3ª, pula
   function tryPlay() {

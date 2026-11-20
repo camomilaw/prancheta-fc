@@ -6,7 +6,7 @@
 (function (P) {
   const A = P.app, esc = P.esc;
 
-  P.YOUTH = { maxSquad: 24, startSquad: 18, wage: 2000, reportEvery: 8, maxScouts: 3, maxAge: 19, gemChance: 1 / 150 };
+  P.YOUTH = { maxSquad: 24, startSquad: 18, wage: 2000, reportEvery: 8, maxScouts: 3, maxAge: 19, gemChance: 1 / 150, maxOvr: 80 };
   // Joia rara: de vez em nunca aparece um garoto de potencial de craque, seja qual for o clube
   const gemPot = (r) => 85 + Math.floor(r() * 11); // 85 a 95
 
@@ -79,6 +79,24 @@
   const durOf = (m) => P.MISSION_DUR[(m && m.dur) || 3] || P.MISSION_DUR[3];
   P.missionWeeks = (g, m) => Math.round(((m && m.dur) || 3) * g.cal.length / 12);
 
+  // Teto do Sub-20: na base ninguém passa de 80 de força (o resto do potencial aparece no profissional)
+  P.capYouth = function (p) {
+    const max = P.YOUTH.maxOvr;
+    if (P.ovr(p) <= max) return p;
+    const keys = P.ATTRS.map((a) => a.k).filter((k) => p.pos === 'GOL' || !P.GK_ATTRS.includes(k));
+    for (let i = 0; i < 120 && P.ovr(p) > max; i++) {
+      // tira 1 ponto do atributo que mais pesa na força da posição (empate: o mais alto)
+      const o0 = P.ovr(p); let best = null, bestDrop = -1;
+      for (const k of keys) {
+        if (p.a[k] <= 1) continue;
+        p.a[k]--; const drop = o0 - P.ovr(p); p.a[k]++;
+        if (drop > bestDrop || (drop === bestDrop && p.a[k] > p.a[best])) { best = k; bestDrop = drop; }
+      }
+      if (!best) break;
+      p.a[best]--;
+    }
+    return p;
+  };
   // ---------- Geração ----------
   function youthPlayer(r, opts) {
     const age = opts.age || 15 + Math.floor(r() * 4);
@@ -91,6 +109,7 @@
     p.potO = Math.max(potO, P.ovr(p) + 2);
     p.pot = p.potO / 5;
     p.clubId = null; p.wage = P.YOUTH.wage; p.ctr = 0;
+    P.capYouth(p);
     return p;
   }
   function randomPos(r) { return P.weighted(r, P.POS, (x) => P.SQUAD_TEMPLATE[x]); }
@@ -122,7 +141,7 @@
     const used = new Set();
     for (let i = 0; i < P.YOUTH.startSquad; i++) {
       const pos = i < 2 ? 'GOL' : randomPos(r);
-      const potO = P.levelFromRep(me.rep) * 5 + 4 + P.gauss(r) * 8;
+      const potO = P.levelFromRep(me.rep) * 5 + P.gauss(r) * 7;
       const p = youthPlayer(r, { pos, potO, nat: P.pickNat(r, me.country), used });
       g.y.squad[p.id] = p;
     }
@@ -195,7 +214,7 @@
     for (let i = 0; i < n; i++) {
       const pos = legacy ? (foc.pos ? P.pick(r, foc.pos) : randomPos(r)) : (posPick(r, m.pos) || randomPos(r));
       // o talento que aceita vir acompanha o tamanho do clube (reputação); olheiro melhor acha um pouco acima
-      const base = P.levelFromRep(P.club(g, g.user).rep) * 5 + 6;
+      const base = P.levelFromRep(P.club(g, g.user).rep) * 5 + 3;
       const gem = r() < P.YOUTH.gemChance * D.gem;
       const potO = gem ? gemPot(r) : base + 1.5 + D.q + (s.stars - 2.5) * 3 + P.gauss(r) * 6 + (r() < 0.04 ? 8 : 0);
       const p = youthPlayer(r, { pos, potO, nat: P.pick(r, reg.c), boost: foc.b });
@@ -247,6 +266,7 @@
         if (P.GK_ATTRS.includes(at.k) && p.pos !== 'GOL') continue;
         p.a[at.k] = P.clamp(p.a[at.k] + P.sround(r, pts / 5 * (1 + P.gauss(r) * 0.3)), 1, 20);
       }
+      P.capYouth(p);
     }
   }
   P.youthTable = function (g, d) {
@@ -289,7 +309,7 @@
     const n = Object.keys(g.y.squad).length;
     for (let i = 0; i < Math.max(4, 16 - n) && n + i < P.YOUTH.maxSquad; i++) {
       const gem = r() < P.YOUTH.gemChance;
-      const y = youthPlayer(r, { pos: randomPos(r), potO: gem ? gemPot(r) : P.levelFromRep(me.rep) * 5 + 4 + P.gauss(r) * 8 + (r() < 0.05 ? 10 : 0) + (P.facLvl ? (P.facLvl(g, 'base') - 2.5) * 3.5 + 1 : 0), age: 15 + Math.floor(r() * 2), nat: P.pickNat(r, me.country) });
+      const y = youthPlayer(r, { pos: randomPos(r), potO: gem ? gemPot(r) : P.levelFromRep(me.rep) * 5 + P.gauss(r) * 7 + (r() < 0.05 ? 10 : 0) + (P.facLvl ? (P.facLvl(g, 'base') - 2.5) * 3.5 + 1 : 0), age: 15 + Math.floor(r() * 2), nat: P.pickNat(r, me.country) });
       if (gem) { y.gem = true; P.news(g, `Os treinadores da base não param de falar de ${y.name} (${y.age} anos): pode ser uma joia rara, daquelas que aparecem uma vez na vida.`, 'good'); if (P.flash) P.flash(g, { pri: 3, ttl: 2, kicker: 'Categorias de base', head: `Nasce uma joia: ${y.name}, ${y.age} anos`, dek: `Os treinadores da base do ${me.name} não falam de outra coisa. Pode ser daqueles que aparecem uma vez na vida.` }); }
       g.y.squad[y.id] = y; fresh.push(y.name);
     }
@@ -300,6 +320,47 @@
     if (up.length) P.news(g, `Completaram 20 anos e subiram ao profissional: ${up.join(', ')}.`, 'good');
     if (out.length) P.news(g, `Completaram 20 anos sem espaço no profissional e deixaram o clube: ${out.join(', ')}.`, '');
   };
+
+  // ---------- Chamar da base para um jogo ----------
+  // O garoto vai ao elenco profissional só até o próximo jogo do seu time e depois volta sozinho ao Sub-20
+  P.callupYouth = function (g, id) {
+    const p = g.y.squad[id]; if (!p) return 'Jogador não encontrado.';
+    if (P.squad(g, g.user).length >= P.MARKET.maxSquad) return `O elenco profissional já tem ${P.MARKET.maxSquad} jogadores.`;
+    delete g.y.squad[id];
+    g.y.xi = (g.y.xi || []).filter((x) => x !== id);
+    p.callup = { ys: p.s, w: g.week, s: g.season };
+    p.clubId = g.user; p.ctr = g.season + 1; p.pot = p.potO / 5;
+    p.s = P.blankStats(); p.cond = Math.max(p.cond || 0, 90); p.mor = Math.max(p.mor || 0, 75);
+    p.listed = false; p.loanList = false;
+    g.db.players[id] = p;
+    P.dirty(g);
+    P.news(g, `${p.name} (${p.age} anos) foi chamado do Sub-20 para o próximo jogo.`, '');
+    return '';
+  };
+  P.returnCallups = function (g) {
+    const back = [];
+    for (const p of Object.values(g.db.players)) {
+      if (!p.callup) continue;
+      if (p.clubId !== g.user) { delete p.callup; continue; } // vendido nesse meio-tempo: segue a vida no clube novo
+      delete g.db.players[p.id];
+      g.offers = (g.offers || []).filter((o) => o.pid !== p.id);
+      const ys = p.callup.ys || P.blankStats(), pro = p.s || {};
+      ys.pj = (ys.pj || 0) + (pro.j || 0); ys.pg = (ys.pg || 0) + (pro.g || 0); // guarda os jogos e gols no profissional
+      p.s = ys; delete p.callup;
+      p.clubId = null; p.wage = P.YOUTH.wage; p.ctr = 0; p.listed = false; p.loanList = false;
+      g.y.squad[p.id] = p; back.push(p.name);
+    }
+    if (back.length) { P.dirty(g); P.fixXI(g, g.user); P.news(g, `Voltaram ao Sub-20 depois do jogo: ${back.join(', ')}.`, ''); }
+  };
+  {
+    const origEnd = P.endWeek;
+    P.endWeek = function (g, ctx) {
+      const played = (ctx && ctx.playing && ctx.playing.has(g.user)) || !!(ctx && ctx.live) || !!(ctx && ctx.step && P.userMatch(g, ctx.step));
+      const r = origEnd.apply(this, arguments);
+      if (g.y && (played || g.over)) P.returnCallups(g);
+      return r;
+    };
+  }
 
   P.promoteYouth = function (g, id, silent) {
     const p = g.y.squad[id]; if (!p) return 'Jogador não encontrado.';
@@ -458,7 +519,7 @@
       <div class="attrs">${Object.entries(groups).map(([gn, list]) => `<div class="grp"><h4 class="label">${gn}</h4>${list.map((at) => `<div class="attr"><span>${at.n}</span><b class="${vcls(p.a[at.k])}">${p.a[at.k]}</b></div>`).join('')}</div>`).join('')}</div>
       ${P.adaptBlock ? P.adaptBlock(g, p) : ''}
       ${A.st.yb.confirm === id ? `<div class="confirm"><b>Dispensar ${esc(p.name)}?</b><div class="row"><button class="btn" data-a="ySheet" data-id="${id}">Cancelar</button><button class="btn danger" data-a="yRelease" data-id="${id}">Dispensar</button></div></div>` : ''}
-      <div class="row"><button class="btn" data-a="yXi" data-id="${id}">${inXi ? 'Tirar dos titulares' : 'Escalar como titular'}</button><button class="btn danger" data-a="yReleaseAsk" data-id="${id}">Dispensar</button><span class="spacer"></span><button class="btn primary" data-a="yPromote" data-id="${id}">Promover ao profissional</button></div>`);
+      <div class="row"><button class="btn" data-a="yXi" data-id="${id}">${inXi ? 'Tirar dos titulares' : 'Escalar como titular'}</button><button class="btn danger" data-a="yReleaseAsk" data-id="${id}">Dispensar</button><span class="spacer"></span><button class="btn" data-a="yCallup" data-id="${id}" title="Ele joga no profissional no próximo jogo e depois volta sozinho ao Sub-20">Chamar para 1 jogo</button><button class="btn primary" data-a="yPromote" data-id="${id}">Promover ao profissional</button></div>`);
   };
 
   // ---------- Ações ----------
@@ -485,6 +546,12 @@
     ySheet(d) { A.st.yb.confirm = null; A.youthSheet(d.id); },
     yReleaseAsk(d) { A.st.yb.confirm = d.id; A.youthSheet(d.id); },
     yRelease(d) { const g = A.g; const n = g.y.squad[d.id].name; delete g.y.squad[d.id]; g.y.xi = (g.y.xi || []).filter((x) => x !== d.id); A.save(); A.closeSheet(); A.render(); A.toast(`${n} dispensado`); },
+    yCallup(d) {
+      const err = P.callupYouth(A.g, d.id); if (err) { A.toast(err); return; }
+      const p = A.g.db.players[d.id];
+      A.save(); A.closeSheet(); A.render();
+      A.toast(`${p.name} foi chamado para o próximo jogo: escale-o na Tática. Depois do jogo ele volta ao Sub-20.`);
+    },
     yPromote(d) { const err = P.promoteYouth(A.g, d.id); if (err) { A.toast(err); return; } A.save(); A.closeSheet(); A.render(); A.toast('Promovido ao profissional'); },
     yXi(d) {
       const g = A.g; g.y.xi = g.y.xi || [];

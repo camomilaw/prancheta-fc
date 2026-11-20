@@ -71,7 +71,10 @@
   const vcls = (v) => (v <= 6 ? 'v1' : v <= 10 ? 'v2' : v <= 15 ? 'v3' : 'v4');
   const condCls = (c) => (c >= 80 ? '' : c >= 60 ? 'mid' : 'low');
   const condBar = (p) => `<span class="cond ${condCls(p.cond)}" title="Condição ${Math.round(p.cond)}%"><i style="width:${Math.round(p.cond)}%"></i></span>`;
-  const status = (p) => (p.inj ? `<span class="chip inj">${p.injN ? esc(p.injN) + ' · ' : 'Lesão '}${p.inj}s</span>` : '') + (p.susp ? '<span class="chip sus">Suspenso</span>' : '') + (p.unh ? '<span class="chip sus">Insatisfeito</span>' : '') + (P.adaptChip && p.ad ? P.adaptChip(p) : '');
+  const status = (p) => (p.inj ? `<span class="chip inj">${p.injN ? esc(p.injN) + ' · ' : 'Lesão '}${p.inj}s</span>` : '') + (p.susp ? '<span class="chip sus">Suspenso</span>' : '') + (p.unh ? '<span class="chip sus">Insatisfeito</span>' : '') + (P.adaptChip && p.ad ? P.adaptChip(p) : '')
+    + (p.callup ? '<span class="chip xi" title="Chamado do Sub-20 para o próximo jogo">Sub-20 · 1 jogo</span>' : '')
+    + (A.g && p.clubId === A.g.user && p.listed ? '<span class="chip lst" title="Na lista de transferências">⇄ À venda</span>' : '')
+    + (A.g && p.clubId === A.g.user && p.loanList && !p.loan ? '<span class="chip loan" title="Na lista de empréstimo">↻ Empréstimo</span>' : '');
   const avgNote = (p) => (p.s.j ? (p.s.nt / p.s.j).toFixed(1).replace('.', ',') : '–');
   const ord = (n) => n + 'º';
   const divName = (d) => `${d}ª divisão`;
