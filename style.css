@@ -2221,3 +2221,18 @@ html.phone-land .cal-nav .cal-back { display: inline-flex; position: absolute; l
 html.phone-land .cal-card { padding-top: 6px; }
 html.phone-land .cal-grid { gap: 3px; }
 html.phone-land .cal-cell { min-height: 44px; }
+
+/* Mapinha dos continentes (missão dos olheiros) */
+.wm { position: relative; margin: 6px 0 2px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 60%, transparent); padding: 6px 8px 4px; }
+.wm svg { display: block; width: 100%; height: auto; max-height: 220px; }
+.wm-deco { fill: var(--line-2); stroke: var(--line); stroke-width: 1.5; }
+.wm-c { cursor: pointer; outline: none; }
+.wm-c path { fill: color-mix(in srgb, var(--ink) 16%, transparent); stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; transition: fill .12s; }
+.wm-c text { font-family: var(--f-label); font-size: 22px; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink); text-anchor: middle; pointer-events: none; paint-order: stroke; stroke: var(--bg); stroke-width: 5px; }
+.wm-c:hover path, .wm-c:focus-visible path { fill: color-mix(in srgb, var(--accent) 35%, transparent); }
+.wm-c.on path { fill: var(--accent); }
+.wm-c.on text { fill: var(--accent-ink, #fff); stroke: var(--accent); }
+.wm-all { position: absolute; left: 10px; bottom: 8px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-family: var(--f-label); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px; cursor: pointer; }
+.wm-all.on { color: var(--ink); border-color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+html.phone-land .wm svg { max-height: 150px; }
+@media (max-width: 520px) { .wm-c text { font-size: 30px; } }

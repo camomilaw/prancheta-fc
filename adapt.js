@@ -11,7 +11,7 @@
 (function (P) {
   const A = P.app, esc = P.esc;
 
-  const LANG_N = { pt: 'português', es: 'espanhol', en: 'inglês', fr: 'francês', nl: 'holandês', de: 'alemão', it: 'italiano', tr: 'turco', gr: 'grego', sl: 'língua do leste europeu', sc: 'língua escandinava', af: 'língua africana', ar: 'árabe', jp: 'japonês', kr: 'coreano', cn: 'chinês' };
+  const LANG_N = { pt: 'português', es: 'espanhol', en: 'inglês', fr: 'francês', nl: 'holandês', de: 'alemão', it: 'italiano', tr: 'turco', gr: 'grego', sl: 'língua do leste europeu', sc: 'língua escandinava', af: 'língua africana', ar: 'árabe', jp: 'japonês', kr: 'coreano', cn: 'chinês', hi: 'língua do sul da Ásia', sea: 'língua do sudeste asiático', pac: 'língua do Pacífico' };
   P.LANG_N = LANG_N;
   const langOf = (c) => (P.COUNTRIES[c] ? P.COUNTRIES[c].lang : null);
   const contOf = (c) => { if (!P.CONTINENTS) return null; for (const [k, v] of Object.entries(P.CONTINENTS)) if (v.c.includes(c)) return k; return null; };

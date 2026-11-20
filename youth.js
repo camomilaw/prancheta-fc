@@ -48,6 +48,12 @@
     asi: { n: 'Ásia', c: ['JPN', 'KOR', 'CHN', 'HKG', 'KSA', 'UZB', 'IRN', 'JOR', 'IDN'] },
     oce: { n: 'Oceania', c: ['AUS', 'NZL'] }
   };
+  // países com continente marcado (ct) entram sozinhos na lista do continente (inclusive os de patches)
+  P.rebuildContinents = function () {
+    for (const [k, v] of Object.entries(P.COUNTRIES)) if (v.ct && P.CONTINENTS[v.ct] && !P.CONTINENTS[v.ct].c.includes(k)) P.CONTINENTS[v.ct].c.push(k);
+    P.REGIONS.mundo.c = Object.keys(P.COUNTRIES);
+  };
+  P.rebuildContinents();
   P.LINES_N = { GOL: 'Goleiros', DEF: 'Defesa (zagueiros e laterais)', MEI: 'Meio-campo (volantes e meias)', ATA: 'Ataque (pontas e atacantes)' };
   const contCountries = (cont) => (cont && P.CONTINENTS[cont] ? P.CONTINENTS[cont].c : Object.keys(P.COUNTRIES)).filter((k) => P.COUNTRIES[k]);
   const posPick = (r, want) => {
@@ -378,12 +384,46 @@
         <div class="cad-tools"><button class="btn sm ghost only-m" data-a="go" data-v="elenco">‹ Elenco</button></div></header>
       ${tabs}<div class="yb-body">${body}</div></div>`;
   };
+  // ---------- Mapinha dos continentes (clicável) ----------
+  // Contornos simplificados em longitude/latitude, desenhados como num mapa de jornal
+  const LAND = {
+    nca: [[[-168, 66], [-162, 70], [-140, 70], [-125, 72], [-95, 74], [-80, 73], [-62, 66], [-55, 52], [-65, 45], [-70, 42], [-76, 35], [-81, 31], [-80, 25], [-83, 29], [-90, 30], [-97, 26], [-97, 21], [-92, 18], [-88, 21], [-87, 16], [-83, 15], [-83, 10], [-78, 8], [-80, 7], [-84, 9], [-86, 12], [-92, 14], [-105, 20], [-110, 24], [-114, 30], [-117, 33], [-121, 36], [-124, 41], [-124, 48], [-131, 55], [-140, 60], [-150, 60], [-160, 58], [-165, 62]],
+      [[-85, 22], [-78, 23], [-74, 20], [-68, 19], [-66, 18], [-72, 18], [-77, 20], [-84, 21]]],
+    sam: [[[-78, 8], [-72, 12], [-62, 11], [-52, 5], [-50, 0], [-44, -2], [-35, -5], [-35, -9], [-39, -14], [-41, -22], [-48, -26], [-53, -34], [-58, -38], [-62, -40], [-65, -45], [-68, -50], [-69, -55], [-74, -52], [-73, -45], [-72, -38], [-71, -30], [-70, -18], [-76, -14], [-81, -6], [-80, -1], [-78, 2]]],
+    eur: [[[-10, 36], [-9, 43], [-2, 44], [-5, 48], [2, 51], [5, 53], [8, 57], [5, 58], [5, 62], [14, 68], [20, 70], [28, 71], [40, 68], [45, 66], [55, 68], [60, 69], [60, 55], [52, 50], [48, 46], [40, 44], [36, 45], [30, 45], [28, 41], [26, 40], [23, 37], [20, 40], [18, 40], [16, 38], [15, 38], [16, 41], [13, 45], [12, 44], [8, 44], [3, 43], [0, 39], [-2, 37], [-6, 36]],
+      [[-6, 50], [-5, 52], [-5, 55], [-6, 58], [-3, 59], [-1, 57], [0, 53], [2, 52], [1, 51], [-4, 50]],
+      [[-10, 52], [-10, 54], [-8, 55], [-6, 55], [-6, 52]],
+      [[-24, 64], [-22, 66], [-15, 66.5], [-13, 65], [-18, 63.5]]],
+    afr: [[[-17, 21], [-16, 28], [-10, 30], [-6, 36], [10, 37], [11, 33], [20, 31], [25, 32], [32, 31], [35, 28], [43, 12], [51, 12], [51, 10], [44, 0], [40, -10], [40, -16], [35, -24], [33, -27], [28, -33], [20, -35], [18, -32], [12, -18], [13, -12], [9, -1], [9, 4], [5, 6], [-2, 5], [-8, 4], [-13, 8], [-17, 14]],
+      [[44, -25], [47, -25], [50, -16], [49, -12], [44, -16]]],
+    asi: [[[36, 36], [36, 32], [35, 28], [39, 22], [43, 13], [52, 16], [57, 20], [60, 23], [56, 26], [52, 27], [57, 25], [62, 25], [67, 25], [72, 21], [73, 16], [77, 8], [80, 13], [80, 16], [87, 22], [92, 22], [94, 17], [98, 16], [98, 8], [103, 1], [104, 10], [109, 12], [108, 21], [114, 22], [120, 25], [122, 31], [120, 36], [122, 40], [126, 38], [129, 35], [130, 42], [140, 47], [141, 53], [137, 55], [143, 59], [156, 61], [160, 60], [163, 63], [178, 65], [180, 69], [170, 70], [160, 70], [140, 72], [130, 71], [113, 74], [100, 77], [80, 73], [70, 73], [66, 69], [60, 69], [60, 55], [52, 50], [48, 46], [48, 42], [42, 42], [40, 41], [36, 41], [28, 41], [26, 40], [30, 37]],
+      [[130, 31], [131, 34], [135, 34], [140, 36], [141, 41], [140, 43], [145, 44], [142, 46], [140, 40], [136, 37], [132, 35]],
+      [[95, 5], [98, 4], [106, -6], [104, -5], [100, -1]], [[109, 1], [117, 7], [119, 1], [116, -4], [110, -3]],
+      [[105, -6], [115, -8], [106, -7.5]], [[120, 18], [122, 18], [126, 7], [122, 7]]],
+    oce: [[[114, -22], [114, -34], [118, -35], [124, -33], [131, -31], [137, -35], [140, -38], [146, -39], [150, -37], [153, -30], [153, -25], [146, -19], [142, -11], [141, -17], [136, -12], [130, -12], [126, -14], [122, -18]],
+      [[172, -35], [178, -38], [175, -41], [171, -46], [167, -46], [172, -41], [174, -37]],
+      [[131, -1], [141, -3], [150, -6], [147, -10], [141, -9], [138, -8], [132, -4]]]
+  };
+  const GREENLAND = [[-73, 78], [-60, 82], [-30, 83], [-20, 80], [-20, 70], [-42, 60], [-50, 64], [-55, 70], [-60, 76]];
+  const X = (lon) => ((lon + 170) * 1000 / 350).toFixed(1), Y = (lat) => ((84 - lat) * 1000 / 350).toFixed(1);
+  const pathOf = (polys) => polys.map((pts) => 'M' + pts.map(([lo, la]) => `${X(lo)},${Y(la)}`).join('L') + 'Z').join('');
+  const LABEL = { nca: [-100, 45], sam: [-60, -16], eur: [22, 54], afr: [20, 6], asi: [95, 48], oce: [134, -26] };
+  let mapPaths = null;
+  P.worldMap = function (cur, id) {
+    mapPaths = mapPaths || Object.fromEntries(Object.entries(LAND).map(([k, v]) => [k, pathOf(v)]));
+    const parts = Object.keys(LAND).map((k) => `<g class="wm-c ${cur === k ? 'on' : ''}" data-a="ymMap" data-id="${id}" data-k="${k}" role="button" tabindex="0" aria-pressed="${cur === k}" aria-label="${esc(P.CONTINENTS[k].n)}"><title>${esc(P.CONTINENTS[k].n)}</title><path d="${mapPaths[k]}"/>
+      <text x="${X(LABEL[k][0])}" y="${Y(LABEL[k][1])}">${esc(P.CONTINENTS[k].n.replace(' e Central', ''))}</text></g>`).join('');
+    return `<div class="wm" id="wm-${id}"><svg viewBox="0 0 1000 400" aria-label="Escolha o continente no mapa">
+        <path class="wm-deco" d="${pathOf([GREENLAND])}"/>${parts}</svg>
+      <button class="wm-all ${cur ? '' : 'on'}" data-a="ymMap" data-id="${id}" data-k="">🌐 Mundo inteiro</button></div>`;
+  };
+
   // Formulário da missão: posição ou área, continente e país (só os do continente escolhido)
   const natOpts = (cont, cur) => `<option value="">${cont ? 'Todo o continente (' + esc(P.CONTINENTS[cont].n) + ')' : 'Qualquer país'}</option>` +
     contCountries(cont).map((k) => [k, P.COUNTRIES[k].n]).sort((a, b) => a[1].localeCompare(b[1])).map(([k, n]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${esc(n)}</option>`).join('');
   function missionForm(s, m) {
     const pos = (m && m.pos) || 'any', cont = (m && m.cont) || '', nat = (m && m.nat) || '', dur = String((m && m.dur) || 3);
-    return `<div class="form-grid mission-form" style="margin:8px 0">
+    return `${P.worldMap(cont, s.id)}<div class="form-grid mission-form" style="margin:8px 0">
       <div class="field"><label class="label" for="ym-pos-${s.id}">Posição ou área</label><select class="sel" id="ym-pos-${s.id}">
         <option value="any" ${pos === 'any' ? 'selected' : ''}>Qualquer posição</option>
         <optgroup label="Área do campo">${Object.entries(P.LINES_N).map(([k, n]) => `<option value="L:${k}" ${pos === 'L:' + k ? 'selected' : ''}>${esc(n)}</option>`).join('')}</optgroup>
@@ -424,9 +464,18 @@
   // ---------- Ações ----------
   // ao trocar o continente, a lista de países passa a mostrar só os daquele continente
   Object.assign(A.CHG, {
-    ymCont(el) { const box = document.getElementById(`ym-nat-${el.dataset.id}`); if (box) box.innerHTML = natOpts(el.value, ''); }
+    ymCont(el) {
+      const box = document.getElementById(`ym-nat-${el.dataset.id}`); if (box) box.innerHTML = natOpts(el.value, '');
+      const wm = document.getElementById(`wm-${el.dataset.id}`);
+      if (wm) { wm.querySelectorAll('.wm-c').forEach((g) => { const on = g.dataset.k === el.value; g.classList.toggle('on', on); g.setAttribute('aria-pressed', String(on)); }); wm.querySelector('.wm-all').classList.toggle('on', !el.value); }
+    }
   });
   Object.assign(A.ACT, {
+    ymMap(d) {
+      const sel = document.getElementById(`ym-cont-${d.id}`); if (!sel) return;
+      sel.value = sel.value === d.k ? '' : d.k; // tocar de novo no mesmo continente volta para o mundo inteiro
+      A.CHG.ymCont(sel);
+    },
     yTab(d) { A.st.yb.tab = d.k; A.st.yb.edit = null; A.render(); },
     yDemote(d) {
       const msg = P.demoteYouth(A.g, d.id);

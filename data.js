@@ -96,19 +96,61 @@
     QAT: { n: 'Catar', lang: 'ar' }, UAE: { n: 'Emirados Árabes', lang: 'ar' }, IRQ: { n: 'Iraque', lang: 'ar' },
     BLR: { n: 'Belarus', lang: 'sl' }, SMR: { n: 'San Marino', lang: 'it' }, TRI: { n: 'Trinidad e Tobago', lang: 'en' },
     KEN: { n: 'Quênia', lang: 'af' }, UGA: { n: 'Uganda', lang: 'af' }, TAN: { n: 'Tanzânia', lang: 'af' },
-    LBR: { n: 'Libéria', lang: 'af' }, SLE: { n: 'Serra Leoa', lang: 'af' }, THA: { n: 'Tailândia', lang: 'kr' }
+    LBR: { n: 'Libéria', lang: 'af' }, SLE: { n: 'Serra Leoa', lang: 'af' }, THA: { n: 'Tailândia', lang: 'sea' },
+    // o resto do mundo do futebol: todas as seleções filiadas à FIFA que faltavam (ct = continente)
+    AND: { n: 'Andorra', lang: 'es', ct: 'eur' }, LIE: { n: 'Liechtenstein', lang: 'de', ct: 'eur' }, MLT: { n: 'Malta', lang: 'en', ct: 'eur' },
+    GIB: { n: 'Gibraltar', lang: 'en', ct: 'eur' }, AZE: { n: 'Azerbaijão', lang: 'tr', ct: 'eur' }, KAZ: { n: 'Cazaquistão', lang: 'sl', ct: 'eur' },
+    HON: { n: 'Honduras', lang: 'es', ct: 'nca' }, NCA: { n: 'Nicarágua', lang: 'es', ct: 'nca' }, CUB: { n: 'Cuba', lang: 'es', ct: 'nca' },
+    HAI: { n: 'Haiti', lang: 'fr', ct: 'nca' }, PUR: { n: 'Porto Rico', lang: 'es', ct: 'nca' }, BLZ: { n: 'Belize', lang: 'en', ct: 'nca' },
+    BAH: { n: 'Bahamas', lang: 'en', ct: 'nca' }, BRB: { n: 'Barbados', lang: 'en', ct: 'nca' }, GRN: { n: 'Granada', lang: 'en', ct: 'nca' },
+    LCA: { n: 'Santa Lúcia', lang: 'en', ct: 'nca' }, VIN: { n: 'São Vicente e Granadinas', lang: 'en', ct: 'nca' }, SKN: { n: 'São Cristóvão e Névis', lang: 'en', ct: 'nca' },
+    ATG: { n: 'Antígua e Barbuda', lang: 'en', ct: 'nca' }, DMA: { n: 'Dominica', lang: 'en', ct: 'nca' }, BER: { n: 'Bermudas', lang: 'en', ct: 'nca' },
+    CAY: { n: 'Ilhas Cayman', lang: 'en', ct: 'nca' }, CUW: { n: 'Curaçao', lang: 'nl', ct: 'nca' }, ARU: { n: 'Aruba', lang: 'nl', ct: 'nca' },
+    AIA: { n: 'Anguila', lang: 'en', ct: 'nca' }, MSR: { n: 'Montserrat', lang: 'en', ct: 'nca' }, TCA: { n: 'Turks e Caicos', lang: 'en', ct: 'nca' },
+    VGB: { n: 'Ilhas Virgens Britânicas', lang: 'en', ct: 'nca' }, VIR: { n: 'Ilhas Virgens Americanas', lang: 'en', ct: 'nca' },
+    GUY: { n: 'Guiana', lang: 'en', ct: 'sam' },
+    LBY: { n: 'Líbia', lang: 'ar', ct: 'afr' }, SDN: { n: 'Sudão', lang: 'ar', ct: 'afr' }, SSD: { n: 'Sudão do Sul', lang: 'af', ct: 'afr' },
+    ETH: { n: 'Etiópia', lang: 'af', ct: 'afr' }, ERI: { n: 'Eritreia', lang: 'af', ct: 'afr' }, DJI: { n: 'Djibuti', lang: 'ar', ct: 'afr' },
+    SOM: { n: 'Somália', lang: 'ar', ct: 'afr' }, RWA: { n: 'Ruanda', lang: 'af', ct: 'afr' }, CGO: { n: 'Congo', lang: 'af', ct: 'afr' },
+    MAD: { n: 'Madagascar', lang: 'fr', ct: 'afr' }, MRI: { n: 'Maurício', lang: 'fr', ct: 'afr' }, SEY: { n: 'Seychelles', lang: 'fr', ct: 'afr' },
+    COM: { n: 'Comores', lang: 'ar', ct: 'afr' }, NIG: { n: 'Níger', lang: 'af', ct: 'afr' }, CHA: { n: 'Chade', lang: 'af', ct: 'afr' },
+    MTN: { n: 'Mauritânia', lang: 'ar', ct: 'afr' }, NAM: { n: 'Namíbia', lang: 'af', ct: 'afr' }, BOT: { n: 'Botsuana', lang: 'af', ct: 'afr' },
+    LES: { n: 'Lesoto', lang: 'af', ct: 'afr' }, SWZ: { n: 'Essuatíni', lang: 'af', ct: 'afr' }, MWI: { n: 'Malawi', lang: 'af', ct: 'afr' },
+    STP: { n: 'São Tomé e Príncipe', lang: 'pt', ct: 'afr' },
+    IND: { n: 'Índia', lang: 'hi', ct: 'asi' }, PAK: { n: 'Paquistão', lang: 'hi', ct: 'asi' }, BAN: { n: 'Bangladesh', lang: 'hi', ct: 'asi' },
+    SRI: { n: 'Sri Lanka', lang: 'hi', ct: 'asi' }, NEP: { n: 'Nepal', lang: 'hi', ct: 'asi' }, BHU: { n: 'Butão', lang: 'hi', ct: 'asi' },
+    MDV: { n: 'Maldivas', lang: 'hi', ct: 'asi' }, AFG: { n: 'Afeganistão', lang: 'ar', ct: 'asi' }, MYA: { n: 'Mianmar', lang: 'sea', ct: 'asi' },
+    MAS: { n: 'Malásia', lang: 'sea', ct: 'asi' }, SGP: { n: 'Singapura', lang: 'sea', ct: 'asi' }, PHI: { n: 'Filipinas', lang: 'sea', ct: 'asi' },
+    VIE: { n: 'Vietnã', lang: 'sea', ct: 'asi' }, CAM: { n: 'Camboja', lang: 'sea', ct: 'asi' }, LAO: { n: 'Laos', lang: 'sea', ct: 'asi' },
+    BRU: { n: 'Brunei', lang: 'sea', ct: 'asi' }, TLS: { n: 'Timor-Leste', lang: 'pt', ct: 'asi' }, MGL: { n: 'Mongólia', lang: 'sl', ct: 'asi' },
+    PRK: { n: 'Coreia do Norte', lang: 'kr', ct: 'asi' }, TPE: { n: 'Taiwan', lang: 'cn', ct: 'asi' }, MAC: { n: 'Macau', lang: 'cn', ct: 'asi' },
+    GUM: { n: 'Guam', lang: 'en', ct: 'asi' }, KGZ: { n: 'Quirguistão', lang: 'sl', ct: 'asi' }, TJK: { n: 'Tajiquistão', lang: 'sl', ct: 'asi' },
+    TKM: { n: 'Turcomenistão', lang: 'sl', ct: 'asi' }, SYR: { n: 'Síria', lang: 'ar', ct: 'asi' }, LBN: { n: 'Líbano', lang: 'ar', ct: 'asi' },
+    PLE: { n: 'Palestina', lang: 'ar', ct: 'asi' }, KUW: { n: 'Kuwait', lang: 'ar', ct: 'asi' }, BHR: { n: 'Bahrein', lang: 'ar', ct: 'asi' },
+    OMA: { n: 'Omã', lang: 'ar', ct: 'asi' }, YEM: { n: 'Iêmen', lang: 'ar', ct: 'asi' },
+    FIJ: { n: 'Fiji', lang: 'pac', ct: 'oce' }, PNG: { n: 'Papua-Nova Guiné', lang: 'pac', ct: 'oce' }, SOL: { n: 'Ilhas Salomão', lang: 'pac', ct: 'oce' },
+    VAN: { n: 'Vanuatu', lang: 'pac', ct: 'oce' }, NCL: { n: 'Nova Caledônia', lang: 'fr', ct: 'oce' }, TAH: { n: 'Taiti', lang: 'fr', ct: 'oce' },
+    SAM: { n: 'Samoa', lang: 'pac', ct: 'oce' }, ASA: { n: 'Samoa Americana', lang: 'pac', ct: 'oce' }, TGA: { n: 'Tonga', lang: 'pac', ct: 'oce' },
+    COK: { n: 'Ilhas Cook', lang: 'pac', ct: 'oce' }
   };
+  // continente dos países que vieram de patches anteriores
+  Object.assign(P.COUNTRIES.QAT, { ct: 'asi' }); Object.assign(P.COUNTRIES.UAE, { ct: 'asi' }); Object.assign(P.COUNTRIES.IRQ, { ct: 'asi' });
+  Object.assign(P.COUNTRIES.BLR, { ct: 'eur' }); Object.assign(P.COUNTRIES.SMR, { ct: 'eur' }); Object.assign(P.COUNTRIES.TRI, { ct: 'nca' });
+  ['KEN', 'UGA', 'TAN', 'LBR', 'SLE'].forEach((k) => { P.COUNTRIES[k].ct = 'afr'; }); P.COUNTRIES.THA.ct = 'asi';
   // Países extras trazidos por um patch ficam guardados no banco (db.countries) e valem também ao reabrir o save.
   // Formato: { "XYZ": { "n": "Nome em português", "lang": "pt|es|en|..." } }
-  const LANGS = ['pt', 'es', 'en', 'de', 'it', 'fr', 'nl', 'tr', 'gr', 'sl', 'sc', 'af', 'ar', 'jp', 'kr', 'cn'];
+  const LANGS = ['pt', 'es', 'en', 'de', 'it', 'fr', 'nl', 'tr', 'gr', 'sl', 'sc', 'af', 'ar', 'jp', 'kr', 'cn', 'hi', 'sea', 'pac'];
+  const CTS = ['sam', 'nca', 'eur', 'afr', 'asi', 'oce'];
   P.registerCountries = function (map) {
     if (!map || typeof map !== 'object') return 0;
     let n = 0;
     for (const [k, v] of Object.entries(map)) {
       if (!/^[A-Z]{3}$/.test(k) || !v || !v.n || P.COUNTRIES[k]) continue;
       P.COUNTRIES[k] = { n: String(v.n).slice(0, 40), lang: LANGS.includes(v.lang) ? v.lang : 'en' };
+      if (CTS.includes(v.ct)) P.COUNTRIES[k].ct = v.ct;
       n++;
     }
+    if (n && P.rebuildContinents) P.rebuildContinents();
     return n;
   };
   P.countryName = (c) => (P.COUNTRIES[c] ? P.COUNTRIES[c].n : c || '—');
@@ -200,6 +242,21 @@
       l: ['Son', 'Kim', 'Lee', 'Hwang', 'Jeong', 'Cho', 'Park', 'Paik', 'Kwon', 'Seol', 'Jung', 'Oh'],
       nick: []
     },
+    hi: {
+      f: ['Sunil', 'Gurpreet', 'Sandesh', 'Anirudh', 'Sahal', 'Lallianzuala', 'Rahul', 'Manvir', 'Udanta', 'Ashique', 'Imran', 'Faisal', 'Arjun', 'Vikram', 'Jamal', 'Tariq', 'Kiran', 'Rohit', 'Bilal', 'Anwar'],
+      l: ['Chhetri', 'Singh', 'Jhingan', 'Thapa', 'Samad', 'Chhangte', 'Bheke', 'Kuruniyan', 'Gogoi', 'Khan', 'Ahmed', 'Hossain', 'Rahman', 'Kumar', 'Sharma', 'Perera', 'Fernando', 'Gurung', 'Rai', 'Malik'],
+      nick: []
+    },
+    sea: {
+      f: ['Chanathip', 'Teerasil', 'Supachok', 'Nguyen', 'Quang', 'Van', 'Safawi', 'Faisal', 'Ikhsan', 'Hariss', 'Neil', 'Kyaw', 'Aung', 'Sok', 'Somsak', 'Thanawat', 'Rizky', 'Hoang', 'Duc', 'Arif'],
+      l: ['Songkrasin', 'Dangda', 'Sarachat', 'Hai', 'Toan', 'Rasid', 'Fandi', 'Harun', 'Etheridge', 'Min', 'Htet', 'Vann', 'Chamratsamee', 'Boonmatan', 'Ridwan', 'Phuong', 'Trong', 'Hassan', 'Thu', 'Tan'],
+      nick: []
+    },
+    pac: {
+      f: ['Roy', 'Chris', 'Tuimasi', 'Inia', 'Micah', 'Joses', 'Benjamin', 'Tiko', 'Lagi', 'Sione', 'Ratu', 'Jone', 'Iosefa', 'Tevita', 'Kalo', 'Manu', 'Peni', 'Kaneti', 'Rory', 'Alvin'],
+      l: ['Krishna', 'Wood', 'Manuca', 'Tagi', 'Lea\'alafa', 'Nawo', 'Totori', 'Kaltack', 'Tuilagi', 'Vaka', 'Ravouvou', 'Naqeletabua', 'Faleolo', 'Fifita', 'Tupou', 'Masi', 'Seru', 'Mataele', 'Tamasese', 'Tavita'],
+      nick: []
+    },
     cn: {
       f: ['Wei', 'Lei', 'Hao', 'Jun', 'Ming', 'Tao', 'Yang', 'Chun', 'Ka-ho', 'Wai-lok', 'Chi-fung', 'Tsz-chun', 'Kin-wai', 'Long', 'Bin', 'Xiang'],
       l: ['Wu', 'Zhang', 'Wang', 'Li', 'Chen', 'Liu', 'Huang', 'Zhou', 'Chan', 'Wong', 'Leung', 'Cheung', 'Lam', 'Tsang', 'Ho', 'Yip'],
@@ -211,7 +268,11 @@
   const NAT_POOL = ['BRA', 'BRA', 'ARG', 'ARG', 'FRA', 'ESP', 'POR', 'URU', 'COL', 'ENG', 'GER', 'ITA', 'NED', 'BEL', 'MEX', 'TUR',
     'CHI', 'PAR', 'ECU', 'CRO', 'SRB', 'POL', 'SUI', 'DEN', 'SWE', 'NOR', 'NGA', 'GHA', 'SEN', 'CIV', 'CMR', 'MAR', 'EGY', 'ALG',
     'JPN', 'KOR', 'AUS', 'USA', 'CAN', 'IRL', 'AUT', 'PER', 'VEN', 'KSA', 'CHN', 'HKG', 'ANG', 'CPV', 'MOZ', 'WAL'];
-  P.pickNat = (r, clubCountry) => (r() < 0.75 && P.COUNTRIES[clubCountry] ? clubCountry : P.pick(r, NAT_POOL));
+  P.pickNat = (r, clubCountry) => {
+    if (r() < 0.75 && P.COUNTRIES[clubCountry]) return clubCountry;
+    if (r() < 0.12) return P.pick(r, Object.keys(P.COUNTRIES)); // de vez em quando, qualquer país do mundo
+    return P.pick(r, NAT_POOL);
+  };
 
   // Nomes femininos (usados só em parte dos jovens novos: newgens da base e dos olheiros)
   const FEM = {
@@ -230,6 +291,9 @@
     ar: ['Fatima', 'Ghizlane', 'Sanaa', 'Ibtissam', 'Nouhaila', 'Salma', 'Yasmin', 'Layla', 'Amina', 'Nour', 'Rania', 'Hana'],
     jp: ['Saki', 'Mana', 'Yui', 'Hinata', 'Aoba', 'Riko', 'Mina', 'Hina', 'Yuka', 'Fuka', 'Momoko', 'Moeka'],
     kr: ['Ji-so', 'Min-a', 'Seo-yeon', 'Ga-eun', 'Yu-ri', 'Hye-ri', 'Su-bin', 'Ye-eun', 'Da-eun', 'Ha-eun', 'So-hyun', 'Ji-woo'],
+    hi: ['Bala', 'Ashalata', 'Dangmei', 'Manisha', 'Sabitra', 'Pyari', 'Sanjida', 'Krishmi', 'Anju', 'Priya', 'Ayesha', 'Sana'],
+    sea: ['Huynh', 'Kanyanat', 'Pikul', 'Tuyet', 'Sarina', 'Nurul', 'Siti', 'Win', 'Chuthamat', 'Thanh', 'Dinda', 'Lan'],
+    pac: ['Meagen', 'Unaisi', 'Sereima', 'Losana', 'Ana', 'Mele', 'Salote', 'Lavinia', 'Tupou', 'Vika', 'Maria', 'Grace'],
     cn: ['Wang Shuang', 'Tang Jiali', 'Zhang Rui', 'Wu Chengshu', 'Li Ying', 'Shen Mengyu', 'Yang Lina', 'Zhao Yujie', 'Chen Qiaozhu', 'Xiao Yuyi', 'Liu Shanshan', 'Gu Yasha']
   };
   P.FEM_CHANCE = 0.07;
