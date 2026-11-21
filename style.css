@@ -2237,3 +2237,35 @@ html.phone-land .cal-cell { min-height: 44px; }
 html.phone-land .wm svg { max-height: 150px; }
 @media (max-width: 520px) { .wm-c text { font-size: 30px; } }
 .chip.lst { color: var(--accent); }
+
+/* Mesa de negociação */
+.sheet.sheet-wide { max-width: 980px; width: min(980px, 100%); }
+.ng { display: flex; flex-direction: column; gap: 14px; }
+.ng-left, .ng-right { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ng-player { display: flex; gap: 10px; align-items: center; }
+.ng-player > div { display: flex; flex-direction: column; min-width: 0; }
+.ng-player small { color: var(--muted); font-size: .8rem; }
+.ng-mood { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 6px 0; }
+.ng-dots { display: flex; gap: 5px; }
+.ng-dots i { width: 12px; height: 12px; border: 1px solid var(--ink); border-radius: 50%; }
+.ng-dots i.on { background: var(--accent); border-color: var(--accent); }
+.ng-log { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; font-size: .86rem; }
+.ng-log p { margin: 0; padding: 6px 8px; border-left: 3px solid var(--line); background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+.ng-log p.eu { border-left-color: var(--info); }
+.ng-log p.clube { border-left-color: var(--accent); }
+.ng-log p.jog { border-left-color: var(--good); }
+.ng-fee { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.ng-fee input { width: 100%; box-sizing: border-box; }
+.ng-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 10px; }
+.ng-two input { width: 100%; box-sizing: border-box; }
+.ng .seg { display: flex; flex-wrap: nowrap; }
+.ng .seg button { flex: 1 1 0; min-width: 0; padding-left: 4px; padding-right: 4px; }
+.ng-sum { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border: 1px dashed var(--line); font-size: .86rem; }
+.ng-sum em { color: var(--warn); }
+.ng-act { flex-wrap: wrap; gap: 8px; }
+@media (min-width: 900px) { .ng { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 24px; } .ng-right { border-left: 1px solid var(--line); padding-left: 24px; } }
+html.phone-land .ng { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 16px; }
+html.phone-land .ng-right { border-left: 1px solid var(--line); padding-left: 16px; }
+html.phone-land .ng-log { max-height: 150px; }
+html.phone-land .sheet.sheet-wide { max-width: min(900px, 96vw); }
+.ng-done { display: flex; flex-direction: column; gap: 10px; }
