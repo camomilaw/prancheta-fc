@@ -2269,3 +2269,12 @@ html.phone-land .ng-right { border-left: 1px solid var(--line); padding-left: 16
 html.phone-land .ng-log { max-height: 150px; }
 html.phone-land .sheet.sheet-wide { max-width: min(900px, 96vw); }
 .ng-done { display: flex; flex-direction: column; gap: 10px; }
+
+/* Mais › Índice: saídas (tela inicial e sair do app) */
+.idx-list button { padding-left: 8px; }
+.idx-ic { font-size: 1.3rem; width: 1.4em; text-align: center; color: var(--accent); }
+.idx-exit b { color: var(--accent); }
+/* Escudo com imagem própria na capa: mesmo tamanho do escudo desenhado */
+.fm-photo img, .fm-crest img { width: 130px; height: 130px; object-fit: contain; }
+html.phone-land .fm-photo img { width: 46px; height: 46px; }
+img.badge-img { object-fit: contain; max-width: 100%; }

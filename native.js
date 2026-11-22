@@ -58,6 +58,15 @@
     } catch (e) { /* ignora */ }
   }
 
+  // Sair do jogo (só nos apps; no navegador, a aba é fechada pelo próprio navegador)
+  P.canQuit = () => !!(window.pfcNative || isAndroidApp);
+  A.ACT.appQuit = function () {
+    try { A.save(); } catch (e) { /* sem carreira aberta */ }
+    Promise.resolve(P.nativeFlush ? P.nativeFlush() : null).catch(() => {}).then(() => {
+      if (isAndroidApp) { const App = (Cap.Plugins && Cap.Plugins.App) || (Cap.registerPlugin ? Cap.registerPlugin('App') : null); if (App && App.exitApp) { App.exitApp(); return; } }
+      window.close();
+    });
+  };
   P.native = fs;
   if (!fs) return;
   document.documentElement.classList.add('is-app', 'app-' + fs.kind);
