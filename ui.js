@@ -75,7 +75,8 @@
   const status = (p) => (p.inj ? `<span class="chip inj">${p.injN ? esc(p.injN) + ' · ' : 'Lesão '}${p.inj}s</span>` : '') + (p.susp ? '<span class="chip sus">Suspenso</span>' : '') + (p.unh ? '<span class="chip sus">Insatisfeito</span>' : '') + (P.adaptChip && p.ad ? P.adaptChip(p) : '')
     + (p.callup ? '<span class="chip xi" title="Chamado do Sub-20 para o próximo jogo">Sub-20 · 1 jogo</span>' : '')
     + (A.g && p.clubId === A.g.user && p.listed ? '<span class="chip lst" title="Na lista de transferências">⇄ À venda</span>' : '')
-    + (A.g && p.clubId === A.g.user && p.loanList && !p.loan ? '<span class="chip loan" title="Na lista de empréstimo">↻ Empréstimo</span>' : '');
+    + (A.g && p.clubId === A.g.user && p.loanList && !p.loan ? '<span class="chip loan" title="Na lista de empréstimo">↻ Empréstimo</span>' : '')
+    + (A.g && p.pendId ? (p.clubId === A.g.user ? '<span class="chip lst" title="Vendido: sai quando a janela abrir">⇥ Sai na janela</span>' : '<span class="chip xi" title="Contratado: chega quando a janela abrir">⇤ Chega na janela</span>') : '');
   const avgNote = (p) => (p.s.j ? (p.s.nt / p.s.j).toFixed(1).replace('.', ',') : '–');
   const ord = (n) => n + 'º';
   const divName = (d) => `${d}ª divisão`;

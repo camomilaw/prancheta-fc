@@ -134,6 +134,8 @@
     return '';
   }
 
+  P.negCloseBuy = closeBuy;
+
   // ---------- Parcelas: pagas na virada de temporada ----------
   const origPre = P.marketPreSeason;
   P.marketPreSeason = function (g, r) {
@@ -166,6 +168,13 @@
   A.negSheet = function (id, kind) {
     const g = A.g, p = g.db.players[id]; if (!p || !p.clubId) return;
     const st = state(g, p); if (kind) st.kind = kind;
+    const pd = P.pendOf && P.pendOf(g, p.id);
+    if (pd && !st.ok && pd.pid === p.id) {
+      A.openSheet(`<div class="bar-top"><h2>Negociação</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
+        <div class="ng-done"><div class="msg good">Acordo fechado: ${esc(p.name)} chega ${esc(P.pendWhen(g))}. Veja e desfaça em Mercado › Propostas.</div>
+        <div class="row"><span class="spacer"></span><button class="btn" data-a="closeSheet">Fechar</button><button class="btn primary" data-a="player" data-id="${p.id}">Ver a ficha</button></div></div>`);
+      return;
+    }
     if (st.ok) { // negócio fechado: só o resumo
       A.openSheet(`<div class="bar-top"><h2>Negociação</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
         <div class="ng-done"><div class="msg good">${esc(st.msg)}</div>
@@ -225,7 +234,9 @@
   function send() {
     const g = A.g, st = A.st.ng, p = g.db.players[st.pid]; if (!p) return;
     const m = mem(g, p), me = P.club(g, g.user);
-    if (!P.windowOpen(g)) { st.msg = P.windowText(g) + '.'; return; }
+    const open = P.windowOpen(g);
+    if (P.pendOf && P.pendOf(g, p.id)) { st.msg = `Já existe um acordo por ${p.name} esperando a janela abrir.`; return; }
+    if (!open && (st.kind === 'loan' || !P.pendAdd)) { st.msg = P.windowText(g) + '. Empréstimos só com a janela aberta; transferências podem ser acertadas para a próxima janela.'; return; }
     if (st.kind === 'loan') {
       say(m, 'eu', `Empréstimo: ${P.money(st.lfee)} de taxa, pago ${st.share}% do salário${st.opt ? ', com opção de compra' : ''}.`);
       const r = evalLoan(g, p, { fee: st.lfee, share: st.share, opt: st.opt }, m);
@@ -260,6 +271,17 @@
       say(m, 'jog', `Quero ${P.money(need)}/mês.`); return;
     }
     const a = m.agreed;
+    if (!open) { // janela fechada: vira acordo, concluído (e pago) quando a janela abrir
+      const sp = a.swap ? g.db.players[a.swap] : null;
+      if (sp && P.pendOf(g, sp.id)) { st.msg = `${sp.name} já está em outro acordo.`; return; }
+      say(m, 'jog', 'Combinado. Me apresento quando a janela abrir.'); keepLog(g, p, m, P.club(g, p.clubId));
+      P.pendAdd(g, { kind: 'buy', pid: p.id, from: p.clubId, to: g.user, fee: a.fee, inst: a.inst, swap: a.swap || null, sv: a.sv, wage: st.wage, years: st.years });
+      const now = r10k(a.fee / a.inst);
+      P.news(g, `Acordo fechado com o ${P.club(g, p.clubId).name}: ${p.name} chega ${P.pendWhen(g)}.`, 'good');
+      delete g.neg[p.id];
+      st.ok = true; st.msg = `Acordo fechado! ${p.name} continua no ${P.club(g, p.clubId).name} e chega ${P.pendWhen(g)}. O pagamento${a.inst > 1 ? ' da 1ª parcela' : ''} (${P.money(now)}) só sai nessa hora, e o clube precisa ter esse valor em caixa; senão o negócio cai.`;
+      return;
+    }
     say(m, 'jog', 'Fechado! Pode preparar a apresentação.'); keepLog(g, p, m, P.club(g, p.clubId));
     const err = closeBuy(g, p, { fee: a.fee, inst: a.inst, swap: a.swap, wage: st.wage, years: st.years }, m, a.sv);
     if (err) { st.msg = err; return; }

@@ -153,7 +153,7 @@
     const tv = P.ECON.tv[c.div - 1];
     let n = 0;
     while (c.bal < -tv * 0.15 && n < max) {
-      const sq = P.squad(g, c.id).filter((p) => !p.loan);
+      const sq = P.squad(g, c.id).filter((p) => !p.loan && !p.pendId);
       if (sq.length <= 21) return;
       const p = sq.sort((a, b) => b.wage - a.wage)[0];
       const fee = Math.round(P.value(p) * (0.55 + rnd() * 0.2) / 10000) * 10000;
@@ -168,13 +168,13 @@
   P.marketWeek = function (g, step) {
     const rnd = Math.random;
     const open = P.windowOpen(g);
-    // fora da janela você ainda pode VENDER (propostas de compra continuam chegando, mais raras); comprar, não
+    // fora da janela as propostas continuam chegando (mais raras); aceitar vira acordo para a próxima janela
     g.offers = (g.offers || []).filter((o) => o.until > g.week && (open || o.kind !== 'loan'));
     const clubs = g.db.clubs;
     const ovrs = P.clubOvrs(g.db);
 
     // 1. propostas pelos seus jogadores
-    const mine = P.squad(g, g.user).filter((p) => !p.loan);
+    const mine = P.squad(g, g.user).filter((p) => !p.loan && !p.pendId);
     const listed = mine.filter((p) => p.listed);
     if (!g.over && mine.length > P.MARKET.minSquad && rnd() < (listed.length ? (open ? 0.8 : 0.35) : (open ? 0.55 : 0.15))) {
       const p = listed.length && rnd() < 0.7 ? P.pick(rnd, listed) : P.weighted(rnd, mine, (x) => P.value(x));
@@ -223,7 +223,7 @@
       const all = Object.values(g.db.players), off = Math.floor(rnd() * all.length);
       for (let k = 0; k < all.length; k++) {
         const p = all[(off + k) % all.length];
-        if (P.LINE[p.pos] !== line || p.clubId === buyer.id || p.clubId === g.user || p.loan) continue;
+        if (P.LINE[p.pos] !== line || p.clubId === buyer.id || p.clubId === g.user || p.loan || p.pendId) continue;
         const c = p.clubId && P.club(g, p.clubId);
         if (c && (c.div < buyer.div || c.div > buyer.div + 2)) continue;
         if (P.ovr(p) < bar) continue;
@@ -388,11 +388,11 @@
         <div class="plist">${res.map((p) => rowP(p, p.clubId && p.saleList && !p.loan ? '<span class="chip sus">À venda</span>' : p.clubId && p.loanList && !p.loan ? `<span class="chip loan">Empréstimo · ${P.money(P.loanFeeOf(p))}</span>` : '')).join('') || '<p class="empty">Ninguém com esses filtros.</p>'}</div>
         <p class="cad-fine">Toque num jogador para ver a ficha e fazer proposta.</p></section></div>`;
     } else if (f.tab === 'prop') {
-      body = offers.length ? `<div class="plist">${offers.map((o) => {
+      body = (P.pendBox ? P.pendBox(g) : '') + (offers.length ? `<div class="plist">${offers.map((o) => {
         const p = g.db.players[o.pid], b = club(o.from);
         return `<div class="offer"><div class="row" style="gap:8px">${P.badge(b, 28)}<div style="flex:1;min-width:0"><b>${esc(b.name)}</b> <span class="muted">(${b.div}ª div)</span>${o.ask ? ' <span class="chip sus">Ele quer ir</span>' : ''}<div class="muted" style="font-size:.85rem">quer <b>${esc(p.name)}</b>${o.kind === 'loan' ? ' <span class="chip loan">por empréstimo</span>' : ''} · ${p.pos} · força ${P.ovr(p)} · vale ${P.money(P.value(p))}</div></div><b class="num">${P.money(o.fee)}${o.kind === 'loan' ? '<small class="muted" style="display:block;font-size:.7rem;font-weight:400;text-align:right">taxa</small>' : ''}</b></div>
           <div class="row"><span class="muted" style="font-size:.8rem;flex:1">Vale até a semana ${o.until}</span><button class="btn sm" data-a="mkReject" data-id="${o.id}">Recusar</button><button class="btn sm primary" data-a="mkAccept" data-id="${o.id}">Aceitar</button></div></div>`;
-      }).join('')}</div>` : `<p class="empty">Nenhuma proposta no momento. Coloque jogadores à venda pela ficha deles para atrair interessados.</p>`;
+      }).join('')}</div>` : `<p class="empty">Nenhuma proposta no momento. Coloque jogadores à venda pela ficha deles para atrair interessados.</p>`);
     } else if (f.tab === 'venda') {
       const ls = P.squad(g, g.user).filter((p) => p.listed);
       body = ls.length ? `<div class="plist">${ls.map((p) => rowP(p, '<span class="chip sus">À venda</span>')).join('')}</div>` : '<p class="empty">Nenhum jogador à venda. Abra a ficha de um jogador do seu elenco e toque em "Colocar à venda".</p>';
@@ -487,7 +487,7 @@
     },
     mkList(d) { const p = A.g.db.players[d.id]; p.listed = !p.listed; A.save(); A.render(); A.playerSheet(d.id); A.toast(p.listed ? `${p.name} está à venda` : `${p.name} saiu da lista de venda`); },
     mkLoanList(d) { const p = A.g.db.players[d.id]; p.loanList = !p.loanList; A.save(); A.render(); A.playerSheet(d.id); A.toast(p.loanList ? `${p.name} está na lista de empréstimo` : `${p.name} saiu da lista de empréstimo`); },
-    mkAccept(d) { const err = P.acceptOffer(A.g, d.id); if (err) { A.toast(err); return; } A.save(); A.render(); A.toast('Negócio fechado'); },
+    mkAccept(d) { const open = P.windowOpen(A.g); const err = P.acceptOffer(A.g, d.id); if (err) { A.toast(err); return; } A.save(); A.render(); A.toast(open ? 'Negócio fechado' : 'Acordo fechado: ele sai quando a janela abrir'); },
     mkReject(d) { A.g.offers = A.g.offers.filter((o) => o.id !== d.id); A.save(); A.render(); }
   });
   Object.assign(A.CHG, {
