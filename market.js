@@ -167,15 +167,16 @@
   // ---------- Mundo em movimento (roda toda semana) ----------
   P.marketWeek = function (g, step) {
     const rnd = Math.random;
-    g.offers = (g.offers || []).filter((o) => o.until > g.week && P.windowOpen(g));
-    if (!P.windowOpen(g)) return;
+    const open = P.windowOpen(g);
+    // fora da janela você ainda pode VENDER (propostas de compra continuam chegando, mais raras); comprar, não
+    g.offers = (g.offers || []).filter((o) => o.until > g.week && (open || o.kind !== 'loan'));
     const clubs = g.db.clubs;
     const ovrs = P.clubOvrs(g.db);
 
     // 1. propostas pelos seus jogadores
     const mine = P.squad(g, g.user).filter((p) => !p.loan);
     const listed = mine.filter((p) => p.listed);
-    if (mine.length > P.MARKET.minSquad && rnd() < (listed.length ? 0.8 : 0.55)) {
+    if (!g.over && mine.length > P.MARKET.minSquad && rnd() < (listed.length ? (open ? 0.8 : 0.35) : (open ? 0.55 : 0.15))) {
       const p = listed.length && rnd() < 0.7 ? P.pick(rnd, listed) : P.weighted(rnd, mine, (x) => P.value(x));
       const me = P.club(g, g.user);
       const buyers = clubs.filter((c) => c.id !== g.user && c.div <= me.div + 1 && c.bal > P.value(p) * 1.3 && P.ovr(p) >= ovrs[c.id] - 6);
@@ -189,6 +190,7 @@
       }
     }
 
+    if (!open) return;
     // 1b. propostas de empréstimo pelos seus jogadores na lista de empréstimo
     const lend = mine.filter((p) => p.loanList);
     if (lend.length && mine.length > P.MARKET.minSquad && rnd() < 0.6) {

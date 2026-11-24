@@ -87,9 +87,9 @@ h3 { font-size: 1.15rem; }
 /* ---------- Estrutura ---------- */
 .app { min-height: 100%; }
 .top {
-  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  position: sticky; top: 0; z-index: 20; /* o recuo do entalhe/barra do celular vai no padding: com top fixo, o cabeçalho cobria o começo da página */
   background: var(--surface); border-bottom: 1px solid var(--line);
-  padding-block: 10px;
+  padding-block: calc(10px + env(safe-area-inset-top, 0px)) 10px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: flex; align-items: center; gap: 12px;
@@ -1419,7 +1419,7 @@ body.in-match #radio.open .rd-panel { transform: translateY(calc(100% + 100vh));
 
 /* Celular deitado (e telas de PC baixas): layout de PC mais compacto */
 @media (min-width: 900px) and (max-height: 560px) {
-  .top { padding-top: 4px; padding-bottom: 4px; }
+  .top { padding-top: calc(4px + env(safe-area-inset-top, 0px)); padding-bottom: 4px; }
   .app { grid-template-columns: 168px 1fr; }
   .nav { top: 52px; height: calc(100vh - 52px); padding: 8px 6px; overflow-y: auto; }
   .nav button { height: 34px; font-size: .8rem; }
@@ -2278,3 +2278,12 @@ html.phone-land .sheet.sheet-wide { max-width: min(900px, 96vw); }
 .fm-photo img, .fm-crest img { width: 130px; height: 130px; object-fit: contain; }
 html.phone-land .fm-photo img { width: 46px; height: 46px; }
 img.badge-img { object-fit: contain; max-width: 100%; }
+.nc1-row input.sel { width: 100%; box-sizing: border-box; }
+
+/* Bola de Ouro */
+.bdo { display: flex; flex-direction: column; gap: 14px; }
+.bdo-tbl td small { font-size: .74rem; }
+.bdo-tbl tr.bdo-1 td { font-weight: 600; }
+.bdo-tbl tr.bdo-1 td:first-child { color: #b8860b; font-size: 1.1rem; }
+.bdo .head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.bdo-y { width: auto; min-height: 32px; padding: 2px 8px; }

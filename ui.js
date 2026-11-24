@@ -67,7 +67,8 @@
 
   // ---------- Helpers ----------
   const club = (cid) => A.db().clubs.find((c) => c.id === cid);
-  const pl = (id) => A.db().players[id];
+  // jogador por id: elenco de todos os clubes ou o Sub-20 (garoto chamado para um jogo já voltou à base)
+  const pl = (id) => A.db().players[id] || (A.g && A.g.y && A.g.y.squad && A.g.y.squad[id]);
   const vcls = (v) => (v <= 6 ? 'v1' : v <= 10 ? 'v2' : v <= 15 ? 'v3' : 'v4');
   const condCls = (c) => (c >= 80 ? '' : c >= 60 ? 'mid' : 'low');
   const condBar = (p) => `<span class="cond ${condCls(p.cond)}" title="Condição ${Math.round(p.cond)}%"><i style="width:${Math.round(p.cond)}%"></i></span>`;
@@ -190,7 +191,7 @@
     list = list.slice().sort((a, b) => a.div - b.div || ovrs[b.id] - ovrs[a.id]);
     const picked = s.club && db.clubs.find((c) => c.id === s.club);
     return `<div class="jr-founds"><button class="jr-found" data-a="createOpen"><span>…ou funde o seu próprio clube</span><b>Criar →</b></button>
-      <button class="jr-found" data-a="setupImport"><span>…ou importe um patch (ex.: clubes reais)</span><b>${s.importing ? 'Fechar' : 'Importar →'}</b></button></div>
+      <button class="jr-found" data-a="setupImport"><span>…ou importe uma carreira ou um patch (código ou .json)</span><b>${s.importing ? 'Fechar' : 'Importar →'}</b></button></div>
       ${s.importing ? importBox() : ''}
       <section class="jr-sec" aria-labelledby="h-tab">
         <div class="jr-h jr-h-row"><h2 id="h-tab">Escolha o clube</h2>${divSel(s.divF, 'setupDiv')}</div>
@@ -214,8 +215,8 @@
   }
   function importBox() {
     return `<div class="card" style="background:var(--surface-2);display:flex;flex-direction:column;gap:10px">
-      <b>Importar time, patch, banco de dados ou carreira</b>
-      <p class="muted" style="margin:0">Escolha um arquivo .json (como o patch de clubes reais) ou cole o texto abaixo.</p>
+      <b>Importar carreira, time, patch ou banco de dados</b>
+      <p class="muted" style="margin:0">Escolha um arquivo .json ou cole o código abaixo. Uma <b>carreira</b> (o código de Mais › Salvar) continua de onde parou: mesmo clube, mesmo ano e os mesmos elencos.</p>
       <input type="file" id="impfile" accept=".json,.txt,application/json" data-c="impFile" aria-label="Arquivo para importar">
       <div class="field"><textarea id="imptext" placeholder="Cole aqui o JSON"></textarea></div>
       <div class="row"><button class="btn" data-a="setupImport">Cancelar</button><span class="spacer"></span><button class="btn primary" data-a="applyImport">Importar</button></div>
@@ -427,6 +428,7 @@
         ${h.tz && P.TIERS ? P.TIERS.filter((t) => h.tz[t.k]).map((t) => note(t.n, null, h.tz[t.k])).join('') : ''}
       </div>
       <div class="rt-star"><span class="rt-lbl">Craque do ano · artilheiro da Ultraliga</span><b>${esc(h.top)}</b></div>
+      ${g.bdo && g.bdo.length && g.bdo[g.bdo.length - 1].s === g.season && P.ballonTable ? `<h3 class="rt-h">Bola de Ouro ${g.season}</h3>${P.ballonTable(g, g.bdo[g.bdo.length - 1], 5)}` : ''}
       <h3 class="rt-h">Sobe e desce</h3>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Div</th><th>Campeão</th><th>Sobem</th><th>Descem</th></tr></thead><tbody>
         ${s.divs.map((d) => `<tr class="${club(g.user) && d.d === me.div ? 'me' : ''}"><td>${d.d}ª</td><td>${esc(club(d.champ).short)}</td><td>${mv(d.up, I.up) || '–'}</td><td>${mv(d.down, I.down) || '–'}</td></tr>`).join('')}
@@ -586,7 +588,7 @@
     const more = `${mine && !mode && g ? P.marketButtons(p) : ''}${mine && !mode && P.canDemote && P.canDemote(g, p) ? `<button class="btn" data-a="yDemote" data-id="${p.id}">Devolver ao Sub-20</button>` : ''}<button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button>${mine && !mode && !p.loan ? `<button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}`;
     A.openSheet(`<div class="bar-top"><span class="pos-tag ${P.LINE[p.pos]}" style="padding:4px 8px">${p.pos}</span>
         <h2>${esc(p.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
-      <div class="ps-head">${P.badge(c, 34)}<div class="ps-id"><div>${p.age} anos · ${esc(P.countryName(p.nat))}</div><div class="muted">${c ? esc(c.name) + ' · ' + c.div + 'ª div' : 'Sem clube'}</div><div>${status(p)}</div></div>
+      <div class="ps-head">${P.badge(c, 34)}<div class="ps-id"><div>${p.age} anos · ${esc(P.countryName(p.nat))}</div><div class="muted">${c ? esc(c.name) + ' · ' + c.div + 'ª div' : 'Sem clube'}</div><div>${status(p)}${P.bdoChip ? P.bdoChip(p) : ''}</div></div>
         <div class="ps-ovr"><span class="label">Força</span><div class="big-ovr">${P.ovr(p)}</div></div></div>
       <div class="ps-rende"><span class="label">Rende em</span>${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}">${b.pos} ${b.v}</span>`).join('')}</div>
       <div class="ps-blocks">
@@ -1120,8 +1122,13 @@
     if (obj && obj.cal && obj.db) {
       obj.db = P.normalizeDb(obj.db);
       P.ensureEconomy(obj);
-      A.g = obj; A.save(); A.view = 'inicio';
-      return 'Carreira carregada';
+      // carreira de outro save: continua do mesmo ponto (mesmo clube, ano e elencos) num espaço livre
+      const meta = P.slotMeta ? P.slotMeta().s : {};
+      if (!A.setup.slot && Object.keys(meta).length >= (P.SLOT_N || 9)) throw new Error(`os ${P.SLOT_N || 9} espaços de carreira estão ocupados. Rasgue uma página em Carreiras salvas antes`);
+      A.g = obj; A.slot = null; A.save(); A.view = 'inicio'; A.st.div = null;
+      (A.onLoad || []).forEach((f) => { try { f(obj); } catch (e) { /* ignora */ } });
+      const c = obj.db.clubs.find((x) => x.id === obj.user);
+      return `Carreira carregada: ${c ? c.name : 'seu clube'}, temporada ${obj.season}${A.slot ? ` · salva no espaço ${A.slot}` : ''}`;
     }
     const nd = P.normalizeDb(obj);
     A.setup.db = nd; A.setup.club = null; A.setup.importing = false; A.setup.editing = false;

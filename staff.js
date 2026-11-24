@@ -30,7 +30,24 @@
         out.push({ id: P.uid('s'), role, name: P.makeName(r, names, nat), nat, stars, wage, fee: wage * 6 });
       }
     }
+    // ex-jogadores aposentados também procuram emprego como funcionários
+    const pool = (g.retirees || []).filter((x) => !(g.y.staff || []).some((s) => s.exId === x.id));
+    const nEx = Math.min(pool.length, 2 + Math.floor(r() * 3));
+    for (let i = 0; i < nEx; i++) {
+      const x = pool.splice(Math.floor(r() * pool.length), 1)[0];
+      const stars = x.ovr >= 85 ? 5 : x.ovr >= 78 ? 4 : x.ovr >= 70 ? 3 : x.ovr >= 62 ? 2 : 1;
+      const role = x.pos === 'GOL' ? P.pick(r, ['prep', 'tsub', 'olheiro']) : P.pick(r, ['aux', 'tsub', 'olheiro', 'prep', 'fisio']);
+      const wage = Math.round(STAR_WAGE[stars] * P.STAFF_ROLES[role].wageM / 500) * 500;
+      out.push({ id: P.uid('s'), role, name: x.name, nat: x.nat, stars, wage, fee: wage * 6, ex: { pos: x.pos, ovr: x.ovr, s: x.s, club: x.club }, exId: x.id });
+    }
     g.y.cands = out.sort((a, b) => b.stars - a.stars);
+  };
+  // Aposentados viram possíveis funcionários (guarda os últimos 80)
+  P.onRetire = function (g, p) {
+    const o = P.ovr(p); if (o < 60) return; // só quem teve uma carreira de destaque
+    const c = p.clubId ? P.club(g, p.clubId) : null;
+    (g.retirees = g.retirees || []).push({ id: p.id, name: p.name, nat: p.nat, pos: p.pos, ovr: o, s: g.season, club: c ? c.name : '' });
+    if (g.retirees.length > 80) g.retirees.splice(0, g.retirees.length - 80);
   };
   function ensureCands(g) {
     if (!g.y) P.ensureYouth(g);
@@ -96,7 +113,7 @@
       }).join('')}</div>
       <div class="row" style="margin:18px 0 8px"><span class="label" style="flex:1">Disponíveis nesta temporada</span>
         <select class="sel" data-c="stRoleSel" aria-label="Função"><option value="all">Todas as funções</option>${roles.map(([k, r]) => `<option value="${k}" ${role === k ? 'selected' : ''}>${r.n}</option>`).join('')}</select></div>
-      <div class="plist">${cands.map((c) => `<div class="staff-row"><div style="flex:1;min-width:0"><b>${esc(c.name)}</b> ${stars(c.stars)}
+      <div class="plist">${cands.map((c) => `<div class="staff-row"><div style="flex:1;min-width:0"><b>${esc(c.name)}</b> ${stars(c.stars)}${c.ex ? ` <span class="chip loan" title="Aposentou-se em ${c.ex.s}${c.ex.club ? ' no ' + esc(c.ex.club) : ''}">ex-jogador · ${c.ex.pos} ${c.ex.ovr}</span>` : ''}
           <div class="muted" style="font-size:.85rem">${P.STAFF_ROLES[c.role].n} · ${esc(P.countryName(c.nat))} (${esc((P.LANG_N || {})[(P.COUNTRIES[c.nat] || {}).lang] || '')}) · ${esc(P.STAFF_ROLES[c.role].eff(c.stars))}</div>${P.adaptStaffHint ? P.adaptStaffHint(g, c) : ''}
           <div class="muted" style="font-size:.85rem">${P.money(c.wage)}/mês · luvas ${P.money(c.fee)}</div></div>
         <button class="btn sm primary" data-a="stHire" data-id="${c.id}">Contratar</button></div>`).join('') || '<p class="empty">Ninguém disponível para essa função.</p>'}</div>

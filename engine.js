@@ -1164,6 +1164,7 @@
           g.db.players[young.id] = young;
           if (p.clubId === g.user) retired.push(`${p.name} se aposentou; ${young.name} (${young.age} anos) subiu da base`);
         }
+        if (P.onRetire) P.onRetire(g, p);
         delete g.db.players[p.id];
         continue;
       }

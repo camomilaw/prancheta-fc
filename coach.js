@@ -75,13 +75,12 @@
     let body = '';
     if (step === 1) {
       const nats = Object.entries(P.COUNTRIES).sort((a, b) => a[1].n.localeCompare(b[1].n));
-      const ages = []; for (let a = 28; a <= 72; a++) ages.push(a);
       body = `<section class="jr-classif nc1"><div class="jr-classif-h"><h2>Ficha de inscrição</h2><span>Classificados</span></div>
         <div class="nc1-grid">
           <div class="nc1-left">
             <div class="field"><label class="jr-step" for="mgr">Seu nome</label><input id="mgr" class="jr-sign" data-i="mgr" value="${esc(s.manager)}" placeholder="assine aqui" maxlength="30"></div>
             <div class="nc1-row">
-              <div class="field"><label class="jr-step" for="nc-age">Idade</label><select id="nc-age" class="sel" data-c="ncMeta" data-k="age">${ages.map((a) => `<option ${a === (c.age || 40) ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+              <div class="field"><label class="jr-step" for="nc-age">Idade</label><input id="nc-age" class="sel" type="number" inputmode="numeric" min="14" max="110" step="1" data-c="ncMeta" data-k="age" value="${c.age || 40}"></div>
               <div class="field"><span class="jr-step">Você é</span><div class="seg">${[['m', 'Técnico'], ['f', 'Técnica']].map(([k, n]) => `<button class="${(c.gender || 'm') === k ? 'on' : ''}" data-a="ncGender" data-k="${k}">${n}</button>`).join('')}</div></div>
             </div>
             <div class="field"><label class="jr-step" for="nc-nat">País</label><select id="nc-nat" class="sel" data-c="ncMeta" data-k="nat">${nats.map(([k, v]) => `<option value="${k}" ${k === (c.nat || 'BRA') ? 'selected' : ''}>${esc(v.n)}</option>`).join('')}</select>
@@ -117,7 +116,7 @@
   });
   Object.assign(A.CHG, {
     ncStyleForm(el) { A.setup.coach.form = el.value; },
-    ncMeta(el) { const v = el.dataset.k === 'age' ? Number(el.value) : el.value; A.setup.coach[el.dataset.k] = v; },
+    ncMeta(el) { let v = el.value; if (el.dataset.k === 'age') { v = Math.round(Math.min(110, Math.max(14, Number(v) || 40))); el.value = v; } A.setup.coach[el.dataset.k] = v; },
     cStyleForm(el) { const g = A.g; g.coach = g.coach || { styles: [], form: '4-4-2' }; g.coach.form = el.value; A.save(); }
   });
 

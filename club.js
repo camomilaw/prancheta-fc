@@ -51,6 +51,12 @@
     c.lastOcc = Math.round(o * 100);
     return Math.round(c.cap * o * P.ECON.ticket(c.div) * price);
   };
+  // Custo de operação do clube do usuário por temporada: funcionários do dia a dia, viagens,
+  // manutenção do estádio (cresce com a capacidade) e da estrutura (cresce com o nível)
+  P.opsCost = function (c) {
+    const f = P.facOf(c), full = c.cap * P.ECON.ticket(c.div) * 19;
+    return 0.25 * P.ECON.tv[c.div - 1] + 0.2 * full + 0.15e6 * (f.base + f.ct + f.sede) * scale(c.div);
+  };
   const commercial = P.commercialOf = (c) => 0.4 * P.ECON.tv[c.div - 1] * (c.rep / 70) * (0.6 + 0.2 * P.facOf(c).sede);
 
   // ---------- Diretoria ----------
@@ -64,6 +70,7 @@
   P.clubWeek = function (g, step, ctx) {
     // receita comercial (todos os clubes) e retorno de lesões
     for (const c of g.db.clubs) P.pay(g, c.id, commercial(c) / g.cal.length, 'Patrocínio e camisas');
+    { const u = P.club(g, g.user); if (u) P.pay(g, u.id, -P.opsCost(u) / g.cal.length, 'Operação do clube'); }
     // clubes da IA: custos de operação (base, comissão, estrutura) e reinvestimento do que sobra
     for (const c of g.db.clubs) {
       if (c.id === g.user) continue;
