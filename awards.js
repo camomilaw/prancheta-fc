@@ -19,6 +19,7 @@
     const add = (cid, n, w) => { if (!cid) return; (t[cid] = t[cid] || []).push({ n, w }); };
     const s = g.summary;
     if (s) s.divs.forEach((d) => add(d.champ, P.leagueTitle ? P.leagueTitle(d.d) : d.d === 1 ? 'Ultraliga' : `${d.d}ª divisão`, lw(d.d)));
+    if (P.normalTitles && P.isNormal(g)) { P.normalTitles(g, add, byTier); return t; }
     if (g.cup && g.cup.winner) add(g.cup.winner, 'Copa Ultra', W.cup);
     const sc = g.scup && g.scup.eds && g.scup.eds.find((e) => e.season === g.season);
     if (sc && sc.w) add(sc.w, 'Supercopa', W.sc);

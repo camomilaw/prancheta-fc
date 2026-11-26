@@ -934,7 +934,7 @@
       for (const e of r.ev) {
         if (e.t === 'gol') {
           const p = g.db.players[e.p];
-          if (it.comp === 'lg') p.s.g++; else if (it.comp === 'cup' || it.comp === 'po') p.s.cg++;
+          if (it.comp === 'lg') p.s.g++; else if (it.comp === 'cup' || it.comp === 'po' || it.comp === 'nc' || it.comp === 'cc') p.s.cg++;
           if (e.as) g.db.players[e.as].s.as++;
         }
         if (e.t === 'vermelho' && !e.two) { const p = g.db.players[e.p]; p.s.cv++; p.susp = Math.max(p.susp, 2); }
@@ -1043,7 +1043,7 @@
     if (g.week >= g.cal.length) P.endSeason(g);
     else if (g.cal[g.week].t !== 'lg') P.stepMatches(g); // sorteia copa/playoff da próxima semana
     // rodadas da Taça Raízes sem jogo seu passam direto (não viram uma semana vazia para você)
-    while (!g.over && g.week < g.cal.length && g.cal[g.week].t === 'rz' && !P.userMatch(g)) P.endWeek(g, P.beginWeek(g, false));
+    while (!g.over && g.week < g.cal.length && (g.cal[g.week].t === 'rz' || g.cal[g.week].t === 'nc' || g.cal[g.week].t === 'cc') && !P.userMatch(g)) P.endWeek(g, P.beginWeek(g, false));
     return { step, anim };
   };
 
