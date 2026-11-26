@@ -24,6 +24,7 @@
     if (!A.g) return;
     if (!P.store.set(SAVE_KEY, JSON.stringify(A.g))) A.toast('Não deu para salvar neste navegador. Use Mais › Exportar carreira.');
   };
+  A.saveTac = () => A.save();
   A.loadSave = () => {
     const raw = P.store.get(SAVE_KEY);
     if (!raw) return null;
@@ -1246,10 +1247,10 @@
       if (j >= 0) t.xi[j] = t.xi[i];
       t.xi[i] = d.id;
       if (t.auto) A.toast('Escalação automática ligada: antes do jogo entram os melhores. Desmarque a opção para manter sua escolha.');
-      A.save(); A.closeSheet(); A.render();
+      A.saveTac(); A.closeSheet(); A.render();
     },
-    tac(d) { const t = A.g.tac[A.g.user]; t[d.k] = d.v; A.save(); A.render(); },
-    bestXI() { const g = A.g, t = g.tac[g.user]; t.xi = P.autoXI(g, g.user, t.f); A.save(); A.render(); A.toast('Melhores escalados'); },
+    tac(d) { const t = A.g.tac[A.g.user]; t[d.k] = d.v; A.saveTac(); A.render(); },
+    bestXI() { const g = A.g, t = g.tac[g.user]; t.xi = P.autoXI(g, g.user, t.f); A.saveTac(); A.render(); A.toast('Melhores escalados'); },
     editPlayer(d) { const p = pl(d.id); A.closeSheet(); A.st.ed = { v: 'player', cid: p.clubId, pid: p.id }; if (A.g) A.view = 'editor'; else A.setup.editing = true; A.render(); window.scrollTo(0, 0); },
     confirm(d) { A.st.confirm = d.k || null; A.render(); },
     newGameYes() { A.clearSave(); A.g = null; A.st.confirm = null; A.setup = { db: P.generateDatabase(2027), club: null, manager: '', editing: false, importing: false, creating: false, divF: 1, q: '', form: null }; A.render(); window.scrollTo(0, 0); },
@@ -1327,8 +1328,8 @@
 
   Object.assign(CHG, {
     sort(el) { A.st.sort = el.value; A.render(); },
-    formation(el) { const g = A.g, t = g.tac[g.user]; t.f = el.value; t.xi = P.autoXI(g, g.user, t.f); A.save(); A.render(); A.toast('Formação ' + t.f); },
-    auto(el) { const g = A.g; g.tac[g.user].auto = el.checked; A.save(); },
+    formation(el) { const g = A.g, t = g.tac[g.user]; t.f = el.value; t.xi = P.autoXI(g, g.user, t.f); A.saveTac(); A.render(); A.toast('Formação ' + t.f); },
+    auto(el) { const g = A.g; g.tac[g.user].auto = el.checked; A.saveTac(); },
     tblDiv(el) { A.st.div = Number(el.value); A.st.rd = null; A.render(); },
     cupR(el) { A.st.cupR = Number(el.value); A.render(); },
     setupDiv(el) { A.setup.divF = Number(el.value); A.setup.q = ''; A.render(); },

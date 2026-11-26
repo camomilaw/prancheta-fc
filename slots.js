@@ -54,12 +54,27 @@
   let busy = false, pending = null;
   // Transformar a carreira em texto pesa (na Carreira normal são ~11 MB): junta os saves seguidos
   // de cliques rápidos num só, feito logo depois que a tela responde. Ao sair do app grava na hora.
-  let later = null;
-  const textNow = () => { if (later) { clearTimeout(later.t); const { n, g } = later; later = null; pending = { n, text: JSON.stringify(g) }; } };
-  const flushSoon = () => { textNow(); flush(); };
+  let later = null, small = null;
+  const textNow = () => { if (later) { clearTimeout(later.t); const { n, g } = later; later = null; g.__at = Date.now(); small = null; pending = { n, text: JSON.stringify(g) }; } };
+  const flushSoon = () => { if (small && !later && A.g && A.slot === small.n) A.save(); textNow(); flush(); };
+  // Save leve: mudanças só de tática/escalação gravam num cantinho à parte (rápido),
+  // que é aplicado por cima do save completo ao abrir. O save completo vem no próximo jogo ou ao sair.
+  A.saveTac = () => {
+    const g = A.g; if (!g) return;
+    if (!P.isNormal(g)) { A.save(); return; } // na Ultraliga o save completo já é rápido
+    if (!A.slot) { A.save(); return; }
+    const n = A.slot;
+    small = { n, at: Date.now(), tac: g.tac[g.user], train: g.train, trn: g.trn };
+    const text = JSON.stringify(small);
+    tx('readwrite', (st) => st.put(text, 'o' + n)).catch(() => {});
+  };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSoon(); });
   addEventListener('pagehide', flushSoon);
   A.saveNow = flushSoon;
+  let down = false;
+  document.addEventListener('pointerdown', () => { down = true; }, true);
+  document.addEventListener('pointerup', () => { down = false; }, true);
+  document.addEventListener('pointercancel', () => { down = false; }, true);
   A.saveIdle = () => { flushSoon(); return new Promise((res) => { const chk = () => (!busy && !pending && !later ? res() : setTimeout(chk, 40)); chk(); }); };
   function flush() {
     if (busy || !pending) return;
@@ -78,7 +93,9 @@
     meta.active = A.slot;
     writeMeta();
     if (later) clearTimeout(later.t);
-    later = { n: A.slot, g, t: setTimeout(flushSoon, P.isNormal(g) ? 700 : 150) };
+    // não grava no meio de um toque/arrasto (a gravação pesada travaria o movimento)
+    const fire = () => { if (down) { later.t = setTimeout(fire, 400); return; } flushSoon(); };
+    later = { n: A.slot, g, t: setTimeout(fire, P.isNormal(g) ? 900 : 150) };
   };
   A.loadSave = () => null; // a tela inicial usa os resumos; carregar é assíncrono (A.loadSlot)
   A.clearSave = () => { if (A.slot) A.deleteSlot(A.slot); };
@@ -88,6 +105,12 @@
       if (!raw) throw new Error('espaço vazio');
       const g = JSON.parse(raw);
       if (!g || !g.db || !g.cal || !g.lg) throw new Error('save inválido');
+      return tx('readonly', (st) => st.get('o' + n)).catch(() => null).then((o) => {
+        try { o = o && JSON.parse(o); } catch (e) { o = null; }
+        if (o && o.at > (g.__at || 0) && o.tac) { g.tac[g.user] = o.tac; if (o.train) g.train = o.train; if (o.trn) g.trn = o.trn; }
+        return g;
+      });
+    }).then((g) => {
       g.db = P.normalizeDb(g.db); P.ensureEconomy(g);
       A.g = g; A.slot = n; A.view = 'inicio'; A.st.div = null;
       A.save(); A.render(); window.scrollTo(0, 0);

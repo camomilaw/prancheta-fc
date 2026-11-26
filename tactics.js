@@ -349,7 +349,13 @@
     drag.px = P.clamp((e.clientX - rect.left) / rect.width * 100, 5, 95);
     drag.py = P.clamp((e.clientY - rect.top) / rect.height * 100, 5, 88);
     drag.x = drag.px; drag.y = 100 - drag.py;
-    if (!drag.raf) drag.raf = requestAnimationFrame(() => { if (!drag) return; drag.raf = 0; drag.el.style.left = drag.px + '%'; drag.el.style.top = drag.py + '%'; });
+    // move só com transform (não recalcula o layout da página a cada quadro)
+    if (drag.sx == null) { drag.sx = parseFloat(drag.el.style.left) || 50; drag.sy = parseFloat(drag.el.style.top) || 50; }
+    if (!drag.raf) drag.raf = requestAnimationFrame(() => {
+      if (!drag) return; drag.raf = 0;
+      const dx = (drag.px - drag.sx) / 100 * rect.width, dy = (drag.py - drag.sy) / 100 * rect.height;
+      drag.el.style.transform = `translate(calc(-50% + ${dx.toFixed(1)}px), calc(-50% + ${dy.toFixed(1)}px))`;
+    });
   }, { passive: false });
   document.addEventListener('pointerup', () => {
     if (!drag) return;
@@ -361,7 +367,7 @@
     if (!t.xy) { const sl = P.slots(t.f); t.xy = sl.map((x) => ({ x: x.x, y: x.y })); t.xyPos = sl.map((x) => x.pos); }
     t.xy[d.i] = P.snapXY(d.x, d.y, t.xy, d.i); t.snap = true;
     if (t.xyPos) t.xyPos[d.i] = null;
-    A.save(); A.render();
+    A.saveTac(); A.render();
   });
 
   // ---------- Ações ----------
@@ -371,24 +377,24 @@
       const t = A.g.tac[A.g.user];
       if (d.k === 'men' || d.k === 'pre') t[d.k] = d.v;
       else { t.ins = t.ins || P.insOf(t); t.ins[d.k] = d.k === 'trap' ? d.v === 'true' : d.v; }
-      A.save(); A.render();
+      A.saveTac(); A.render();
     },
-    tRole(d) { const t = A.g.tac[A.g.user]; t.roles = t.roles || []; t.roles[d.i] = Object.assign({}, t.roles[d.i], { fn: d.k }); A.save(); A.render(); P.tacSheet(Number(d.i)); },
-    tPost(d) { const t = A.g.tac[A.g.user]; t.roles = t.roles || []; t.roles[d.i] = Object.assign({}, t.roles[d.i], { post: d.k }); A.save(); A.render(); P.tacSheet(Number(d.i)); },
+    tRole(d) { const t = A.g.tac[A.g.user]; t.roles = t.roles || []; t.roles[d.i] = Object.assign({}, t.roles[d.i], { fn: d.k }); A.saveTac(); A.render(); P.tacSheet(Number(d.i)); },
+    tPost(d) { const t = A.g.tac[A.g.user]; t.roles = t.roles || []; t.roles[d.i] = Object.assign({}, t.roles[d.i], { post: d.k }); A.saveTac(); A.render(); P.tacSheet(Number(d.i)); },
     tSwap(d) { A.slotSheet(Number(d.i)); },
-    tReset() { const g = A.g, t = g.tac[g.user]; delete t.xy; delete t.xyPos; t.xi = P.autoXI(g, g.user, t.f); A.save(); A.render(); A.toast('Formação ' + t.f + ' restaurada'); }
+    tReset() { const g = A.g, t = g.tac[g.user]; delete t.xy; delete t.xyPos; t.xi = P.autoXI(g, g.user, t.f); A.saveTac(); A.render(); A.toast('Formação ' + t.f + ' restaurada'); }
   });
   Object.assign(A.CHG, {
     tSp(el) {
       const g = A.g, t = g.tac[g.user];
       t.sp = Object.assign({}, t.sp, { [el.dataset.k]: el.value || null });
-      A.save(); A.render();
+      A.saveTac(); A.render();
     },
     tForm(el) {
       const g = A.g, t = g.tac[g.user];
       if (!P.FORMATIONS[el.value]) return;
       t.f = el.value; delete t.xy; delete t.xyPos; t.roles = [];
-      t.xi = P.autoXI(g, g.user, t.f); A.save(); A.render(); A.toast('Formação ' + t.f);
+      t.xi = P.autoXI(g, g.user, t.f); A.saveTac(); A.render(); A.toast('Formação ' + t.f);
     }
   });
 })(window.PFC);
