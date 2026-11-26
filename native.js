@@ -62,7 +62,7 @@
   P.canQuit = () => !!(window.pfcNative || isAndroidApp);
   A.ACT.appQuit = function () {
     try { A.save(); } catch (e) { /* sem carreira aberta */ }
-    Promise.resolve(P.nativeFlush ? P.nativeFlush() : null).catch(() => {}).then(() => {
+    Promise.resolve(A.saveIdle ? A.saveIdle() : null).then(() => (P.nativeFlush ? P.nativeFlush() : null)).catch(() => {}).then(() => {
       if (isAndroidApp) { const App = (Cap.Plugins && Cap.Plugins.App) || (Cap.registerPlugin ? Cap.registerPlugin('App') : null); if (App && App.exitApp) { App.exitApp(); return; } }
       window.close();
     });

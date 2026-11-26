@@ -336,20 +336,21 @@
   document.addEventListener('pointerdown', (e) => {
     const el = e.target.closest('#pitch .slot');
     if (!el) return;
-    drag = { el, i: Number(el.dataset.i), x0: e.clientX, y0: e.clientY, moved: false, can: !!el.dataset.drag };
+    drag = { el, i: Number(el.dataset.i), x0: e.clientX, y0: e.clientY, moved: false, can: !!el.dataset.drag, rect: document.getElementById('pitch').getBoundingClientRect(), raf: 0 };
     if (drag.can) el.setPointerCapture(e.pointerId);
   });
+  // o movimento só é desenhado uma vez por quadro (no celular chegam muitos eventos por quadro)
   document.addEventListener('pointermove', (e) => {
     if (!drag || !drag.can) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 8) return;
-    drag.moved = true;
-    const rect = document.getElementById('pitch').getBoundingClientRect();
-    const x = P.clamp((e.clientX - rect.left) / rect.width * 100, 5, 95);
-    const y = P.clamp((e.clientY - rect.top) / rect.height * 100, 5, 88);
-    drag.el.style.left = x + '%'; drag.el.style.top = y + '%';
-    drag.x = x; drag.y = 100 - y;
-    drag.el.classList.add('dragging');
-  });
+    if (!drag.moved) { drag.moved = true; drag.el.classList.add('dragging'); }
+    e.preventDefault();
+    const rect = drag.rect;
+    drag.px = P.clamp((e.clientX - rect.left) / rect.width * 100, 5, 95);
+    drag.py = P.clamp((e.clientY - rect.top) / rect.height * 100, 5, 88);
+    drag.x = drag.px; drag.y = 100 - drag.py;
+    if (!drag.raf) drag.raf = requestAnimationFrame(() => { if (!drag) return; drag.raf = 0; drag.el.style.left = drag.px + '%'; drag.el.style.top = drag.py + '%'; });
+  }, { passive: false });
   document.addEventListener('pointerup', () => {
     if (!drag) return;
     const d = drag; drag = null;

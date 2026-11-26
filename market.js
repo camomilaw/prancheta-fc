@@ -352,6 +352,8 @@
       const dmin = num(f.dmin), dmax = num(f.dmax);
       if (f.div && dmin == null && dmax == null) list = list.filter((p) => p.clubId && club(p.clubId).div === Number(f.div));
       if (dmin != null || dmax != null) list = list.filter((p) => { const c = p.clubId && club(p.clubId); return c && (dmin == null || P.divLvl(c.div) >= dmin) && (dmax == null || P.divLvl(c.div) <= dmax); });
+      if (P._W && f.pais && f.pais !== 'ALL') list = list.filter((p) => { const c = p.clubId && club(p.clubId); return c && P.divCountry(c.div) === f.pais; });
+      if (P._W && f.dv) list = list.filter((p) => { const c = p.clubId && club(p.clubId); return c && P.divLvl(c.div) === Number(f.dv); });
       if (f.lst === 'emp') list = list.filter((p) => p.clubId && p.loanList && !p.loan);
       if (f.lst === 'venda') list = list.filter((p) => p.clubId && p.saleList && !p.loan);
       if (f.ctr === 'free') list = list.filter((p) => !p.clubId);
@@ -366,7 +368,7 @@
       const res = withO.sort(sorter).slice(0, 40).map((x) => x.p);
       const nats = Object.entries(P.COUNTRIES).sort((a, b) => a[1].n.localeCompare(b[1].n));
       const numIn = (k, ph, step, label) => `<input class="sel num-in" type="number" inputmode="decimal" min="0" step="${step}" data-c="mkF" data-k="${k}" value="${esc(f[k])}" placeholder="${ph}" aria-label="${label}">`;
-      const DEF = { pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', omin: '', omax: '', dmin: '', dmax: '', lst: 'any' };
+      const DEF = { pos: 'ALL', nat: 'ALL', amin: '', amax: '', vmin: '', vmax: '', ctr: 'any', omin: '', omax: '', dmin: '', dmax: '', lst: 'any', pais: 'ALL', dv: '' };
       const nAct = Object.keys(DEF).filter((k) => String(f[k] == null ? '' : f[k]) !== String(DEF[k])).length + (f.div ? 1 : 0);
       body = `<div class="mk-busca">
         <div class="mk-bar"><input class="sel search" id="mkq" type="search" data-i="mkQ" value="${esc(f.q || '')}" placeholder="Buscar jogador pelo nome…" aria-label="Buscar jogador pelo nome" autocomplete="off">
@@ -379,7 +381,8 @@
           <div class="field"><span class="label">Valor (R$ mi)</span><div class="range">${numIn('vmin', 'mín', 0.1, 'Valor mínimo em milhões')}<span>a</span>${numIn('vmax', 'máx', 0.1, 'Valor máximo em milhões')}</div></div>
           <div class="field"><span class="label">Contrato</span>${opt('ctr', CTR_OPTS, f.ctr)}</div>
           <div class="field"><span class="label">Força</span><div class="range">${numIn('omin', 'mín', 1, 'Força mínima')}<span>a</span>${numIn('omax', 'máx', 1, 'Força máxima')}</div></div>
-          <div class="field"><span class="label">Divisão</span><div class="range">${numIn('dmin', 'da', 1, 'Da divisão')}<span>a</span>${numIn('dmax', 'até', 1, 'Até a divisão')}</div></div>
+          ${P._W ? `<div class="field"><span class="label">Liga</span><div class="range">${opt('pais', [['ALL', 'Todos os países']].concat(P.worldCountries().map((c) => [c, P.countryName(c)])), f.pais || 'ALL')}${opt('dv', [['', 'Todas']].concat([1, 2, 3, 4].filter((n) => !f.pais || f.pais === 'ALL' || P.countryDivs(f.pais).length >= n).map((n) => [n, n + 'ª div.'])), f.dv || '')}</div></div>`
+            : `<div class="field"><span class="label">Divisão</span><div class="range">${numIn('dmin', 'da', 1, 'Da divisão')}<span>a</span>${numIn('dmax', 'até', 1, 'Até a divisão')}</div></div>`}
           <div class="field"><span class="label">Lista</span>${opt('lst', [['any', 'Qualquer'], ['venda', 'À venda'], ['emp', 'Para empréstimo']], f.lst)}</div>
         </div>
         <div class="row" style="margin-top:8px"><button class="btn sm ghost" data-a="mkClear">Limpar filtros</button></div></aside>

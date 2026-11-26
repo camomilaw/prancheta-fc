@@ -84,10 +84,13 @@
   const divSel = (cur, act, label, all) => {
     const open = `<select class="sel" data-c="${act}" aria-label="${label || 'Divisão'}">`;
     if (!P._W) return `${open}${Array.from({ length: P.DIVS }, (_, i) => i + 1).map((d) => `<option value="${d}" ${cur === d ? 'selected' : ''}>${divName(d)}</option>`).join('')}</select>`;
+    // Carreira normal: um seletor de país e, ao lado, as divisões só desse país
     const g = A.g;
     const cs = P.worldCountries().filter((c) => all || !g || P.followed(g, P.topDivOf(c)));
-    return `${open}${cs.map((c) => `<optgroup label="${esc(P.countryName(c))}">${P.countryDivs(c).map((d) => `<option value="${d}" ${cur === d ? 'selected' : ''}>${P.divLvl(d)}ª divisão ${esc(P.countryPrep(c))}</option>`).join('')}</optgroup>`).join('')}</select>`;
+    const cc = cs.includes(P.divCountry(cur)) ? P.divCountry(cur) : cs[0];
+    return `<span class="div2"><select class="sel" data-c="divCtry" data-for="${act}" aria-label="País">${cs.map((c) => `<option value="${c}" ${c === cc ? 'selected' : ''}>${esc(P.countryName(c))}</option>`).join('')}</select>${open}${P.countryDivs(cc).map((d) => `<option value="${d}" ${cur === d ? 'selected' : ''}>${P.divLvl(d)}ª divisão</option>`).join('')}</select></span>`;
   };
+  CHG.divCtry = (el) => { const h = CHG[el.dataset.for]; if (h) h({ value: String(P.topDivOf(el.value)), dataset: {} }); };
   const countryOpts = (cur) => Object.entries(P.COUNTRIES).sort((a, b) => a[1].n.localeCompare(b[1].n)).map(([k, v]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${esc(v.n)}</option>`).join('');
   A.countryOpts = countryOpts;
   A.divSel = divSel;

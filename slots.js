@@ -52,6 +52,15 @@
   // ---------- Salvar ----------
   // Grava só a versão mais recente: se chegar outro save durante a gravação, ele espera a vez
   let busy = false, pending = null;
+  // Transformar a carreira em texto pesa (na Carreira normal são ~11 MB): junta os saves seguidos
+  // de cliques rápidos num só, feito logo depois que a tela responde. Ao sair do app grava na hora.
+  let later = null;
+  const textNow = () => { if (later) { clearTimeout(later.t); const { n, g } = later; later = null; pending = { n, text: JSON.stringify(g) }; } };
+  const flushSoon = () => { textNow(); flush(); };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSoon(); });
+  addEventListener('pagehide', flushSoon);
+  A.saveNow = flushSoon;
+  A.saveIdle = () => { flushSoon(); return new Promise((res) => { const chk = () => (!busy && !pending && !later ? res() : setTimeout(chk, 40)); chk(); }); };
   function flush() {
     if (busy || !pending) return;
     const { n, text } = pending; pending = null; busy = true;
@@ -68,13 +77,14 @@
     meta.s[A.slot] = { mgr: g.manager, club: c.name, badge: P.badge(c, 48), div: c.div, dn: P.divName(c.div), mode: P.isNormal(g) ? 'n' : 'u', season: g.season, week: g.week, over: !!g.over, at: Date.now(), head: hl && hl.head, dek: hl && hl.dek, x: P.frontExtra ? (() => { try { return P.frontExtra(g); } catch (e) { return null; } })() : null };
     meta.active = A.slot;
     writeMeta();
-    pending = { n: A.slot, text: JSON.stringify(g) }; flush();
+    if (later) clearTimeout(later.t);
+    later = { n: A.slot, g, t: setTimeout(flushSoon, P.isNormal(g) ? 700 : 150) };
   };
   A.loadSave = () => null; // a tela inicial usa os resumos; carregar é assíncrono (A.loadSlot)
   A.clearSave = () => { if (A.slot) A.deleteSlot(A.slot); };
 
   A.loadSlot = function (n) {
-    return get(n).then((raw) => {
+    return A.saveIdle().then(() => get(n)).then((raw) => {
       if (!raw) throw new Error('espaço vazio');
       const g = JSON.parse(raw);
       if (!g || !g.db || !g.cal || !g.lg) throw new Error('save inválido');
