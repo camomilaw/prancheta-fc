@@ -90,7 +90,7 @@
         </div></section>`;
     }
     if (step === 2) body = `<section class="jr-classif"><div class="jr-classif-h"><h2>Condições do contrato</h2><span>Classificados</span></div>
-        ${P.setupExtra ? P.setupExtra() : ''}${P.slotPick ? P.slotPick() : ''}</section>`;
+        ${P.modePick ? P.modePick() : ''}${P.setupExtra ? P.setupExtra() : ''}${P.slotPick ? P.slotPick() : ''}</section>`;
     if (step === 3) body = A.clubPickSection ? A.clubPickSection() : '';
     return `<div class="setup jr nc nc-s${step}">
       <div class="row"><button class="btn" data-a="ncBack">‹ ${step === 1 ? 'Capa' : 'Voltar'}</button><span class="spacer"></span><span class="nc-steps">${dots}</span></div>

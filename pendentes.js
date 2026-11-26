@@ -120,7 +120,7 @@
     const say = (msg, ok) => { A.st.offer = Object.assign(A.st.offer || { pid: p.id }, { pid: p.id, msg, ok }); A.playerSheet(p.id, 'offer'); };
     if (P.pendOf(g, p.id)) return say(`Já existe um acordo por ${p.name}.`);
     const wage = P.playerDemand(g, p, g.user);
-    if (wage == null) return say(`${p.name} não quer jogar na ${me.div}ª divisão, nem com a multa paga.`);
+    if (wage == null) return say(`${p.name} não quer jogar na ${P.divName(me.div)}, nem com a multa paga.`);
     P.pendAdd(g, { kind: 'clause', pid: p.id, from: p.clubId, to: g.user, fee: rc, wage, years: 3 });
     P.news(g, `Acordo fechado: você vai pagar a multa de ${P.money(rc)} por ${p.name} ${P.pendWhen(g)}.`, 'good');
     A.st.offer = null; A.save(); A.render(); A.playerSheet(p.id);

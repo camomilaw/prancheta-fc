@@ -24,7 +24,7 @@
   function pickInfo(pk) {
     if (pk.src === 'lib') { const t = P.teamLib().find((x) => x.libId === pk.id); return t ? { name: t.name, short: t.short, colors: t.colors, logo: t.logo, ovr: P.teamOvr(t), tag: 'recebido' } : null; }
     const db = A.setup.db, c = db.clubs.find((x) => x.id === pk.id); if (!c) return null;
-    return { name: c.name, short: c.short, colors: c.colors, logo: c.logo, ovr: P.clubOvrs(db)[c.id], tag: c.div + 'ª div' };
+    return { name: c.name, short: c.short, colors: c.colors, logo: c.logo, ovr: P.clubOvrs(db)[c.id], tag: P.divName(c.div, 1) };
   }
   const has = (src, id) => st().picks.some((p) => p.src === src && p.id === id);
   function validCount(t) {
@@ -68,7 +68,7 @@
       ${lib.length ? `<section class="jr-sec"><h2 class="jr-h">Times recebidos</h2><div class="jr-clubs">${lib.map((tm) => row('lib', tm.libId, { name: tm.name, colors: tm.colors, ovr: P.teamOvr(tm), tag: (tm.manager ? 'de ' + tm.manager + ' · ' : '') + 'temporada ' + (tm.season || '—') })).join('')}</div></section>` : ''}
       <section class="jr-sec"><div class="jr-h jr-h-row"><h2>Clubes da Ultraliga</h2><select class="sel" data-c="tourDiv">${Array.from({ length: P.DIVS }, (_, i) => `<option value="${i + 1}" ${t.divF === i + 1 ? 'selected' : ''}>${i + 1}ª divisão</option>`).join('')}</select></div>
         <input class="jr-search" data-c="tourQ" value="${esc(t.q)}" placeholder="Buscar clube pelo nome…" aria-label="Buscar clube">
-        <div class="jr-clubs">${clubs.map((c) => row('db', c.id, { name: c.name, colors: c.colors, ovr: ovrs[c.id], tag: c.div + 'ª divisão · ' + P.countryName(c.country) })).join('')}</div>
+        <div class="jr-clubs">${clubs.map((c) => row('db', c.id, { name: c.name, colors: c.colors, ovr: ovrs[c.id], tag: P.divName(c.div) + ' · ' + P.countryName(c.country) })).join('')}</div>
         <p class="jr-note">Toque para colocar ou tirar do torneio. "Completar com sorteio" usa clubes da divisão escolhida.</p></section>
       <div class="jr-sign-bar"><button class="jr-stamp" data-a="tourStart" ${err ? 'disabled' : ''}>Apitar o torneio</button><span class="jr-note">${err ? esc(err) : `${FORMATS[t.format].n} com ${t.picks.length} times`}</span></div>
     </div>`;

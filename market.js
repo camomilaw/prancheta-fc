@@ -90,7 +90,7 @@
       if (fee < ask * acc) return { ok: false, counter: { fee: ask }, msg: `O ${P.club(g, p.clubId).name} faz uma contraproposta: ${P.money(ask)}.` };
     }
     const demand = P.playerDemand(g, p, g.user);
-    if (demand == null) return { ok: false, msg: `${p.name} não quer jogar na ${me.div}ª divisão.` };
+    if (demand == null) return { ok: false, msg: `${p.name} não quer jogar na ${P.divName(me.div)}.` };
     if (wage < demand) return { ok: false, counter: { wage: demand }, msg: `${free ? '' : 'O clube aceitou, mas '}${p.name} quer ganhar ${P.money(demand)}/mês.` };
     P.transfer(g, p, g.user, fee, wage, years);
     P.news(g, `${p.name} é o novo reforço do ${me.name}${fee ? ` por ${P.money(fee)}` : ' (jogador livre)'}.`, 'good');
@@ -186,7 +186,7 @@
         const oid = P.uid('o');
         g.offers.push({ id: oid, pid: p.id, from: b.id, fee, until: g.week + 2 });
         P.news(g, `O ${b.name} fez uma proposta de ${P.money(fee)} por ${p.name}. Veja em Mercado › Propostas.`, 'warn');
-        if (P.mail) P.mail(g, { k: 'prop', pid: p.id, oid, subj: `${b.name} quer o ${p.name}`, body: `Chefe, o ${b.name} (${b.div}ª divisão) ofereceu ${P.money(fee)} pelo ${p.name}, que tem força ${P.ovr(p)} e valor de mercado de ${P.money(P.value(p))}. A proposta vale por 2 semanas.` });
+        if (P.mail) P.mail(g, { k: 'prop', pid: p.id, oid, subj: `${b.name} quer o ${p.name}`, body: `Chefe, o ${b.name} (${P.divName(b.div)}) ofereceu ${P.money(fee)} pelo ${p.name}, que tem força ${P.ovr(p)} e valor de mercado de ${P.money(P.value(p))}. A proposta vale por 2 semanas.` });
       }
     }
 
@@ -202,7 +202,7 @@
           const fee = Math.round(P.value(p) * P.MARKET.loanFee * (0.6 + rnd() * 0.6) / 10000) * 10000;
           g.offers.push({ id: oid, pid: p.id, from: b.id, fee, until: g.week + 2, kind: 'loan' });
           P.news(g, `O ${b.name} quer o ${p.name} emprestado (taxa de ${P.money(fee)}). Veja em Mercado › Propostas.`, 'warn');
-          if (P.mail) P.mail(g, { k: 'prop', pid: p.id, oid, subj: `${b.name} quer o ${p.name} emprestado`, body: `Chefe, o ${b.name} (${b.div}ª divisão) quer o ${p.name} por empréstimo até o fim da temporada. Pagam ${P.money(fee)} de taxa e o salário dele. A proposta vale por 2 semanas.` });
+          if (P.mail) P.mail(g, { k: 'prop', pid: p.id, oid, subj: `${b.name} quer o ${p.name} emprestado`, body: `Chefe, o ${b.name} (${P.divName(b.div)}) quer o ${p.name} por empréstimo até o fim da temporada. Pagam ${P.money(fee)} de taxa e o salário dele. A proposta vale por 2 semanas.` });
         }
       }
     }
@@ -351,7 +351,7 @@
       if (amax != null) list = list.filter((p) => p.age <= amax);
       const dmin = num(f.dmin), dmax = num(f.dmax);
       if (f.div && dmin == null && dmax == null) list = list.filter((p) => p.clubId && club(p.clubId).div === Number(f.div));
-      if (dmin != null || dmax != null) list = list.filter((p) => { const c = p.clubId && club(p.clubId); return c && (dmin == null || c.div >= dmin) && (dmax == null || c.div <= dmax); });
+      if (dmin != null || dmax != null) list = list.filter((p) => { const c = p.clubId && club(p.clubId); return c && (dmin == null || P.divLvl(c.div) >= dmin) && (dmax == null || P.divLvl(c.div) <= dmax); });
       if (f.lst === 'emp') list = list.filter((p) => p.clubId && p.loanList && !p.loan);
       if (f.lst === 'venda') list = list.filter((p) => p.clubId && p.saleList && !p.loan);
       if (f.ctr === 'free') list = list.filter((p) => !p.clubId);
@@ -390,7 +390,7 @@
     } else if (f.tab === 'prop') {
       body = (P.pendBox ? P.pendBox(g) : '') + (offers.length ? `<div class="plist">${offers.map((o) => {
         const p = g.db.players[o.pid], b = club(o.from);
-        return `<div class="offer"><div class="row" style="gap:8px">${P.badge(b, 28)}<div style="flex:1;min-width:0"><b>${esc(b.name)}</b> <span class="muted">(${b.div}ª div)</span>${o.ask ? ' <span class="chip sus">Ele quer ir</span>' : ''}<div class="muted" style="font-size:.85rem">quer <b>${esc(p.name)}</b>${o.kind === 'loan' ? ' <span class="chip loan">por empréstimo</span>' : ''} · ${p.pos} · força ${P.ovr(p)} · vale ${P.money(P.value(p))}</div></div><b class="num">${P.money(o.fee)}${o.kind === 'loan' ? '<small class="muted" style="display:block;font-size:.7rem;font-weight:400;text-align:right">taxa</small>' : ''}</b></div>
+        return `<div class="offer"><div class="row" style="gap:8px">${P.badge(b, 28)}<div style="flex:1;min-width:0"><b>${esc(b.name)}</b> <span class="muted">(${P.divName(b.div, 1)})</span>${o.ask ? ' <span class="chip sus">Ele quer ir</span>' : ''}<div class="muted" style="font-size:.85rem">quer <b>${esc(p.name)}</b>${o.kind === 'loan' ? ' <span class="chip loan">por empréstimo</span>' : ''} · ${p.pos} · força ${P.ovr(p)} · vale ${P.money(P.value(p))}</div></div><b class="num">${P.money(o.fee)}${o.kind === 'loan' ? '<small class="muted" style="display:block;font-size:.7rem;font-weight:400;text-align:right">taxa</small>' : ''}</b></div>
           <div class="row"><span class="muted" style="font-size:.8rem;flex:1">Vale até a semana ${o.until}</span><button class="btn sm" data-a="mkReject" data-id="${o.id}">Recusar</button><button class="btn sm primary" data-a="mkAccept" data-id="${o.id}">Aceitar</button></div></div>`;
       }).join('')}</div>` : `<p class="empty">Nenhuma proposta no momento. Coloque jogadores à venda pela ficha deles para atrair interessados.</p>`);
     } else if (f.tab === 'venda') {

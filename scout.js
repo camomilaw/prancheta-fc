@@ -88,7 +88,7 @@
     const tb = P.table(g, c.div), pos = tb.findIndex((r) => r.cid === opp) + 1, row = tb[pos - 1];
     const pl = (p, extra) => (p ? `<div class="kp"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span><div style="flex:1;min-width:0"><b>${esc(p.name)}</b><div class="muted" style="font-size:.82rem">${extra}</div></div><span class="ovr">${P.ovr(p)}</span></div>` : '<p class="muted" style="margin:0">Sem dados ainda.</p>');
     A.openSheet(`<div class="bar-top">${P.badge(c, 34)}<h2>${esc(c.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
-      <div class="muted">${c.div}ª divisão · ${pos}º lugar${row ? ` · ${row.pts} pts · ${row.v}-${row.e}-${row.d}` : ''} · força ${P.clubOvrs(g.db)[opp]}</div>
+      <div class="muted">${P.divName(c.div)} · ${pos}º lugar${row ? ` · ${row.pts} pts · ${row.v}-${row.e}-${row.d}` : ''} · força ${P.clubOvrs(g.db)[opp]}</div>
       <div><div class="label" style="margin-bottom:6px">Chance da sua equipe</div>${probBar(pr)}
         <p class="muted" style="font-size:.82rem;margin:6px 0 0">Placar médio previsto: ${pr.gf.toFixed(1).replace('.', ',')} × ${pr.ga.toFixed(1).replace('.', ',')}.${um.ko ? ` Chance de classificação (com pênaltis): ${pr.adv}%.` : ''} Muda se você alterar a escalação ou a tática.</p></div>
       <div><div class="label" style="margin-bottom:6px">Estilo de jogo</div><p style="margin:0">${esc(st.f)}. ${esc(st.txt[0].toUpperCase() + st.txt.slice(1))}.</p>

@@ -79,8 +79,15 @@
     + (A.g && p.pendId ? (p.clubId === A.g.user ? '<span class="chip lst" title="Vendido: sai quando a janela abrir">⇥ Sai na janela</span>' : '<span class="chip xi" title="Contratado: chega quando a janela abrir">⇤ Chega na janela</span>') : '');
   const avgNote = (p) => (p.s.j ? (p.s.nt / p.s.j).toFixed(1).replace('.', ',') : '–');
   const ord = (n) => n + 'º';
-  const divName = (d) => `${d}ª divisão`;
-  const divSel = (cur, act, label) => `<select class="sel" data-c="${act}" aria-label="${label || 'Divisão'}">${Array.from({ length: P.DIVS }, (_, i) => i + 1).map((d) => `<option value="${d}" ${cur === d ? 'selected' : ''}>${divName(d)}</option>`).join('')}</select>`;
+  const divName = (d) => P.divName(d);
+  // Seletor de divisão. Carreira normal: agrupado por país (em jogo, só as ligas acompanhadas)
+  const divSel = (cur, act, label, all) => {
+    const open = `<select class="sel" data-c="${act}" aria-label="${label || 'Divisão'}">`;
+    if (!P._W) return `${open}${Array.from({ length: P.DIVS }, (_, i) => i + 1).map((d) => `<option value="${d}" ${cur === d ? 'selected' : ''}>${divName(d)}</option>`).join('')}</select>`;
+    const g = A.g;
+    const cs = P.worldCountries().filter((c) => all || !g || P.followed(g, P.topDivOf(c)));
+    return `${open}${cs.map((c) => `<optgroup label="${esc(P.countryName(c))}">${P.countryDivs(c).map((d) => `<option value="${d}" ${cur === d ? 'selected' : ''}>${P.divLvl(d)}ª divisão ${esc(P.countryPrep(c))}</option>`).join('')}</optgroup>`).join('')}</select>`;
+  };
   const countryOpts = (cur) => Object.entries(P.COUNTRIES).sort((a, b) => a[1].n.localeCompare(b[1].n)).map(([k, v]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${esc(v.n)}</option>`).join('');
   A.countryOpts = countryOpts;
   A.divSel = divSel;
@@ -211,7 +218,7 @@
     return list.map((c, i) => `<button class="jr-club ${A.setup.club === c.id ? 'on' : ''}" role="listitem" data-a="pickClub" data-id="${c.id}" aria-pressed="${A.setup.club === c.id}">
       <span class="jr-strip" style="background:${esc(c.colors[0])};border-right-color:${esc(c.colors[1])}"></span>
       <span class="jr-rank">${String(i + 1).padStart(2, '0')}</span>
-      <span class="jr-club-n"><b>${esc(c.name)}${c.custom ? ' <span class="chip xi">Seu</span>' : ''}</b><small>${esc(P.countryName(c.country))} · ${c.div}ª div · ${esc(P.expectation(db, c.id, ovrs))}</small></span>
+      <span class="jr-club-n"><b>${esc(c.name)}${c.custom ? ' <span class="chip xi">Seu</span>' : ''}</b><small>${esc(P.countryName(c.country))} · ${P.divName(c.div, 1)} · ${esc(P.expectation(db, c.id, ovrs))}</small></span>
       <span class="jr-ovr">${ovrs[c.id]}</span></button>`).join('');
   }
   function importBox() {
@@ -311,10 +318,11 @@
     return g.cup.byes.includes(g.user) ? 'Na 1ª fase' : g.cup.rounds.length ? 'Eliminado' : 'Aguardando';
   };
   function zoneOf(d, i, n) {
-    if (d === 1) return i === 0 ? 'z1' : i >= n - P.RULES.down ? 'z3' : '';
-    if (i < P.RULES.autoUp) return 'z1';
-    if (i >= P.RULES.playoff[0] - 1 && i < P.RULES.playoff[1]) return 'z2';
-    if (d < P.DIVS && i >= n - P.RULES.down) return 'z3';
+    const z = P.zoneRules(d);
+    if (!z.up) return i === 0 ? 'z1' : z.down && i >= n - z.down ? 'z3' : '';
+    if (i < z.up) return 'z1';
+    if (z.po && i >= z.po[0] - 1 && i < z.po[1]) return 'z2';
+    if (z.down && i >= n - z.down) return 'z3';
     return '';
   }
   function vInicio() {
@@ -345,9 +353,9 @@
         const adj = P.adjName ? P.adjName(g) : 'Auxiliar';
         top += `<section class="jr-next ${P.rivalry && P.rivalry(g, um.m.h, um.m.a) ? 'derby' : ''}"><div class="jr-next-h"><span>Próximo jogo</span><span>${esc(P.stepLabel(step))}</span></div>${P.derbyTag && P.derbyTag(g, um) ? `<div class="derby-line">${P.derbyTag(g, um)}</div>` : ''}
           <div class="fixture">
-            <div class="side"><button class="badge-btn" data-a="clubInfo" data-id="${h.id}" aria-label="Resumo do ${esc(h.name)}">${P.badge(h, 52)}</button><b>${esc(h.name)}</b><span class="sub">${h.div}ª div · ${ord(posOf(h.id))} · ${form(h.id)}</span></div>
+            <div class="side"><button class="badge-btn" data-a="clubInfo" data-id="${h.id}" aria-label="Resumo do ${esc(h.name)}">${P.badge(h, 52)}</button><b>${esc(h.name)}</b><span class="sub">${P.divName(h.div, 1)} · ${ord(posOf(h.id))} · ${form(h.id)}</span></div>
             <div class="vs">vs.</div>
-            <div class="side"><button class="badge-btn" data-a="clubInfo" data-id="${a.id}" aria-label="Resumo do ${esc(a.name)}">${P.badge(a, 52)}</button><b>${esc(a.name)}</b><span class="sub">${a.div}ª div · ${ord(posOf(a.id))} · ${form(a.id)}</span></div>
+            <div class="side"><button class="badge-btn" data-a="clubInfo" data-id="${a.id}" aria-label="Resumo do ${esc(a.name)}">${P.badge(a, 52)}</button><b>${esc(a.name)}</b><span class="sub">${P.divName(a.div, 1)} · ${ord(posOf(a.id))} · ${form(a.id)}</span></div>
           </div>
           <p class="jr-venue">${um.m.neutral ? 'Campo neutro' : esc(h.stadium)}${um.ko ? ' · jogo único, empate vai para os pênaltis' : ''}</p>
           ${P.adjQuote ? `<blockquote class="jr-quote">“${esc(P.adjQuote(g, um))}”<cite>— ${esc(adj)}, auxiliar técnico</cite></blockquote>` : ''}
@@ -373,7 +381,7 @@
     const sit = `<div class="card"><div class="head"><span class="label">Situação</span><span class="label">Meta: ${esc(P.expectation(g, g.user))}</span></div>
           <div class="kv">
             <div><span class="label">Saldo</span><b class="${me.bal < 0 ? 'v1' : ''}" style="font-size:1.05rem">${P.money(me.bal)}</b></div>
-            <div><span class="label">Divisão</span><b>${me.div}ª</b></div>
+            <div><span class="label">Divisão</span><b>${P.divName(me.div, 1)}</b></div>
             <div><span class="label">Posição</span><b>${ord(myIdx + 1)}</b></div>
             <div><span class="label">Pontos</span><b>${row.pts}</b></div>
             <div><span class="label">Campanha</span><b>${row.v}-${row.e}-${row.d}</b></div>
@@ -405,10 +413,12 @@
     </div>`;
   }
   function zoneLegend(d) {
-    const items = d === 1 ? [['z1', 'Campeão'], ['z3', 'Rebaixamento']] : [['z1', 'Acesso direto'], ['z2', 'Playoff de acesso']].concat(d < P.DIVS ? [['z3', 'Rebaixamento']] : []);
+    const z = P.zoneRules(d);
+    const items = (!z.up ? [['z1', 'Campeão']] : [['z1', z.po ? 'Acesso direto' : 'Acesso']].concat(z.po ? [['z2', 'Playoff de acesso']] : [])).concat(z.down ? [['z3', 'Rebaixamento']] : []);
     return `<div class="row legend">${items.map(([z, n]) => `<span><span class="zone ${z}">&nbsp;</span> ${n}</span>`).join('')}</div>`;
   }
   function seasonSummary(g) {
+    if (P.isNormal(g) && P.normalSummary) return P.normalSummary(g);
     const s = g.summary, me = club(g.user);
     const h = g.hist[g.hist.length - 1];
     const champ = club(s.divs[0].champ);
@@ -420,7 +430,7 @@
     const myTop = sq[0];
     return `<section class="rt">
       <div class="rt-band"><span>Retrospectiva</span><b>${g.season}</b></div>
-      <div class="rt-me">${P.badge(me, 48)}<div><span class="rt-lbl">O ano do ${esc(me.short || me.name)}</span><b>${esc(h.result)}</b><small>${h.pos}º lugar na ${h.div}ª divisão${mine.length ? ' · ' + esc(mine.join(' · ')) : ''}${myTop ? ` · artilheiro do time: ${esc(myTop.name)} (${myTop.s.g})` : ''}</small></div></div>
+      <div class="rt-me">${P.badge(me, 48)}<div><span class="rt-lbl">O ano do ${esc(me.short || me.name)}</span><b>${esc(h.result)}</b><small>${h.pos}º lugar na ${P.divName(h.div)}${mine.length ? ' · ' + esc(mine.join(' · ')) : ''}${myTop ? ` · artilheiro do time: ${esc(myTop.name)} (${myTop.s.g})` : ''}</small></div></div>
       <h3 class="rt-h">Os campeões</h3>
       <div class="rt-notes">
         ${note('Ultraliga', champ)}
@@ -522,7 +532,7 @@
     const csTab = A.st.csCid === cid ? A.st.csTab || 'res' : 'res'; A.st.csCid = cid; A.st.csTab = csTab;
     A.openSheet(`<div class="bar-top"><h2>${esc(c.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
       <div class="cs-head">${P.badge(c, 72)}<div style="flex:1;min-width:0">
-        <div class="jr-kick">${c.div}ª divisão · ${esc(P.countryName(c.country))}</div>
+        <div class="jr-kick">${P.divName(c.div)} · ${esc(P.countryName(c.country))}</div>
         <div class="cs-sub">${esc(c.city || '')}${c.stadium ? ' · ' + esc(c.stadium) : ''}${c.cap ? ` (${c.cap.toLocaleString('pt-BR')} lugares)` : ''}</div>
         <div class="cs-sub">${mine ? 'Seu clube' : 'Meta: ' + esc(P.expectation(g, cid))}</div>${P.rivalsOf && P.rivalsOf(g, cid).length ? `<div class="cs-sub">Rivais: ${P.rivalsOf(g, cid).slice(0, 3).map((r) => `<button class="jr-link" data-a="clubInfo" data-id="${r.id}">${esc(club(r.id).name)}</button>${r.v >= 2 ? ' ⚔' : ''}`).join(', ')}</div>` : ''}</div></div>
       <nav class="cad-tabs cad-tabs-all cs-tabs" aria-label="Seções do clube">${[['res', 'A', 'Resumo'], ['el', 'B', `Elenco (${sq.length})`], ['jg', 'C', 'Jogos']].map(([kk, l, n]) => `<button class="${csTab === kk ? 'on son' : ''}" data-a="csTab" data-k="${kk}" data-id="${cid}"><i>${l}</i>${n}</button>`).join('')}</nav>
@@ -589,7 +599,7 @@
     const more = `${mine && !mode && g ? P.marketButtons(p) : ''}${mine && !mode && P.canDemote && P.canDemote(g, p) ? `<button class="btn" data-a="yDemote" data-id="${p.id}">Devolver ao Sub-20</button>` : ''}<button class="btn" data-a="editPlayer" data-id="${p.id}">Editar no editor</button>${mine && !mode && !p.loan ? `<button class="btn danger" data-a="releaseOpen" data-id="${p.id}">Dispensar</button>` : ''}`;
     A.openSheet(`<div class="bar-top"><span class="pos-tag ${P.LINE[p.pos]}" style="padding:4px 8px">${p.pos}</span>
         <h2>${esc(p.name)}</h2><button class="btn sm" data-a="closeSheet">Fechar</button></div>
-      <div class="ps-head">${P.badge(c, 34)}<div class="ps-id"><div>${p.age} anos · ${esc(P.countryName(p.nat))}</div><div class="muted">${c ? esc(c.name) + ' · ' + c.div + 'ª div' : 'Sem clube'}</div><div>${status(p)}${P.bdoChip ? P.bdoChip(p) : ''}</div></div>
+      <div class="ps-head">${P.badge(c, 34)}<div class="ps-id"><div>${p.age} anos · ${esc(P.countryName(p.nat))}</div><div class="muted">${c ? esc(c.name) + ' · ' + P.divName(c.div, 1) : 'Sem clube'}</div><div>${status(p)}${P.bdoChip ? P.bdoChip(p) : ''}</div></div>
         <div class="ps-ovr"><span class="label">Força</span><div class="big-ovr">${P.ovr(p)}</div></div></div>
       <div class="ps-rende"><span class="label">Rende em</span>${best.map((b) => `<span class="pos-tag ${P.LINE[b.pos]}">${b.pos} ${b.v}</span>`).join('')}</div>
       <div class="ps-blocks">
@@ -686,11 +696,17 @@
     const g = A.g, st = A.st, me = club(g.user);
     if (st.div == null) st.div = me.div;
     const d = st.div;
-    const tabs = `<div class="seg tabs-x">${[['class', 'Classificação'], ['meus', 'Meus jogos'], ['art', 'Estatísticas'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra'], ['rz', (P.rzStatusName && P.rzStatusName(g)) || 'Copas regionais'], ['sc', 'Supercopa']].map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
+    const normal = P.isNormal(g);
+    const TABS = normal ? [['class', 'Classificação'], ['meus', 'Meus jogos'], ['art', 'Estatísticas'], ['rod', 'Rodadas'], ['nc', 'Copa nacional'], ['cc', 'Copas continentais']]
+      : [['class', 'Classificação'], ['meus', 'Meus jogos'], ['art', 'Estatísticas'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra'], ['rz', (P.rzStatusName && P.rzStatusName(g)) || 'Copas regionais'], ['sc', 'Supercopa']];
+    if (!TABS.some(([k]) => k === st.tab)) st.tab = 'class';
+    const tabs = `<div class="seg tabs-x">${TABS.map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
     let body = '';
     if (st.tab === 'cup') return `<div class="card"><div class="head"><h2>Copa Ultra ${g.season}</h2>${tabs}</div>${cupView(g)}</div>`;
     if (st.tab === 'rz') return `<div class="card"><div class="head"><h2>Copas por divisão ${g.season}</h2>${tabs}</div>${P.raizesView(g)}</div>`;
     if (st.tab === 'sc') return `<div class="card"><div class="head"><h2>Supercopa Ultra</h2>${tabs}</div>${P.superView(g)}</div>`;
+    if (st.tab === 'nc') return `<div class="card"><div class="head"><h2>Copas nacionais ${g.season}</h2>${tabs}</div>${P.ncView(g)}</div>`;
+    if (st.tab === 'cc') return `<div class="card"><div class="head"><h2>Copas continentais ${g.season}</h2>${tabs}</div>${P.ccView(g)}</div>`;
     if (st.tab === 'class') {
       const tb = P.table(g, d), n = tb.length;
       body = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">P</th><th class="n">J</th><th class="n">V</th><th class="n">E</th><th class="n">D</th><th class="n hide-sm">GP</th><th class="n hide-sm">GC</th><th class="n">SG</th><th class="hide-sm">Últimos</th></tr></thead><tbody>
@@ -714,8 +730,8 @@
       body = (d > 1 && g.po ? `<div class="seg" style="margin-bottom:10px">${[[0, 'Liga'], [1, 'Playoffs']].map(([k, n]) => `<button class="${!!po === !!k ? 'on' : ''}" data-a="cstPo" data-k="${k}">${n}</button>`).join('')}</div>` : '')
         + P.compStatsView(g, po ? 'po' : 'lg', (p) => { const c = club(p.clubId); return c && c.div === d; }, { minNote: po ? 1 : 5, empty: 'Ninguém jogou ainda nesta divisão.' });
     } else {
-      const fx = g.lg[d], total = fx.length;
-      if (st.rd == null) { const played = fx.filter((rd) => rd[0] && rd[0].done).length; st.rd = Math.max(0, Math.min(total - 1, played - 1)); }
+      const fx = g.lg[d].filter((rd) => rd.length), total = fx.length; // ligas menores têm semanas sem rodada
+      if (st.rd == null || st.rd > total - 1) { const played = fx.filter((rd) => rd[0] && rd[0].done).length; st.rd = Math.max(0, Math.min(total - 1, played - 1)); }
       const rd = fx[st.rd];
       body = `<div class="row" style="justify-content:center;margin-bottom:12px"><button class="btn sm" data-a="rd" data-d="-1" ${st.rd <= 0 ? 'disabled' : ''} aria-label="Rodada anterior">‹</button>
         <b style="font-family:var(--f-display);font-size:1.2rem;min-width:110px;text-align:center">Rodada ${st.rd + 1}</b>
@@ -723,7 +739,7 @@
         <div class="others">${rd.map((m) => m.done ? ogRow(m, m.hg, m.ag, { click: true, label: 'Rodada ' + (st.rd + 1) }) : ogRow(m, '', '')).join('')}</div>
         <p class="muted" style="font-size:.85rem">${d === me.div ? 'Toque num jogo disputado para ver o relatório.' : 'Relatórios completos ficam guardados só para a sua divisão.'}</p>`;
     }
-    return `<div class="card tbl-card"><div class="head"><h2>Ultraliga ${g.season}</h2>${tabs}</div>
+    return `<div class="card tbl-card"><div class="head"><h2>${normal ? esc(P.leagueTitle(d)) : 'Ultraliga'} ${g.season}</h2>${tabs}</div>
       <div class="filters tbl-div" style="margin-bottom:12px">${divSel(d, 'tblDiv')}${d !== me.div ? `<button class="btn sm ghost" data-a="myDiv">Minha divisão</button>` : ''}</div>${body}</div>`;
   }
   function playoffView(g, d) {
@@ -898,6 +914,8 @@
     if (res.step.t === 'lg') others = others.filter((x) => x.div === (mine ? mine.div : userDiv));
     if (res.step.t === 'po' && mine) others = others.filter((x) => x.div === mine.div);
     if (res.step.t === 'rz' && mine) others = others.filter((x) => x.comp === mine.comp);
+    if (res.step.t === 'nc' && mine) others = others.filter((x) => x.ctry === mine.ctry);
+    if (res.step.t === 'cc' && mine) others = others.filter((x) => x.z === mine.z);
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     A.md = { step: res.step, mine, others, T: reduce || !mine ? 96 : 0, speed: 1 };
     let el = document.getElementById('md');
@@ -938,7 +956,7 @@
       const flash = o.goals.some((e) => key(e) <= T && key(e) > T - 3);
       return ogRow({ h: o.h, a: o.a }, h, a, { flash: flash && !done, pen: done ? o.pen : null });
     }).join('');
-    const othersLabel = md.step.t === 'lg' ? `Outros jogos da ${(x ? x.div : club(A.g.user).div)}ª divisão` : md.step.t === 'cup' || md.step.t === 'sc' ? 'Outros jogos da fase' : md.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g) || 'rodada'}` : 'Playoffs';
+    const othersLabel = md.step.t === 'lg' ? `Outros jogos da ${P.divName(x ? x.div : club(A.g.user).div)}` : md.step.t === 'cup' || md.step.t === 'sc' || md.step.t === 'nc' || md.step.t === 'cc' ? 'Outros jogos da fase' : md.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g) || 'rodada'}` : 'Playoffs';
     el.innerHTML = `<div class="md-in">
       <div class="row"><h2 style="flex:1;min-width:0">${esc(P.stepLabel(md.step))}</h2>
         ${done ? '' : `<div class="seg"><button class="${md.speed === 1 ? 'on' : ''}" data-a="mdSpeed" data-s="1">Normal</button><button class="${md.speed === 3 ? 'on' : ''}" data-a="mdSpeed" data-s="3">Rápido</button></div><button class="btn sm" data-a="mdSkip">Pular</button>`}
@@ -980,13 +998,16 @@
       </div>
       <div class="mais-pane ${on('car')}"><div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="head" style="margin:0"><h2>Carreira</h2></div>
         <div class="muted">${esc(g.manager)} · ${esc(club(g.user).name)} · temporada ${g.season}</div>
-        ${g.hist.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>Div</th><th class="n">Pos</th><th>Resultado</th><th class="hide-sm">Campeão</th><th class="hide-sm">Copa</th></tr></thead><tbody>${g.hist.slice().reverse().map((h) => `<tr><td>${h.season}</td><td>${h.div}ª</td><td class="n">${ord(h.pos)}</td><td>${esc(h.result)}${h.cupMine ? ' · copa' : ''}</td><td class="hide-sm">${esc(h.champ)}</td><td class="hide-sm">${esc(h.cup)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty" style="padding:0">O histórico aparece ao fim da primeira temporada.</p>'}
+        ${g.hist.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>Div</th><th class="n">Pos</th><th>Resultado</th><th class="hide-sm">Campeão</th><th class="hide-sm">Copa</th></tr></thead><tbody>${g.hist.slice().reverse().map((h) => `<tr><td>${h.season}</td><td>${P.divName(h.div, 1)}</td><td class="n">${ord(h.pos)}</td><td>${esc(h.result)}${h.cupMine ? ' · copa' : ''}</td><td class="hide-sm">${esc(h.champ)}</td><td class="hide-sm">${esc(h.cup)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty" style="padding:0">O histórico aparece ao fim da primeira temporada.</p>'}
       </div>
       </div>
       <div class="mais-pane ${on('help')}">      <div class="card" ><div class="head"><h2>Como funciona</h2></div>
         <ul class="muted" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">
-          <li><b>Ultraliga:</b> 8 divisões de 20 clubes, turno e returno. Sobem os 2 primeiros e o vencedor do playoff (3º × 6º e 4º × 5º, depois final). Descem os 3 últimos.</li>
-          <li><b>Copa Ultra:</b> todos os 160 clubes em mata-mata de jogo único, com pênaltis no empate. Os 64 mais fracos fazem a fase preliminar.</li>
+          ${P.isNormal(g) ? `<li><b>Ligas:</b> 15 países, cada um com 2 a 4 divisões de 16 a 20 clubes, turno e returno. Sobem e descem 3 clubes entre divisões de 18 ou mais clubes, e 2 nas menores, sempre dentro do mesmo país.</li>
+          <li><b>Copa nacional:</b> todos os clubes do país em mata-mata de jogo único, com pênaltis no empate. O time da divisão mais baixa joga em casa; a final é em campo neutro.</li>
+          <li><b>Copas continentais:</b> Europa e Américas, 32 clubes cada, classificados pela liga do ano anterior. Grupos de 4 e depois mata-mata.</li>
+          <li><b>Ligas acompanhadas:</b> as que você escolheu e a do seu clube. As outras jogam em silêncio e só aparecem na retrospectiva do fim da temporada.</li>` : `<li><b>Ultraliga:</b> 8 divisões de 20 clubes, turno e returno. Sobem os 2 primeiros e o vencedor do playoff (3º × 6º e 4º × 5º, depois final). Descem os 3 últimos.</li>
+          <li><b>Copa Ultra:</b> todos os 160 clubes em mata-mata de jogo único, com pênaltis no empate. Os 64 mais fracos fazem a fase preliminar.</li>`}
           <li><b>Força</b> (1 a 99) vem dos atributos de 1 a 20, com peso diferente por posição. Fora da posição o jogador rende menos.</li>
           <li><b>Condição</b> cai a cada jogo e volta com descanso. Semanas de copa apertam o calendário: faça rodízio.</li>
           <li><b>Moral</b> sobe com vitórias e boas atuações e cai com derrotas ou falta de jogos.</li>
@@ -1062,6 +1083,8 @@
   P.normalizeDb = function (db) {
     if (!db || !Array.isArray(db.clubs)) throw new Error('Isto não parece um banco de dados do jogo.');
     if (P.registerCountries) P.registerCountries(db.countries);
+    if (P.setWorld) P.setWorld(db);
+    if (db.world) return db; // Carreira normal: o mundo já vem pronto do gerador
     if (db.clubs.length !== P.DIVS * P.DIV_SIZE) throw new Error(`O banco precisa ter ${P.DIVS * P.DIV_SIZE} clubes (${P.DIVS} divisões de ${P.DIV_SIZE}). Este tem ${db.clubs.length}.`);
     const ids = new Set();
     db.clubs.forEach((c, i) => {
@@ -1211,7 +1234,7 @@
     tab(d) { A.st.tab = d.k; A.render(); },
     cstPo(d) { A.st.cstPo = d.k === '1'; A.render(); },
     myDiv() { A.st.div = club(A.g.user).div; A.st.rd = null; A.render(); },
-    rd(d) { A.st.rd = P.clamp(A.st.rd + Number(d.d), 0, A.g.lg[A.st.div].length - 1); A.render(); },
+    rd(d) { A.st.rd = P.clamp(A.st.rd + Number(d.d), 0, A.g.lg[A.st.div].filter((x) => x.length).length - 1); A.render(); },
     report(d) { A.reportSheet(Number(d.ri)); },
     slot(d) { A.slotSheet(Number(d.i)); },
     assign(d) {
@@ -1255,6 +1278,7 @@
     start() {
       const s = A.setup; if (!s.club) return;
       A.g = P.newGame(s.db, s.club, (s.manager || '').trim() || 'Técnico');
+      if (P.isNormal(A.g)) { A.g.follow = (s.follow || []).slice(); s.dbN = null; } // o mundo agora é da carreira
       if (s.coach) A.g.coach = { styles: (s.coach.styles || []).slice(), form: s.coach.form, age: s.coach.age || 40, nat: s.coach.nat || 'BRA', gender: s.coach.gender || 'm', since: A.g.season }; if (A.g.coach.gender === 'f') A.g.news.forEach((n) => { n.txt = n.txt.replace('é o novo técnico', 'é a nova técnica'); });
       s.newc = 0;
       A.save(); A.view = 'inicio'; A.st.div = null; A.render(); window.scrollTo(0, 0);

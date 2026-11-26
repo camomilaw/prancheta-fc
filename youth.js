@@ -418,7 +418,7 @@
         <div class="plist">${list.map((p) => yrow(p)).join('') || '<p class="empty">Nenhum jovem. Contrate pelos relatórios dos olheiros.</p>'}</div>`;
     } else if (st.tab === 'tabela') {
       const tb = P.youthTable(g, me.div);
-      body = `<div class="label" style="margin-bottom:8px">Ultraliga Sub-20 · ${me.div}ª divisão</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">P</th><th class="n">J</th><th class="n">V</th><th class="n">E</th><th class="n">D</th><th class="n">SG</th></tr></thead><tbody>
+      body = `<div class="label" style="margin-bottom:8px">${P.isNormal(g) ? 'Sub-20' : 'Ultraliga Sub-20'} · ${P.divName(me.div)}</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">P</th><th class="n">J</th><th class="n">V</th><th class="n">E</th><th class="n">D</th><th class="n">SG</th></tr></thead><tbody>
         ${tb.map((r, i) => { const c = club(r.cid); return `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n">${i + 1}</td><td><span class="club">${P.badge(c, 18)}<span class="show-sm">${esc(c.short)}</span><span class="nm-long">${esc(c.name)}</span></span></td><td class="n"><b>${r.pts}</b></td><td class="n">${r.j}</td><td class="n">${r.v}</td><td class="n">${r.e}</td><td class="n">${r.d}</td><td class="n">${r.gp - r.gc}</td></tr>`; }).join('')}
         </tbody></table></div><p class="muted" style="font-size:.85rem">O Sub-20 joga na mesma divisão do time principal, nas semanas de liga.</p>`;
     } else if (st.tab === 'olheiros') {

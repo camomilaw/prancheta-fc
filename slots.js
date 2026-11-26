@@ -65,7 +65,7 @@
     if (!A.slot) A.slot = A.setup.slot || firstFree() || 1;
     const c = P.club(g, g.user);
     let hl = null; try { hl = P.headline ? P.headline(g) : null; } catch (e) { hl = null; }
-    meta.s[A.slot] = { mgr: g.manager, club: c.name, badge: P.badge(c, 48), div: c.div, season: g.season, week: g.week, over: !!g.over, at: Date.now(), head: hl && hl.head, dek: hl && hl.dek, x: P.frontExtra ? (() => { try { return P.frontExtra(g); } catch (e) { return null; } })() : null };
+    meta.s[A.slot] = { mgr: g.manager, club: c.name, badge: P.badge(c, 48), div: c.div, dn: P.divName(c.div), mode: P.isNormal(g) ? 'n' : 'u', season: g.season, week: g.week, over: !!g.over, at: Date.now(), head: hl && hl.head, dek: hl && hl.dek, x: P.frontExtra ? (() => { try { return P.frontExtra(g); } catch (e) { return null; } })() : null };
     meta.active = A.slot;
     writeMeta();
     pending = { n: A.slot, text: JSON.stringify(g) }; flush();
@@ -118,7 +118,7 @@
       rows.push(`<article class="jr-story">
         <div class="jr-crest">${m.badge || ''}</div>
         <div class="jr-story-b">
-          <span class="jr-kick">${m.div}ª divisão · Temporada ${m.season}${m.over ? ' · fim' : ''}</span>
+          <span class="jr-kick">${m.dn || m.div + 'ª divisão'} · Temporada ${m.season}${m.over ? ' · fim' : ''}</span>
           <h3>${esc(m.head || `${m.club}, de ${m.mgr}`)}</h3>
           ${m.dek ? `<p>${esc(m.dek)}</p>` : `<p>${esc(m.club)} sob o comando de ${esc(m.mgr)}.</p>`}
           <span class="jr-when">Espaço ${i} · última edição ${when(m.at)}</span>

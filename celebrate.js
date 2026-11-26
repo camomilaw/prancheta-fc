@@ -11,8 +11,10 @@
     const won = [];
     if (step.t === 'lg' && g.lg[me.div] && step.r === g.lg[me.div].length - 1) {
       const tb = P.table(g, me.div);
-      if (tb[0] && tb[0].cid === g.user) won.push({ comp: 'lg', n: me.div === 1 ? 'Ultraliga' : `${me.div}ª divisão da Ultraliga`, big: me.div === 1 });
+      if (tb[0] && tb[0].cid === g.user) won.push(P.isNormal(g) ? { comp: 'lg', n: P.leagueTitle(me.div), big: P.isTopDiv(me.div) } : { comp: 'lg', n: me.div === 1 ? 'Ultraliga' : `${P.divName(me.div)} da Ultraliga`, big: me.div === 1 });
     }
+    if (step.t === 'nc' && g.nc) { const c = P.divCountry(me.div), cup = g.nc[c]; if (cup && cup.w === g.user && step.r === 6) won.push({ comp: 'cup', n: P.ncName(c), big: true }); }
+    if (step.t === 'cc' && step.r === 9 && g.cc) for (const [z, x] of Object.entries(g.cc)) if (x.w === g.user) won.push({ comp: 'sc', n: P.CC[z].n, big: true });
     if (step.t === 'cup' && step.r === P.CUP_NAMES.length - 1 && g.cup.winner === g.user) won.push({ comp: 'cup', n: 'Copa Ultra', big: true });
     if (step.t === 'sc' && P.SC_NAMES && step.r === P.SC_NAMES.length - 1 && g.scup && g.scup.cur && g.scup.cur.w === g.user) won.push({ comp: 'sc', n: 'Supercopa Ultra', big: true });
     if (step.t === 'rz' && P.RZ_NAMES && step.r === P.RZ_NAMES.length - 1 && P.tierOf) {
@@ -47,14 +49,14 @@
     let el = document.getElementById('cele');
     if (!el) { el = document.createElement('div'); el.id = 'cele'; document.body.appendChild(el); }
     const conf = Array.from({ length: 36 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:${(i % 9) * 0.25}s;background:${[club.colors[0], club.colors[1], '#f1e9d8', '#a3261c'][i % 4]}"></i>`).join('');
-    const big = c.comp === 'lg' && club.div === 1 ? 'É campeão da Ultraliga!' : 'É campeão!';
+    const big = c.comp === 'lg' && club.div === 1 && !P.isNormal(g) ? 'É campeão da Ultraliga!' : 'É campeão!';
     const words = ['Festa', 'Noite histórica', 'Glória', 'Taça erguida'];
     const kick = words[(c.s + c.n.length) % words.length];
     const city = club.city ? esc(club.city) : 'casa';
     el.innerHTML = `<div class="cele ${c.big ? 'big' : ''}" role="dialog" aria-modal="true" aria-label="Título conquistado" style="--c1:${esc(club.colors[0])};--c2:${esc(club.colors[1])}">
       <div class="cele-conf" aria-hidden="true">${conf}</div>
       <article class="cele-in cele-paper">
-        <div class="cx-mast"><span>Gazeta da Ultraliga</span><span>${c.s}</span></div>
+        <div class="cx-mast"><span>${P.isNormal(g) ? 'Gazeta Esportiva' : 'Gazeta da Ultraliga'}</span><span>${c.s}</span></div>
         <div class="cx-extra">Edição extra</div>
         <div class="cx-kick">${esc(kick)} · ${esc(c.n)} ${c.s}</div>
         <h2 class="cx-head">${esc(big)}</h2>

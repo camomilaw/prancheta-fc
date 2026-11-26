@@ -53,7 +53,7 @@
         const fee = round(P.value(p) * (1 + rnd() * 0.2));
         g.offers.push({ id: oid, pid: p.id, from: b.id, fee, until: g.week + 2, ask: true });
         P.news(g, `${p.name} pediu para sair: o ${b.name} ofereceu ${P.money(fee)} e ele quer ir.`, 'warn');
-        if (P.mail) P.mail(g, { k: 'saida', pid: p.id, oid, subj: `${p.name} quer sair para o ${b.name}`, body: `Chefe, o ${b.name} (${b.div}ª divisão) ofereceu ${P.money(fee)} pelo ${p.name} e ele veio me dizer que quer muito ir. Se a gente barrar, ele vai ficar chateado. A decisão é sua.` });
+        if (P.mail) P.mail(g, { k: 'saida', pid: p.id, oid, subj: `${p.name} quer sair para o ${b.name}`, body: `Chefe, o ${b.name} (${P.divName(b.div)}) ofereceu ${P.money(fee)} pelo ${p.name} e ele veio me dizer que quer muito ir. Se a gente barrar, ele vai ficar chateado. A decisão é sua.` });
       }
     }
 
@@ -114,7 +114,7 @@
       if (P.squad(g, g.user).length >= P.MARKET.maxSquad) return say(`Seu elenco já tem ${P.MARKET.maxSquad} jogadores.`);
       if (me.bal < rc) return say(`A multa é de ${P.money(rc)} e o saldo não cobre.`);
       const wage = P.playerDemand(g, p, g.user);
-      if (wage == null) return say(`${p.name} não quer jogar na ${me.div}ª divisão, nem com a multa paga.`);
+      if (wage == null) return say(`${p.name} não quer jogar na ${P.divName(me.div)}, nem com a multa paga.`);
       const fromName = P.club(g, p.clubId).name;
       P.transfer(g, p, g.user, rc, wage, 3);
       P.news(g, `Você pagou a multa rescisória de ${P.money(rc)} e tirou ${p.name} do ${fromName}.`, 'good');

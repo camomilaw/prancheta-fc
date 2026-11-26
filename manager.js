@@ -42,7 +42,7 @@
     const first = (g.hist && g.hist.length) ? g.hist[0].season : g.season;
     const titles = [];
     for (const h of g.hist || []) {
-      if (h.pos === 1) titles.push({ s: h.season, t: h.div === 1 ? 'lg' : 'div', div: h.div, cid: h.cid || null });
+      if (h.pos === 1) titles.push({ s: h.season, t: P.isTopDiv(h.div) ? 'lg' : 'div', div: h.div, cid: h.cid || null });
       if (h.cupMine) titles.push({ s: h.season, t: 'cup', cid: h.cid || null });
       if (h.scMine) titles.push({ s: h.season, t: 'sc', cid: h.cid || null });
       if (h.rzMine || h.tzMine) titles.push({ s: h.season, t: h.tzMine || 'rz', cid: h.cid || null });
@@ -90,9 +90,11 @@
     if (!h || h.season !== g.season) return;
     h.cid = g.user;
     const T = g.mgr.titles, add = (t, extra) => T.push(Object.assign({ s: g.season, t, cid: g.user }, extra || {}));
-    if (h.pos === 1) add(h.div === 1 ? 'lg' : 'div', { div: h.div });
+    const normal = P.isNormal(g), myC = normal ? P.divCountry(h.div) : null;
+    if (h.pos === 1) add(P.isTopDiv(h.div) ? 'lg' : 'div', normal ? { div: h.div, n: P.leagueTitle(h.div) } : { div: h.div });
     else if (/acesso/i.test(h.result)) add('up', { div: h.div });
-    if (h.cupMine) add('cup');
+    if (h.cupMine) add('cup', normal ? { n: P.ncName(myC) } : null);
+    if (normal) for (const [z, x] of Object.entries(g.cc || {})) if (x.w === g.user) add('sc', { n: P.CC[z].n });
     if (h.tzMine) add(h.tzMine);
     if (h.scMine) add('sc');
   };
@@ -109,7 +111,7 @@
   };
 
   // ---------- Tela ----------
-  const titleName = (t) => (t.t === 'div' ? `${t.div}ª divisão` : t.t === 'up' ? `Acesso da ${t.div}ª divisão` : TITLE_N[t.t]);
+  const titleName = (t) => (t.n ? t.n : t.t === 'div' ? `${P.divName(t.div)}` : t.t === 'up' ? `Acesso da ${P.divName(t.div)}` : TITLE_N[t.t]);
 
   function resumo(g, M, tot) {
     const counts = {};
@@ -132,7 +134,7 @@
       ${cups.length ? `<div class="mg-trophies">${cups.map((k) => `<div class="mg-trophy t-${k}"><span class="ic">🏆</span><b>${counts[k]}×</b><small>${esc(TITLE_N[k])}</small></div>`).join('')}</div>` : ''}
       <div class="mg-facts">
         ${big ? `<p><span class="label">Maior vitória</span>${M.best.gf} × ${M.best.ga} contra o ${esc(big.name)} <span class="muted">(${esc(clubOf(g, M.best.cid) ? clubOf(g, M.best.cid).short : '')}, ${M.best.s})</span></p>` : ''}
-        ${bestH ? `<p><span class="label">Melhor campanha na liga</span>${ord(bestH.pos)} na ${bestH.div}ª divisão em ${bestH.season}${clubOf(g, bestH.cid) ? ` com o ${esc(clubOf(g, bestH.cid).name)}` : ''}</p>` : ''}
+        ${bestH ? `<p><span class="label">Melhor campanha na liga</span>${ord(bestH.pos)} na ${P.divName(bestH.div)} em ${bestH.season}${clubOf(g, bestH.cid) ? ` com o ${esc(clubOf(g, bestH.cid).name)}` : ''}</p>` : ''}
       </div>`;
   }
 
@@ -147,7 +149,7 @@
     const hist = (g.hist || []).slice().reverse().map((h) => {
       const c = clubOf(g, h.cid);
       const extra = [h.cupMine ? 'Copa Ultra' : '', h.scMine ? 'Supercopa' : ''].filter(Boolean).join(' · ');
-      return `<tr><td>${h.season}</td><td>${c ? `<span class="club">${P.badge(c, 18)}${esc(c.short)}</span>` : '<span class="muted">–</span>'}</td><td>${h.div}ª</td><td class="n">${ord(h.pos)}</td><td>${esc(h.result.replace(' · Supercopa', ''))}${extra ? `<small class="muted" style="display:block;font-size:.72rem">${extra}</small>` : ''}</td></tr>`;
+      return `<tr><td>${h.season}</td><td>${c ? `<span class="club">${P.badge(c, 18)}${esc(c.short)}</span>` : '<span class="muted">–</span>'}</td><td>${P.divName(h.div, 1)}</td><td class="n">${ord(h.pos)}</td><td>${esc(h.result.replace(' · Supercopa', ''))}${extra ? `<small class="muted" style="display:block;font-size:.72rem">${extra}</small>` : ''}</td></tr>`;
     }).join('');
     return `<div class="mg-stints">${rows}</div>
       <div class="label" style="margin:16px 0 6px">Temporada a temporada</div>
@@ -209,7 +211,7 @@
     const body = st.tab === 'clu' ? clubes(g, M) : st.tab === 'tit' ? titulos(g, M) : st.tab === 'hof' ? hall(g, M) : resumo(g, M, tot);
     const note = M.stints[0].seeded ? '<p class="muted" style="font-size:.78rem;margin:12px 0 0">Carreira iniciada antes deste registro: números anteriores vêm do resumo de cada temporada, e o clube dos anos antigos pode não aparecer.</p>' : '';
     return `<div class="card"><div class="mg-head"><div class="mg-avatar">${monogram((g.manager || 'T').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase())}</div>
-        <div style="flex:1;min-width:0"><h2 style="margin:0">${esc(g.manager)}</h2><div class="muted" style="font-size:.88rem">Técnico do ${esc(me.name)} · ${me.div}ª divisão</div></div></div>
+        <div style="flex:1;min-width:0"><h2 style="margin:0">${esc(g.manager)}</h2><div class="muted" style="font-size:.88rem">Técnico do ${esc(me.name)} · ${P.divName(me.div)}</div></div></div>
         ${P.coachCard ? P.coachCard(g) : ''}
         <div class="head" style="margin:14px 0 12px">${tabs}</div>${body}${note}</div>`;
   };

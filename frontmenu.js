@@ -64,7 +64,7 @@
       const pos = x.pos, n = x.n || 20;
       const zone = pos === 1 ? 'lider' : x.upTo && pos <= x.upTo ? 'acesso' : x.down && pos > x.down ? 'z' : pos <= Math.ceil(n / 3) ? 'cima' : pos <= Math.ceil(n * 2 / 3) ? 'meio' : 'baixo';
       out.push({
-        lider: pk([`Na ${m.div}ª divisão, o time olha todos de cima: é o líder.`, `A liderança é do ${C}, e ninguém no clube quer largar o osso.`]),
+        lider: pk([`Na ${m.dn || m.div + 'ª divisão'}, o time olha todos de cima: é o líder.`, `A liderança é do ${C}, e ninguém no clube quer largar o osso.`]),
         acesso: pk([`Na tabela, o ${C} está na briga pelo acesso, em ${pos}º.`, `O sonho de subir segue vivo: ${pos}º lugar.`]),
         cima: pk([`O time ocupa a parte de cima da tabela, em ${pos}º.`, `Em ${pos}º, o ${C} anda entre os primeiros.`]),
         meio: pk([`No meio da tabela, em ${pos}º, o time ainda procura uma identidade.`, `O ${C} é o ${pos}º: nem lá, nem cá.`]),
@@ -106,7 +106,7 @@
       const box = (k, v) => (v || v === 0 ? `<div><span>${k}</span><b>${v}</b></div>` : '');
       const body = P.frontStory(m, x);
       right = `<article class="fm-news fm-big">
-        <div class="fm-kick">${m.div}ª divisão · Temporada ${m.season}${m.over ? ' · fim de temporada' : ''} · Espaço ${last}</div>
+        <div class="fm-kick">${m.dn || m.div + 'ª divisão'} · Temporada ${m.season}${m.over ? ' · fim de temporada' : ''} · Espaço ${last}</div>
         <h2 class="fm-head">${esc(m.head || `${m.club}, de ${m.mgr}`)}</h2>
         <p class="fm-sub">${esc(m.dek || `${m.club} sob o comando de ${m.mgr}.`)}</p>
         <div class="fm-by"><span>Por ${esc(m.mgr)} · última edição ${ago(m.at)}</span><button class="btn primary land-only-btn" data-a="slotOpen" data-n="${last}">Continuar →</button></div>

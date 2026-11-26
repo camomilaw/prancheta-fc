@@ -41,7 +41,7 @@
   // ---------- Lista de clubes ----------
   function clubRows(list, ovrs) {
     return list.map((c) => `<button class="prow" data-a="edClub" data-id="${c.id}" style="grid-template-columns:36px 1fr auto">
-      ${P.badge(c, 30)}<span class="nm"><b>${esc(c.name)}${c.custom ? '<span class="chip xi">Seu</span>' : ''}</b><small>${esc(P.countryName(c.country))} · ${c.div}ª div · ${players(c.id).length} jogadores</small></span>
+      ${P.badge(c, 30)}<span class="nm"><b>${esc(c.name)}${c.custom ? '<span class="chip xi">Seu</span>' : ''}</b><small>${esc(P.countryName(c.country))} · ${P.divName(c.div, 1)} · ${players(c.id).length} jogadores</small></span>
       <span class="ovr">${ovrs[c.id]}</span></button>`).join('') || '<p class="empty">Nenhum clube encontrado.</p>';
   }
   function filteredClubs() {
@@ -66,7 +66,7 @@
     return `${crumbs([['Clubes', 'edGo', 'data-v="clubs"'], [c.name]])}
       ${setupMode && c.custom && A.setup.club === c.id ? `<div class="create-cta"><div style="flex:1;min-width:0"><b>Seu clube está pronto.</b><div class="muted" style="font-size:.88rem">Edite os jogadores abaixo ou volte para começar a carreira.</div></div><button class="btn primary" data-a="edExit">Voltar e começar</button></div>` : ''}
       <div class="card" style="display:flex;flex-direction:column;gap:14px">
-        <div class="row"><span id="ed-badge">${P.badge(c, 48)}</span><div style="flex:1;min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${c.div}ª divisão</div></div><span class="ovr">${P.clubOvr(db(), cid)}</span></div>
+        <div class="row"><span id="ed-badge">${P.badge(c, 48)}</span><div style="flex:1;min-width:0"><h2>${esc(c.name)}</h2><div class="muted">${P.divName(c.div)}</div></div><span class="ovr">${P.clubOvr(db(), cid)}</span></div>
         <div class="form-grid">
           ${f('name', 'Nome', 'maxlength="40"')}
           ${f('short', 'Sigla (3 letras)', 'maxlength="3"')}
@@ -115,7 +115,7 @@
           ${P.xp ? `<div class="field"><label class="label" for="pf-xp">Experiência (1-20)</label><input id="pf-xp" type="number" min="1" max="20" data-c="pf" data-k="xp" value="${Math.round(P.xp(p))}"></div>` : ''}
           <div class="field"><label class="label" for="pf-nat">Nacionalidade</label><select id="pf-nat" data-c="pf" data-k="nat">${A.countryOpts(p.nat)}</select></div>
           <div class="field"><label class="label" for="pf-pos">Posição</label><select id="pf-pos" data-c="pf" data-k="pos">${P.POS.map((x) => `<option value="${x}" ${p.pos === x ? 'selected' : ''}>${x} · ${P.POS_NAME[x]}</option>`).join('')}</select></div>
-          <div class="field"><label class="label" for="pf-club">Clube</label><select id="pf-club" data-c="pf" data-k="clubId">${clubOpts.map((x) => `<option value="${x.id}" ${p.clubId === x.id ? 'selected' : ''}>${x.div}ª · ${esc(x.name)}</option>`).join('')}</select></div>
+          <div class="field"><label class="label" for="pf-club">Clube</label><select id="pf-club" data-c="pf" data-k="clubId">${clubOpts.map((x) => `<option value="${x.id}" ${p.clubId === x.id ? 'selected' : ''}>${P.divName(x.div, 1)} · ${esc(x.name)}</option>`).join('')}</select></div>
           ${A.g ? `<div class="field"><label class="label" for="pf-wage">Salário mensal (R$)</label><input id="pf-wage" type="number" min="0" step="500" data-c="pf" data-k="wage" value="${p.wage || 0}"></div>
           <div class="field"><label class="label" for="pf-ctr">Contrato até</label><input id="pf-ctr" type="number" min="${A.g.season}" max="${A.g.season + 6}" data-c="pf" data-k="ctr" value="${p.ctr || A.g.season}"></div>` : ''}
           ${A.g ? `<div class="field"><label class="label" for="pf-cond">Energia (condição, 0-100)</label><input id="pf-cond" type="number" min="0" max="100" data-c="pf" data-k="cond" value="${Math.round(p.cond)}"></div>
@@ -286,7 +286,7 @@
       box.innerHTML = res.length ? res.map((p) => {
         const c = club(p.clubId);
         return `<div class="prow" style="grid-template-columns:44px 1fr auto auto"><span class="pos-tag ${P.LINE[p.pos]}">${p.pos}</span>
-          <span class="nm"><b>${esc(p.name)}</b><small>${c ? esc(c.short) + ' · ' + c.div + 'ª div' : 'Sem clube'} · ${p.age} anos</small></span>
+          <span class="nm"><b>${esc(p.name)}</b><small>${c ? esc(c.short) + ' · ' + P.divName(c.div, 1) : 'Sem clube'} · ${p.age} anos</small></span>
           <span class="ovr">${P.ovr(p)}</span><button class="btn sm" data-a="edBring" data-id="${p.id}">Trazer</button></div>`;
       }).join('') : '<p class="empty">Nenhum jogador encontrado.</p>';
     }

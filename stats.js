@@ -81,7 +81,7 @@
         return `<div class="card st-pane ${k === sel ? 'on' : ''}"><div class="head"><span class="label">${title}</span></div>${top.length ? `<table class="tbl"><tbody>${top.map((p, i) => { const c = P.club(g, p.clubId); return `<tr class="click ${p.clubId === g.user ? 'me' : ''}" data-a="player" data-id="${p.id}"><td class="n">${i + 1}</td><td>${esc(p.name)} <span class="muted">${esc(c.short)}</span></td><td class="n"><b>${show(p)}</b></td></tr>`; }).join('')}</tbody></table>` : '<p class="empty">Sem dados ainda.</p>'}</div>`;
       };
       const rec = teamRecord(g, g.user);
-      body = `<div class="filters" style="margin-bottom:12px"><div class="seg">${[['club', 'Meu clube'], ['div', 'Minha divisão'], ['all', 'Ultraliga']].map(([k, n]) => `<button class="${st.scope === k ? 'on' : ''}" data-a="stxScope" data-k="${k}">${n}</button>`).join('')}</div></div>
+      body = `<div class="filters" style="margin-bottom:12px"><div class="seg">${[['club', 'Meu clube'], ['div', 'Minha divisão'], ['all', P.isNormal(A.g) ? 'Todas as ligas' : 'Ultraliga']].map(([k, n]) => `<button class="${st.scope === k ? 'on' : ''}" data-a="stxScope" data-k="${k}">${n}</button>`).join('')}</div></div>
         <div class="kv" style="margin-bottom:16px"><div><span class="label">Jogos do seu time</span><b>${rec.j}</b></div><div><span class="label">Campanha</span><b>${rec.v}-${rec.e}-${rec.d}</b></div><div><span class="label">Gols pró</span><b>${rec.gp}</b></div><div><span class="label">Gols contra</span><b>${rec.gc}</b></div></div>
         STNAV<div class="st-grid">
           ${list('Artilheiros (liga + copa)', (p) => p.s.g + p.s.cg, (p) => p.s.g + p.s.cg)}

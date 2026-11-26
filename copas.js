@@ -71,7 +71,8 @@
   // ---------- Sorteios ----------
   function ncDraw(g, c, k) {
     const cup = g.nc[c];
-    if (cup.rounds[k]) return;
+    if (cup.rounds[k]) return true;
+    if (k > 0 && (!cup.rounds[k - 1] || cup.rounds[k - 1].ties.some((m) => !m.done))) return false; // fase anterior ainda não acabou
     const r = Math.random, ovrs = ovrsOf(g);
     let pool;
     if (k === 0) {
@@ -94,6 +95,7 @@
       ties.push(m);
     }
     cup.rounds[k] = { ties };
+    return true;
   }
   P.ccTable = function (g, z, gi) {
     const cc = g.cc[z], rows = {};
@@ -108,7 +110,8 @@
   };
   function ccDraw(g, z, k) { // k: 0 oitavas, 1 quartas, 2 semi, 3 final
     const cc = g.cc[z];
-    if (cc.ko[k]) return;
+    if (cc.ko[k]) return true;
+    if (k === 0 ? cc.gfx.some((rds) => rds.some((rd) => rd.some((m) => !m.done))) : (!cc.ko[k - 1] || cc.ko[k - 1].ties.some((m) => !m.done))) return false;
     let ties = [];
     if (k === 0) {
       const t = cc.groups.map((_, gi) => P.ccTable(g, z, gi).map((x) => x.cid));
@@ -118,6 +121,7 @@
       for (let i = 0; i + 1 < pool.length; i += 2) ties.push({ h: pool[i], a: pool[i + 1], done: false, neutral: k === 3 });
     }
     cc.ko[k] = { ties };
+    return true;
   }
 
   // ---------- Partidas da semana ----------
@@ -130,20 +134,24 @@
       for (const c of Object.keys(g.nc || {})) {
         const cup = g.nc[c], k = step.r - cup.start;
         if (k < 0 || k >= cup.n) continue;
-        ncDraw(g, c, k);
+        if (!ncDraw(g, c, k)) continue;
         cup.rounds[k].ties.forEach((m) => out.push({ m, comp: 'nc', ko: true, ctry: c }));
       }
     } else {
       for (const z of Object.keys(g.cc || {})) {
         const cc = g.cc[z];
         if (step.r < 6) cc.gfx.forEach((rds) => (rds[step.r] || []).forEach((m) => out.push({ m, comp: 'cc', z })));
-        else { ccDraw(g, z, step.r - 6); cc.ko[step.r - 6].ties.forEach((m) => out.push({ m, comp: 'cc', z, ko: true })); }
+        else if (ccDraw(g, z, step.r - 6)) { cc.ko[step.r - 6].ties.forEach((m) => out.push({ m, comp: 'cc', z, ko: true })); }
       }
     }
     return out;
   };
   const origLabel = P.stepLabel;
   P.stepLabel = function (step) {
+    if (step && step.t === 'lg' && P._W && P.app.g && P.app.g.lg) { // rodada da sua liga (ligas menores têm semanas sem jogo)
+      const g = P.app.g, me = P.club(g, g.user), fx = me && g.lg[me.div];
+      if (fx) return 'Rodada ' + Math.max(1, fx.slice(0, step.r + 1).filter((x) => x.length).length);
+    }
     if (step && step.t === 'nc') {
       const g = P.app.g, me = g && P.club(g, g.user), c = me && P.divCountry(me.div);
       const cup = c && g.nc && g.nc[c];
@@ -200,6 +208,54 @@
     }
   };
 
+  // ---------- Telas (Tabela › Copa nacional / Copas continentais) ----------
+  const A = P.app, esc = P.esc;
+  const PHASES = ['Final', 'Semifinal', 'Quartas de final', 'Oitavas de final', '3ª fase', '2ª fase', '1ª fase'];
+  const phase = (cup, k) => PHASES[cup.n - 1 - k] || 'Fase preliminar';
+  const winBox = (g, cid, lbl) => { const c = P.club(g, cid); return c ? `<div class="winner">${P.badge(c, 40)}<div><span class="label">${esc(lbl || 'Campeão')}</span><h3>${esc(c.name)}</h3></div></div>` : ''; };
+  const mineFirst = (g, ties) => ties.slice().sort((a, b) => ((b.h === g.user || b.a === g.user) ? 1 : 0) - ((a.h === g.user || a.a === g.user) ? 1 : 0));
+  const row = (m, k) => A.ogRow(m, m.done ? m.hg : '', m.done ? m.ag : '', { click: true, pen: m.pen, label: k });
+  P.ncView = function (g) {
+    const st = A.st, me = P.club(g, g.user);
+    const cs = P.worldCountries().filter((c) => P.followed(g, P.topDivOf(c)));
+    if (!st.ncC || !cs.includes(st.ncC)) st.ncC = P.divCountry(me.div);
+    const c = st.ncC, cup = g.nc && g.nc[c];
+    const sel = `<select class="sel" data-c="ncC" aria-label="País">${cs.map((x) => `<option value="${x}" ${x === c ? 'selected' : ''}>${esc(ncName(x))}</option>`).join('')}</select>`;
+    if (!cup) return '<p class="empty">Sem copa nesta temporada.</p>';
+    const n = g.db.clubs.filter((x) => P.divCountry(x.div) === c).length;
+    const info = `<p class="muted" style="font-size:.85rem;margin:0 0 10px">${n} clubes ${esc(P.countryPrep(c))}, jogo único e pênaltis em caso de empate. O time da divisão mais baixa joga em casa; a final é em campo neutro.${cup.byes.length ? ` Os ${cup.byes.length} mais fortes entram direto na 2ª fase.` : ''}</p>`;
+    if (!cup.rounds.length) {
+      const first = g.cal.findIndex((x) => x.t === 'nc' && x.r === cup.start);
+      return `<div class="filters" style="margin-bottom:12px">${sel}</div>${info}<p class="empty">A copa começa na semana ${first + 1} da temporada.</p>`;
+    }
+    if (st.ncR == null || st.ncR >= cup.rounds.length || st.ncRc !== c) { st.ncR = cup.rounds.length - 1; st.ncRc = c; }
+    const rd = cup.rounds[st.ncR];
+    const out = cup.rounds.some((r) => r.ties.some((m) => m.done && (m.h === g.user || m.a === g.user) && m.w !== g.user));
+    const alive = !out && cup.rounds.length && (cup.rounds[cup.rounds.length - 1].ties.some((m) => m.h === g.user || m.a === g.user) || (cup.rounds.length === 1 && cup.byes.includes(g.user)));
+    const myStat = c !== P.divCountry(me.div) ? '' : cup.w === g.user ? 'Campeão!' : out ? 'Eliminado' : alive ? 'Na disputa' : 'Aguardando';
+    return `${cup.w ? winBox(g, cup.w) : ''}<div class="filters" style="margin-bottom:12px">${sel}<select class="sel" data-c="ncR" aria-label="Fase">${cup.rounds.map((x, i) => `<option value="${i}" ${i === st.ncR ? 'selected' : ''}>${phase(cup, i)} (${x.ties.length} ${x.ties.length === 1 ? 'jogo' : 'jogos'})</option>`).join('')}</select>${myStat ? `<span class="muted">Seu time: <b>${myStat}</b></span>` : ''}</div>
+      ${info}<div class="others">${mineFirst(g, rd.ties).map((m) => row(m, `${ncName(c)} · ${phase(cup, st.ncR)}`)).join('')}</div>`;
+  };
+  P.ccView = function (g) {
+    const st = A.st;
+    const mine = P.ccOf(g, g.user);
+    if (!st.ccZ || !g.cc[st.ccZ]) st.ccZ = mine || (P.WORLD_DEF.find((w) => w.c === P.divCountry(P.club(g, g.user).div)) || {}).z || 'eu';
+    const z = st.ccZ, cc = g.cc[z], def = P.CC[z];
+    const seg = `<div class="seg" style="margin-bottom:10px">${Object.keys(P.CC).map((k) => `<button class="${k === z ? 'on' : ''}" data-a="ccZ" data-k="${k}">${esc(P.CC[k].short)}</button>`).join('')}</div>`;
+    const info = `<p class="muted" style="font-size:.85rem;margin:0 0 10px">${esc(def.n)}: 32 clubes classificados pela liga do ano anterior (${Object.entries(def.slots).map(([c, k]) => `${esc(P.countryName(c))} ${k}`).join(', ')}). Grupos de 4 em ida e volta; os 2 primeiros vão às oitavas, depois jogo único até a final em campo neutro.${mine === z ? '' : ''}</p>`;
+    const ko = cc.ko.map((r, k) => `<h3 class="cup-h">${['Oitavas de final', 'Quartas de final', 'Semifinal', 'Final'][k]}</h3><div class="others">${mineFirst(g, r.ties).map((m) => row(m, `${def.short} · ${['Oitavas', 'Quartas', 'Semifinal', 'Final'][k]}`)).join('')}</div>`).reverse().join('');
+    const groups = cc.groups.map((gr, gi) => {
+      const tb = P.ccTable(g, z, gi);
+      return `<div class="cc-gr"><div class="label">Grupo ${LET[gi]}</div><table class="tbl"><tbody>${tb.map((r, i) => { const c = P.club(g, r.cid); return `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${i < 2 ? 'z1' : ''}">${i + 1}</span></td><td><button class="club club-btn" data-a="clubInfo" data-id="${c.id}">${P.badge(c, 18)}<span>${esc(c.short)}</span></button> <small class="muted">${esc(c.country)}</small></td><td class="n"><b>${r.pts}</b></td><td class="n">${r.j}</td><td class="n">${r.gp - r.gc}</td></tr>`; }).join('')}</tbody></table></div>`;
+    }).join('');
+    return `${cc.w ? winBox(g, cc.w) : ''}${seg}${info}${ko}<h3 class="cup-h">Fase de grupos</h3><div class="cc-grid">${groups}</div>`;
+  };
+  Object.assign(A.CHG, {
+    ncC(el) { A.st.ncC = el.value; A.st.ncR = null; A.render(); },
+    ncR(el) { A.st.ncR = Number(el.value); A.render(); }
+  });
+  A.ACT.ccZ = (d) => { A.st.ccZ = d.k; A.render(); };
+
   // Classificados para as copas continentais do ano seguinte (pela posição na 1ª divisão)
   const origEnd = P.endSeason;
   P.endSeason = function (g) {
@@ -218,5 +274,43 @@
     if (!P.isNormal(g)) return;
     for (const [c, w] of Object.entries(g.nc || {})) if (w.w) add(w.w, ncName(c), byTier([22, 12, 9, 7, 6, 5, 4, 3], P.topDivOf(c)));
     for (const [z, x] of Object.entries(g.cc || {})) if (x.w) add(x.w, P.CC[z].n, z === 'eu' ? 40 : 26);
+  };
+})(window.PFC);
+
+// ---------- Retrospectiva do fim da temporada (Carreira normal) ----------
+(function (P) {
+  const A = P.app, esc = P.esc;
+  P.normalSummary = function (g) {
+    const s = g.summary, me = P.club(g, g.user), h = g.hist[g.hist.length - 1];
+    const cl = (cid) => P.club(g, cid);
+    const myC = P.divCountry(me.div);
+    const mine = [];
+    if (s.nc && s.nc[myC] === g.user) mine.push('campeão da ' + P.ncName(myC));
+    for (const [z, w] of Object.entries(s.cc || {})) if (w === g.user) mine.push('campeão da ' + P.CC[z].n);
+    const sq = P.squad(g, g.user).filter((p) => p.s && p.s.g + p.s.cg > 0).sort((a, b) => (b.s.g + b.s.cg) - (a.s.g + a.s.cg));
+    const myTop = sq[0];
+    const cell = (cid) => { const c = cid && cl(cid); return c ? `<span class="club">${P.badge(c, 18)}<span class="show-sm">${esc(c.short)}</span><span class="nm-long">${esc(c.name)}</span></span>` : '–'; };
+    const champs = P.worldCountries().map((c) => {
+      const d = P.topDivOf(c), row = s.divs.find((x) => x.d === d);
+      return `<tr class="${c === myC ? 'me' : ''}"><td>${esc(P.countryName(c))}</td><td>${cell(row && row.champ)}</td><td>${cell(s.nc && s.nc[c])}</td></tr>`;
+    }).join('');
+    const mv = (ids, icon) => ids.map((cid) => `<span class="mv">${icon}${esc(cl(cid).short)}</span>`).join(' ');
+    const I = { up: '▲ ', down: '▼ ' };
+    const followedCs = P.worldCountries().filter((c) => P.followed(g, P.topDivOf(c)));
+    const moves = followedCs.map((c) => P.countryDivs(c).map((d) => { const x = s.divs.find((y) => y.d === d); return `<tr class="${d === me.div ? 'me' : ''}"><td>${esc(P.divName(d, 1))}</td><td>${esc(cl(x.champ).short)}</td><td>${mv(x.up, I.up) || '–'}</td><td>${mv(x.down, I.down) || '–'}</td></tr>`; }).join('')).join('');
+    const cc = Object.entries(s.cc || {}).map(([z, w]) => { const c = w && cl(w); return `<div class="rt-note">${c ? P.badge(c, 30) : ''}<div><span class="rt-lbl">${esc(P.CC[z].n)}</span><b>${esc(c ? c.name : '-')}</b></div></div>`; }).join('');
+    const bdo = g.bdo && g.bdo.length && g.bdo[g.bdo.length - 1].s === g.season && P.ballonTable ? `<h3 class="rt-h">Bola de Ouro ${g.season}</h3>${P.ballonTable(g, g.bdo[g.bdo.length - 1], 5)}` : '';
+    return `<section class="rt">
+      <div class="rt-band"><span>Retrospectiva</span><b>${g.season}</b></div>
+      <div class="rt-me">${P.badge(me, 48)}<div><span class="rt-lbl">O ano do ${esc(me.short || me.name)}</span><b>${esc(h.result)}</b><small>${h.pos}º lugar na ${esc(P.divName(h.div))}${mine.length ? ' · ' + esc(mine.join(' · ')) : ''}${myTop ? ` · artilheiro do time: ${esc(myTop.name)} (${myTop.s.g + myTop.s.cg})` : ''}</small></div></div>
+      <h3 class="rt-h">Campeões continentais</h3><div class="rt-notes">${cc}</div>
+      ${bdo}
+      <h3 class="rt-h">Campeões pelo mundo</h3>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>País</th><th>Liga</th><th>Copa</th></tr></thead><tbody>${champs}</tbody></table></div>
+      <h3 class="rt-h">Sobe e desce</h3>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Div</th><th>Campeão</th><th>Sobem</th><th>Descem</th></tr></thead><tbody>${moves}</tbody></table></div>
+      ${P.seasonExtra ? P.seasonExtra(g) : ''}
+      <p class="rt-foot">Na virada os jogadores envelhecem, jovens evoluem, veteranos caem de rendimento e alguns se aposentam. Os classificados para as copas continentais saem desta tabela final.</p>
+      <button class="btn primary" data-a="newSeason">Começar temporada ${g.season + 1}</button></section>`;
   };
 })(window.PFC);

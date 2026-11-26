@@ -2287,3 +2287,21 @@ img.badge-img { object-fit: contain; max-width: 100%; }
 .bdo-tbl tr.bdo-1 td:first-child { color: #b8860b; font-size: 1.1rem; }
 .bdo .head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .bdo-y { width: auto; min-height: 32px; padding: 2px 8px; }
+
+/* Carreira normal: copas continentais */
+.cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.cc-gr .tbl td { padding-block: 4px; }
+.cc-gr .label { margin-bottom: 4px; }
+.cup-h { font-family: var(--f-display); font-size: 1.05rem; margin: 14px 0 8px; }
+.nc-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.nc-mode { text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; cursor: pointer; font: inherit; }
+.nc-mode b { font-family: var(--f-display); font-size: 1.1rem; }
+.nc-mode small { color: var(--muted); font-size: .82rem; line-height: 1.35; }
+.nc-mode.on { border-color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.nc-follow { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+.nc-fl { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: .9rem; cursor: pointer; }
+.nc-fl.on { border-color: var(--accent); background: var(--surface-2); }
+@media (max-width: 560px) { .nc-modes { grid-template-columns: 1fr; } }
+.cal-cell.nc { box-shadow: inset 0 3px 0 var(--accent); }
+.cal-cell.cc { box-shadow: inset 0 3px 0 var(--bad); }
+.nc-fl input[type=checkbox] { width: 16px; height: 16px; min-height: 0; margin: 0; flex: none; accent-color: var(--accent); }

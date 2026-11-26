@@ -139,10 +139,10 @@
     g.chem = {}; g.train = null; g.offers = []; g.fired = null; g.jobs = null;
     g.board = { conf: 60 }; P.boardReset(g);
     P.dirty(g);
-    P.news(g, `${g.manager} deixa o ${old.name} e assume o ${nc.name} (${nc.div}ª divisão).`, 'good');
+    P.news(g, `${g.manager} deixa o ${old.name} e assume o ${nc.name} (${P.divName(nc.div)}).`, 'good');
     if (P.flash) P.flash(g, wasFired
-      ? { pri: 5, ttl: 3, kicker: 'Troca de comando', head: `Demitido no ${old.name}, ${g.manager} recomeça no ${nc.name}`, dek: `Depois da queda, o técnico aceita o desafio na ${nc.div}ª divisão. A diretoria quer: ${P.expectation(g, cid).toLowerCase()}.` }
-      : { pri: 5, ttl: 3, kicker: 'Troca de comando', head: `${g.manager} troca o ${old.name} pelo ${nc.name}`, dek: `O técnico aceita a proposta e assume na ${nc.div}ª divisão. A diretoria quer: ${P.expectation(g, cid).toLowerCase()}.` });
+      ? { pri: 5, ttl: 3, kicker: 'Troca de comando', head: `Demitido no ${old.name}, ${g.manager} recomeça no ${nc.name}`, dek: `Depois da queda, o técnico aceita o desafio na ${P.divName(nc.div)}. A diretoria quer: ${P.expectation(g, cid).toLowerCase()}.` }
+      : { pri: 5, ttl: 3, kicker: 'Troca de comando', head: `${g.manager} troca o ${old.name} pelo ${nc.name}`, dek: `O técnico aceita a proposta e assume na ${P.divName(nc.div)}. A diretoria quer: ${P.expectation(g, cid).toLowerCase()}.` });
   };
 
   // ---------- Telas ----------
@@ -172,7 +172,7 @@
     if (!g.board) P.boardReset(g);
     const b = g.board, B = boardD(g), col = b.conf >= 60 ? 'var(--good)' : b.conf >= B.limit + 10 ? 'var(--warn)' : 'var(--bad)';
     let jobs = '';
-    if (g.over && g.jobs && g.jobs.length) jobs = `<div class="msg good" style="margin-top:10px">Propostas de emprego:</div>${g.jobs.map((id) => { const c = P.club(g, id); return `<div class="staff-row">${P.badge(c, 26)}<div style="flex:1;min-width:0"><b>${esc(c.name)}</b><div class="muted" style="font-size:.85rem">${c.div}ª divisão · ${esc(P.expectation(g, id))}</div></div><button class="btn sm primary" data-a="jobTake" data-id="${id}">Aceitar</button></div>`; }).join('')}`;
+    if (g.over && g.jobs && g.jobs.length) jobs = `<div class="msg good" style="margin-top:10px">Propostas de emprego:</div>${g.jobs.map((id) => { const c = P.club(g, id); return `<div class="staff-row">${P.badge(c, 26)}<div style="flex:1;min-width:0"><b>${esc(c.name)}</b><div class="muted" style="font-size:.85rem">${P.divName(c.div)} · ${esc(P.expectation(g, id))}</div></div><button class="btn sm primary" data-a="jobTake" data-id="${id}">Aceitar</button></div>`; }).join('')}`;
     return `<div class="card"><div class="head"><span class="label">Diretoria (${esc(B.n.toLowerCase())})</span><span class="label">Meta: ${esc(b.obj)} · até ${b.target}º</span></div>
       <div class="bar"><span>Confiança</span><span class="tr"><i style="width:${b.conf}%;background:${col}"></i></span><b class="num">${b.conf}</b></div>
       <p class="muted" style="font-size:.82rem;margin:8px 0 0">Abaixo de ${B.limit} você é demitido. Vitórias, posição acima da meta e acesso aumentam a confiança.</p>${jobs}</div>`;
@@ -182,7 +182,7 @@
     const from = P.club(g, g.fired.from);
     A.openSheet(`<div class="bar-top"><h2>Você foi demitido</h2></div>
       <p style="margin:0">A diretoria do ${esc(from.name)} decidiu encerrar seu trabalho. Escolha um novo clube para continuar a carreira:</p>
-      ${g.fired.offers.map((id) => { const c = P.club(g, id); return `<div class="staff-row">${P.badge(c, 30)}<div style="flex:1;min-width:0"><b>${esc(c.name)}</b><div class="muted" style="font-size:.85rem">${c.div}ª divisão · ${esc(P.countryName(c.country))}</div></div><button class="btn sm primary" data-a="jobTake" data-id="${id}">Assumir</button></div>`; }).join('')}`);
+      ${g.fired.offers.map((id) => { const c = P.club(g, id); return `<div class="staff-row">${P.badge(c, 30)}<div style="flex:1;min-width:0"><b>${esc(c.name)}</b><div class="muted" style="font-size:.85rem">${P.divName(c.div)} · ${esc(P.countryName(c.country))}</div></div><button class="btn sm primary" data-a="jobTake" data-id="${id}">Assumir</button></div>`; }).join('')}`);
     const bg = document.querySelector('.sheet-bg'); if (bg) bg.removeAttribute('data-a');
   };
 

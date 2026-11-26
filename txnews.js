@@ -81,7 +81,7 @@
       const top = buys.slice().sort((a, b) => b.fee - a.fee)[0];
       const mine = w.list.filter((x) => x.to === g.user || x.from === g.user);
       const spent = mine.filter((x) => x.to === g.user).reduce((s, x) => s + x.fee, 0), got = mine.filter((x) => x.from === g.user).reduce((s, x) => s + x.fee, 0);
-      if (top) P.news(g, `Fecha a janela: ${buys.length} ${buys.length === 1 ? 'venda' : 'vendas'} na Ultraliga. A maior foi ${top.n} (${P.club(g, top.from) ? P.club(g, top.from).short : '?'} → ${P.club(g, top.to) ? P.club(g, top.to).short : '?'}) por ${P.money(top.fee)}.`, '');
+      if (top) P.news(g, `Fecha a janela: ${buys.length} ${buys.length === 1 ? 'venda' : 'vendas'} ${P.isNormal(g) ? 'no mercado' : 'na Ultraliga'}. A maior foi ${top.n} (${P.club(g, top.from) ? P.club(g, top.from).short : '?'} → ${P.club(g, top.to) ? P.club(g, top.to).short : '?'}) por ${P.money(top.fee)}.`, '');
       if (mine.length) P.news(g, `Balanço do ${P.club(g, g.user).name} na janela: ${(() => { const a = mine.filter((x) => x.to === g.user).length, b = mine.filter((x) => x.from === g.user).length; return `${a} ${a === 1 ? 'chegada' : 'chegadas'}, ${b} ${b === 1 ? 'saída' : 'saídas'}`; })()}, ${P.money(spent)} gastos e ${P.money(got)} recebidos.`, spent > got ? 'warn' : 'good');
       if (P.flash && top && top.fee >= 15e6) P.flash(g, { pri: 1, ttl: 1, kicker: 'Mercado · fim da janela', head: `${top.n} foi a contratação da janela`, dek: `${P.money(top.fee)} pagos pelo ${P.club(g, top.to).name}. Ao todo, ${buys.length} transferências pagas na Ultraliga.` });
     }

@@ -205,3 +205,36 @@
     });
   };
 })(window.PFC);
+
+// ---------- Criação de carreira: escolher o modo e as ligas acompanhadas ----------
+(function (P) {
+  const A = P.app, esc = P.esc;
+  const origGen = P.generateDatabase;
+  P.generateDatabase = function () { const db = origGen.apply(this, arguments); P.setWorld(db); return db; };
+  P.modePick = function () {
+    const s = A.setup, normal = P.isNormal(s.db);
+    const cs = P.WORLD_DEF.map((w) => w.c), fol = s.follow || (s.follow = []);
+    const card = (k, t, d) => `<button class="nc-mode ${(k === 'n') === normal ? 'on' : ''}" data-a="ncMode" data-k="${k}" aria-pressed="${(k === 'n') === normal}"><b>${t}</b><small>${d}</small></button>`;
+    return `<div class="field"><span class="jr-step">Modo de jogo</span>
+      <div class="nc-modes">${card('u', 'Ultraliga', '160 clubes de vários países numa pirâmide só, de 8 divisões. Copa Ultra, Supercopa e copas por divisão.')}
+      ${card('n', 'Carreira normal', '15 países com as suas ligas (40 divisões, 738 clubes). Acesso e rebaixamento dentro do país, copa nacional e copas continentais.')}</div></div>
+      ${normal ? `<div class="field"><span class="jr-step">Ligas para acompanhar de perto</span>
+        <div class="nc-follow">${cs.map((c) => `<label class="nc-fl ${fol.includes(c) ? 'on' : ''}"><input type="checkbox" data-a="ncFollow" data-k="${c}" ${fol.includes(c) ? 'checked' : ''}> ${esc(P.countryName(c))}</label>`).join('')}</div>
+        <small class="jr-note">O país do seu clube é sempre acompanhado. Nas ligas acompanhadas você vê tabela, rodadas, copa e recebe propostas dos clubes. As outras jogam em silêncio: os resultados aparecem só na retrospectiva do fim da temporada, e os clubes delas não fazem propostas, mas os jogadores podem ser contratados. Menos ligas acompanhadas deixam o jogo mais rápido.</small></div>` : ''}`;
+  };
+  Object.assign(A.ACT, {
+    ncMode(d) {
+      const s = A.setup, normal = P.isNormal(s.db);
+      if ((d.k === 'n') === normal) return;
+      if (d.k === 'n') { s.dbU = s.db; s.db = s.dbN || (s.dbN = P.generateWorld(2027)); s.divF = P.topDivOf('BRA'); }
+      else { s.db = s.dbU || P.generateDatabase(2027); s.dbU = null; s.divF = 1; }
+      P.setWorld(s.db); s.club = null; s.q = '';
+      A.render();
+    },
+    ncFollow(d) {
+      const s = A.setup, f = s.follow || (s.follow = []);
+      const i = f.indexOf(d.k); if (i >= 0) f.splice(i, 1); else f.push(d.k);
+      A.render();
+    }
+  });
+})(window.PFC);

@@ -1030,7 +1030,7 @@
 
     // 7. dados da animação (antes de enxugar o que não precisa ficar salvo)
     const anim = results.map(({ it }) => ({
-      h: it.m.h, a: it.m.a, comp: it.comp, div: it.div, pen: it.m.pen || null,
+      h: it.m.h, a: it.m.a, comp: it.comp, div: it.div, pen: it.m.pen || null, ctry: it.ctry, z: it.z,
       goals: it.m.ev.filter((e) => e.t === 'gol').map((e) => ({ m: e.m, x: e.x, s: e.s })),
       full: it.m
     }));
@@ -1043,7 +1043,7 @@
     if (g.week >= g.cal.length) P.endSeason(g);
     else if (g.cal[g.week].t !== 'lg') P.stepMatches(g); // sorteia copa/playoff da próxima semana
     // rodadas da Taça Raízes sem jogo seu passam direto (não viram uma semana vazia para você)
-    while (!g.over && g.week < g.cal.length && (g.cal[g.week].t === 'rz' || g.cal[g.week].t === 'nc' || g.cal[g.week].t === 'cc') && !P.userMatch(g)) P.endWeek(g, P.beginWeek(g, false));
+    while (!g.over && g.week < g.cal.length && (g.cal[g.week].t === 'rz' || g.cal[g.week].t === 'nc' || g.cal[g.week].t === 'cc' || (g.cal[g.week].t === 'lg' && P.isNormal && P.isNormal(g))) && !P.userMatch(g)) P.endWeek(g, P.beginWeek(g, false));
     return { step, anim };
   };
 

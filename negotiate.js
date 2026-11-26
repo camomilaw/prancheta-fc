@@ -261,7 +261,7 @@
     }
     // 2) jogador
     const demand = P.playerDemand(g, p, g.user);
-    if (demand == null) { st.msg = `${p.name} não quer jogar na ${me.div}ª divisão.`; say(m, 'jog', 'Não tenho interesse nesse projeto.'); return; }
+    if (demand == null) { st.msg = `${p.name} não quer jogar na ${P.divName(me.div)}.`; say(m, 'jog', 'Não tenho interesse nesse projeto.'); return; }
     const need = r500(demand * (st.years >= 3 ? 0.95 : 1)); // contrato mais longo: aceita um pouco menos
     say(m, 'eu', `${P.money(st.wage)}/mês por ${st.years} ${st.years === 1 ? 'ano' : 'anos'}.`);
     if (st.wage < need) {

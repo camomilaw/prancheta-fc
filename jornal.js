@@ -56,18 +56,18 @@
     const pos = idx + 1, n = tb.length;
     const v = { me: me.name, mgr: g.manager, season: g.season };
     const seed = g.season * 31 + g.week * 7;
-    const kicker = `${me.div}ª divisão · ${g.over ? 'Fim da temporada ' + g.season : P.stepLabel(g.cal[Math.min(g.week, g.cal.length - 1)])}`;
+    const kicker = `${P.divName(me.div)} · ${g.over ? 'Fim da temporada ' + g.season : P.stepLabel(g.cal[Math.min(g.week, g.cal.length - 1)])}`;
     let head;
 
     const fl = activeFlash(g);
     if (fl) return { kicker: fl.kicker, head: fl.head, dek: fl.dek, pos, pts: row.pts, sg: row.gp - row.gc, j: row.j, flash: true };
     if (g.over && g.hist && g.hist.length) {
       const h = g.hist[g.hist.length - 1];
-      head = h.result === 'Campeão da Ultraliga' ? `${v.me} é campeão da Ultraliga!`
-        : h.result === 'Campeão e acesso' ? `Campeão! ${v.me} sobe para a ${h.div - 1}ª divisão`
-        : h.result === 'Acesso' ? `Acesso! ${v.me} sobe para a ${h.div - 1}ª divisão`
-        : h.result === 'Rebaixado' ? `Rebaixado: ${v.me} cai para a ${h.div + 1}ª divisão`
-        : `${v.me} fecha o ano em ${h.pos}º na ${h.div}ª divisão`;
+      head = h.result === 'Campeão da Ultraliga' ? `${v.me} é campeão da Ultraliga!` : h.result === 'Campeão nacional' ? `${v.me} é campeão ${P.countryPrep(P.divCountry(h.div))}!`
+        : h.result === 'Campeão e acesso' ? `Campeão! ${v.me} sobe para a ${P.divName(P.divAbove(h.div) || h.div - 1)}`
+        : h.result === 'Acesso' ? `Acesso! ${v.me} sobe para a ${P.divName(P.divAbove(h.div) || h.div - 1)}`
+        : h.result === 'Rebaixado' ? `Rebaixado: ${v.me} cai para a ${P.divName(P.divBelow(h.div) || h.div + 1)}`
+        : `${v.me} fecha o ano em ${h.pos}º na ${P.divName(h.div)}`;
     } else {
       const lm = lastMatch(g);
       if (!lm) head = fill(pick(OPEN, seed), v);
@@ -87,7 +87,7 @@
     }
 
     // Linha fina: situação na tabela + próximo compromisso
-    let dek = `Sob o comando de ${g.manager}, o ${me.name.length > 16 ? me.short : me.name} ${row.j ? `ocupa o ${pos}º lugar da ${me.div}ª divisão, com ${row.pts} ponto${row.pts === 1 ? '' : 's'}` : `estreia na ${me.div}ª divisão`}`;
+    let dek = `Sob o comando de ${g.manager}, o ${me.name.length > 16 ? me.short : me.name} ${row.j ? `ocupa o ${pos}º lugar da ${P.divName(me.div)}, com ${row.pts} ponto${row.pts === 1 ? '' : 's'}` : `estreia na ${P.divName(me.div)}`}`;
     const nx = !g.over && P.userMatch(g, g.cal[g.week]);
     if (nx) {
       const home = nx.m.h === g.user, op = P.club(g, home ? nx.m.a : nx.m.h);
