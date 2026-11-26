@@ -719,11 +719,12 @@
       let vw = null;
       if (views) { vw = views.find((v) => v.k === st.dvw) || views[0]; st.dvw = vw.k; }
       const tb = vw ? vw.rows() : P.table(g, d), n = tb.length;
+      let zoneR = null;
       const zoneOf = vw && P.zoneFor2 ? (dd, i, nn) => P.zoneFor2(g, dd, vw.k, i, nn) : zoneOfU;
       body = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">P</th><th class="n">J</th><th class="n">V</th><th class="n">E</th><th class="n">D</th><th class="n hide-sm">GP</th><th class="n hide-sm">GC</th><th class="n">SG</th><th class="hide-sm">Últimos</th></tr></thead><tbody>
-        ${tb.map((r, i) => {
-          const c = club(r.cid);
-          return `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${zoneOf(d, i, n)}">${i + 1}</span></td>
+        ${(() => { let k = 0; const rI = tb.map((r) => (P.isRes && P.isRes(g, r.cid) ? -1 : k++)); zoneR = (i) => { if (i >= n / 2) return zoneOf(d, i, n); if (rI[i] < 0) return ''; return zoneOf(d, rI[i], n); }; return ''; })()}${tb.map((r, i) => {
+  const c = club(r.cid);
+          return `<tr class="${r.cid === g.user ? 'me' : ''}"><td class="n"><span class="zone ${zoneR(i)}">${i + 1}</span></td>
             <td><button class="club club-btn" data-a="clubInfo" data-id="${c.id}">${P.badge(c, 20)}<span class="show-sm">${esc(c.short)}</span><span class="nm-long">${esc(c.name)}</span></button></td>
             <td class="n"><b>${r.pts}</b></td><td class="n">${r.j}</td><td class="n">${r.v}</td><td class="n">${r.e}</td><td class="n">${r.d}</td>
             <td class="n hide-sm">${r.gp}</td><td class="n hide-sm">${r.gc}</td><td class="n">${r.gp - r.gc}</td>

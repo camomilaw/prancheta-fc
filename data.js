@@ -569,6 +569,7 @@
       if (Array.isArray(pc.colors) && pc.colors.length >= 2) c.colors = pc.colors.slice(0, 2);
       if (pc.logo === null) delete c.logo; else if (pc.logo && P.isLogo && P.isLogo(pc.logo)) c.logo = pc.logo; // escudo em imagem
       if (pc.rep) c.rep = P.clamp(Number(pc.rep) || c.rep, 1, 100);
+      if (pc.reserve !== undefined) { if (pc.reserve) c.reserve = true; else delete c.reserve; } // time B: não sobe de divisão
       if (Array.isArray(pc.players) && pc.players.length) {
         for (const p of Object.values(db.players)) if (p.clubId === c.id) delete db.players[p.id];
         const made = pc.players.filter((row) => Array.isArray(row) && row.length >= 5 && P.POS.includes(row[1])).map((row) => P.realPlayer(r, row, c.id));

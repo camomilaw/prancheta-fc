@@ -108,6 +108,10 @@
     return Object.values(rows).sort((a, b) => b.pts - a.pts || b.v - a.v || (b.gp - b.gc) - (a.gp - a.gc) || b.gp - a.gp || name(a.cid).localeCompare(name(b.cid)));
   };
   const ranks = (t) => t.map((x) => x.cid);
+  // times B (reserva) não sobem: ficam fora das vagas de acesso, playoffs e repescagens contra a divisão de cima
+  P.isRes = (g, cid) => { const c = P.club(g, cid); return !!(c && c.reserve); };
+  P.noRes = (g, arr) => arr.filter((x) => !P.isRes(g, x && x.cid !== undefined ? x.cid : x));
+  P.rankUp = (g, d) => P.noRes(g, P.rank2(g, d));
   const blockSteps = (g, d, k) => (g.dv[d] && g.dv[d].bl[k]) || null;
   const blockDone = (g, d, k) => { const b = blockSteps(g, d, k); return !!b && b.filled !== false && b.steps.every((s) => (g.lg[d][s] || []).every((m) => m.done)); };
   const blockTbl = (g, d, k, ids) => { const b = blockSteps(g, d, k); return P.tbl(g, d, ids, b.steps[0], b.steps[b.steps.length - 1]); };
@@ -274,12 +278,12 @@
     if (K.kind === 'po' && K.spec && !K.nacR && !K.serieD && !K.playout) {
       const [a, b] = K.spec.r;
       if (dv && dv.groups && dv.t === 'grp') {
-        const tabs = dv.groups.map((ids) => P.tbl(g, d, ids));
+        const tabs = dv.groups.map((ids) => P.noRes(g, P.tbl(g, d, ids)));
         const pool = [];
         tabs.forEach((t) => t.slice(a - 1, b).forEach((row, i) => pool.push({ cid: row.cid, pos: a + i, pts: row.pts })));
         if (K.spec.best4) tabs.map((t) => t[b]).filter(Boolean).sort((x, y) => y.pts - x.pts || (y.gp - y.gc) - (x.gp - x.gc)).slice(0, K.spec.best4).forEach((row) => pool.push({ cid: row.cid, pos: b + 1, pts: row.pts }));
         S = pool.sort((x, y) => x.pos - y.pos || y.pts - x.pts).map((x) => x.cid);
-      } else S = P.rank2(g, d).slice(a - 1, b);
+      } else S = P.rankUp(g, d).slice(a - 1, b);
       if (K.spec.upper && P.divAbove(d)) { const up = P.rank2(g, P.divAbove(d))[K.spec.upper - 1]; if (up) S = [up].concat(S); }
     }
     if (K.playout) S = P.rank2(g, d).slice(K.spec.r[0] - 1, K.spec.r[1]);
@@ -312,7 +316,7 @@
       const up = P.rank2(g, d)[K.rel.pos - 1], below = P.divBelow(d);
       let low = null;
       if (K.rel.vs === 'po') { const pk = g.ko['po' + below]; low = pk && pk.w ? [].concat(pk.w)[0] : null; }
-      else low = P.rank2(g, below)[K.rel.vs - 1];
+      else low = P.rankUp(g, below)[K.rel.vs - 1];
       S = up && low ? [up, low] : [];
     }
     if (K.fixedSeeds) S = K.fixedSeeds.slice();
@@ -636,7 +640,7 @@
         fill(g, d, 'p2', mergeN(dv.quad.map((q) => P.makeFixtures(q, Math.random))));
       }
       if (dv.t === 'grp2' && !dv.promo && blockDone(g, d, 'p1')) {
-        dv.promo = [].concat(...dv.groups.map((ids) => blockTbl(g, d, 'p1', ids).slice(0, 4).map((x) => x.cid)));
+        dv.promo = [].concat(...dv.groups.map((ids) => P.noRes(g, blockTbl(g, d, 'p1', ids)).slice(0, 4).map((x) => x.cid)));
         fill(g, d, 'p2', P.makeFixtures(dv.promo, Math.random));
       }
       if (dv.t === 'uru' && !dv.inter && blockDone(g, d, 'ap')) {
@@ -730,12 +734,12 @@
         const L = W.lv[i], dv = g.dv[d] || {}, rk = P.rank2(g, d), above = i > 0, below = i < divs.length - 1;
         if (L.closed) return;
         if (above) {
-          if (dv.t === 'grp') dv.groups.forEach((ids) => P.tbl(g, d, ids).slice(0, L.up || 0).forEach((x) => up[i].add(x.cid)));
-          else if (dv.t === 'serieC') rk.slice(0, 4).forEach((c) => up[i].add(c));
+          if (dv.t === 'grp') dv.groups.forEach((ids) => P.noRes(g, P.tbl(g, d, ids)).slice(0, L.up || 0).forEach((x) => up[i].add(x.cid)));
+          else if (dv.t === 'serieC') P.noRes(g, rk).slice(0, 4).forEach((c) => up[i].add(c));
           else if (dv.t === 'serieD') { const K = g.ko['sd' + d]; const rq = K && K.rounds[3]; if (rq) rq.ties.forEach((t) => t.w && up[i].add(t.w)); }
           else if (dv.t === 'conf') { const w = koW(g, 'pf' + d); if (w) up[i].add(w); }
           else if (dv.t === 'nac') { [koW(g, 'nf' + d), koW(g, 'nr' + d)].forEach((w) => w && up[i].add(w)); }
-          else rk.slice(0, L.up || 0).forEach((c) => up[i].add(c));
+          else P.noRes(g, rk).slice(0, L.up || 0).forEach((c) => up[i].add(c));
           const po = g.ko['po' + d];
           if (po && po.w && !(L.po && L.po.to === 'rel')) [].concat(po.w).forEach((w) => {
             const upperClub = L.po.upper ? P.rank2(g, divs[i - 1])[L.po.upper - 1] : null;
@@ -769,7 +773,7 @@
         if (W.lv[i].closed) continue;
         const rkUp = P.rank2(g, divs[i]), rkLo = P.rank2(g, divs[i + 1]);
         while (U.size > D.size) { const c = rkUp.slice().reverse().find((x) => !D.has(x) && !up[i].has(x)); if (!c) break; D.add(c); }
-        while (D.size > U.size) { const c = rkLo.find((x) => !U.has(x) && !down[i + 1].has(x)); if (!c) break; U.add(c); }
+        while (D.size > U.size) { const c = rkLo.find((x) => !U.has(x) && !down[i + 1].has(x) && !P.isRes(g, x)); if (!c) break; U.add(c); }
       }
       divs.forEach((d, i) => {
         up[i].forEach((c) => { moves[c] = divs[i - 1]; });
