@@ -55,11 +55,12 @@
     const from = p.clubId, oldCtr = p.ctr;
     if (fee) { P.pay(g, toCid, -fee, kind === 'loan' ? 'Empréstimos' : 'Contratações'); if (from) P.pay(g, from, fee, kind === 'loan' ? 'Empréstimos' : 'Vendas'); }
     p.clubId = toCid; p.wage = wage; p.ctr = g.season + years; p.listed = false; p.loanList = false;
+    P.sqMove(g, p, from, toCid);
     if (toCid === g.user && P.coachHas && P.coachHas(g, 'agregador')) p.mor = Math.max(30, (p.mor || 70) - 6); // chega estranhando o grupo
     p.mor = Math.max(p.mor, 70); p.cond = Math.max(p.cond, 80);
     delete p.loan;
     if (kind === 'loan') { p.loan = { from, till: g.season, wage: p.wage }; p.ctr = Math.max(oldCtr || 0, g.season); } // empréstimo não mexe no contrato
-    P.dirty(g);
+    if (!g._sq) P.dirty(g);
     if (from && g.tac[from]) P.fixXI(g, from);
     if (g.tac[toCid]) P.fixXI(g, toCid);
     g.tx = g.tx || [];

@@ -122,7 +122,15 @@
     for (const k in w) s += r[k] * w[k];
     return P.clamp(Math.round(s * 5 * P.fitP(p, pos)), 1, 99);
   };
-  P.ovr = (p) => P.ovrAt(p, p.pos);
+  // força na posição de origem, guardada até a próxima mudança de atributos (P._ovv: semana, treino, edição)
+  P.ovr = (p) => {
+    const c = p._ov;
+    if (c && c[0] === P._ovv && c[1] === p.pos) return c[2];
+    const o = P.ovrAt(p, p.pos);
+    if (c) { c[0] = P._ovv; c[1] = p.pos; c[2] = o; }
+    else Object.defineProperty(p, '_ov', { value: [P._ovv, p.pos, o], writable: true, configurable: true, enumerable: false });
+    return o;
+  };
   P.condF = (p) => 0.75 + 0.25 * p.cond / 100;
   P.morF = (p) => 0.94 + 0.12 * p.mor / 100;
   P.available = (p) => !p.inj && !p.susp;
@@ -227,8 +235,15 @@
     if (f) m.set(cid, f);
     return f;
   };
-  P._ovv = 0; // versão da força dos clubes (muda com transferências e a cada semana)
+  P._ovv = 0; // versão da força dos jogadores (muda a cada semana, com treino e ao salvar)
+  P._cov = 0; // versão da força média dos clubes (uma vez por semana)
   P.dirty = (g) => { if (g) g._sq = null; };
+  // muda um jogador de clube sem refazer o índice de elencos inteiro (o mundo grande tem 30 mil jogadores)
+  P.sqMove = function (g, p, from, to) {
+    const m = g._sq; if (!m) return;
+    if (from && m[from]) { const i = m[from].indexOf(p); if (i >= 0) m[from].splice(i, 1); }
+    if (to) (m[to] = m[to] || []).push(p);
+  };
   P.squad = function (g, cid) {
     if (!g._sq) {
       const m = {};
@@ -238,9 +253,9 @@
     return (g._sq[cid] || []).slice();
   };
   P.clubOvrs = function (db) {
-    if (db._ov && db._ov.v === P._ovv) return Object.assign({}, db._ov.o);
+    if (db._ov && db._ov.v === P._cov) return Object.assign({}, db._ov.o);
     const out = calcOvrs(db);
-    Object.defineProperty(db, '_ov', { value: { v: P._ovv, o: out }, writable: true, configurable: true, enumerable: false });
+    Object.defineProperty(db, '_ov', { value: { v: P._cov, o: out }, writable: true, configurable: true, enumerable: false });
     return Object.assign({}, out);
   };
   function calcOvrs(db) {
@@ -866,13 +881,13 @@
     ctx.results.push({ it, r });
   };
   P.beginWeek = function (g, interactive) {
-    P._ovv++; // atributos mudam com treino e jogos: força recalculada uma vez por semana
+    P._ovv++; P._cov++; // atributos mudam com treino e jogos: força recalculada uma vez por semana
     const step = g.cal[g.week];
     const items = P.stepMatches(g, step);
     const ovrs = P.clubOvrs(g.db);
     const userDiv = (P.club(g, g.user) || {}).div;
     const warn = [];
-    if (P.trainWeek) P.trainWeek(g, step);
+    if (P.trainWeek) { P.trainWeek(g, step); P._ovv++; }
 
     // 1. escalações (ligas silenciosas não precisam: o placar sai direto da força dos times)
     const quiet = (it) => P.isNormal && P.isNormal(g) && it.m.h !== g.user && it.m.a !== g.user && P.silentClub(g, it.m.h) && P.silentClub(g, it.m.a);
@@ -1235,7 +1250,7 @@
       }
       p.s = P.blankStats(); p.cs = {}; p.cond = 100; p.mor = 70; p.inj = 0; p.susp = 0; p.ylw = 0;
     }
-    P.dirty(g); P._ovv++;
+    P.dirty(g); P._ovv++; P._cov++;
     g.season++;
     // elenco mínimo: se faltar gente, jovens da base sobem
     const mineNow = P.squad(g, g.user);

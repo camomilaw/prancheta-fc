@@ -853,7 +853,7 @@
       const ties = rd.ties.slice().sort((a, b) => ((b.a1 === g.user || b.a2 === g.user) ? 1 : 0) - ((a.a1 === g.user || a.a2 === g.user) ? 1 : 0));
       return `<h3 class="cup-h">${esc(nm)}${K.legs[ri] === 2 ? ' <small class="muted">(ida e volta)</small>' : ''}</h3><div class="others">${ties.map((t) => {
         if (t.bye) return `<div class="og"><span class="hm"><span class="tn">${esc(club(g, t.a1).short)}</span> ${P.badge(club(g, t.a1), 18)}</span><span class="s num">passa direto</span><span class="aw"></span></div>`;
-        return t.m.map((m, l) => row(g, m, `${title} · ${nm}${t.m.length > 1 ? (l ? ' (volta)' : ' (ida)') : ''}`)).join('') + (t.w && t.m.length > 1 ? `<div class="muted" style="font-size:.78rem;text-align:center;margin:-2px 0 6px">Classificado: <b>${esc(club(g, t.w).short)}</b>${t.pen ? ' nos pênaltis' : ''}</div>` : '');
+        return `<div class="tie">${t.m.map((m, l) => row(g, m, `${title} · ${nm}${t.m.length > 1 ? (l ? ' (volta)' : ' (ida)') : ''}`)).join('')}${t.w && t.m.length > 1 ? `<div class="muted tie-w">Classificado: <b>${esc(club(g, t.w).short)}</b>${t.pen ? ' nos pênaltis' : ''}</div>` : ''}</div>`;
       }).join('')}</div>`;
     }).reverse().join('');
   }
@@ -961,5 +961,6 @@
   };
 
   // Criação: o modo "Carreira normal" agora usa os formatos reais
+  P.generateWorld1 = P.generateWorld; // mundo antigo (só para testes e saves antigos)
   P.generateWorld = P.generateWorld2;
 })(window.PFC);

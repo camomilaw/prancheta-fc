@@ -55,7 +55,15 @@
   // Transformar a carreira em texto pesa (na Carreira normal são ~11 MB): junta os saves seguidos
   // de cliques rápidos num só, feito logo depois que a tela responde. Ao sair do app grava na hora.
   let later = null, small = null;
-  const textNow = () => { if (later) { clearTimeout(later.t); const { n, g } = later; later = null; g.__at = Date.now(); small = null; pending = { n, text: JSON.stringify(g) }; } };
+  const textNow = () => { if (later) { clearTimeout(later.t); const { n, g } = later; later = null; writeSlotMeta(n, g); g.__at = Date.now(); small = null; pending = { n, text: JSON.stringify(g) }; } };
+  // resumo do espaço (capa): também fica para depois do clique, porque a manchete e os números pesam
+  function writeSlotMeta(n, g) {
+    const c = P.club(g, g.user); if (!c) return;
+    let hl = null; try { hl = P.headline ? P.headline(g) : null; } catch (e) { hl = null; }
+    meta.s[n] = { mgr: g.manager, club: c.name, badge: P.badge(c, 48), div: c.div, dn: P.divName(c.div), mode: P.isNormal(g) ? 'n' : 'u', season: g.season, week: g.week, over: !!g.over, at: Date.now(), head: hl && hl.head, dek: hl && hl.dek, x: P.frontExtra ? (() => { try { return P.frontExtra(g); } catch (e) { return null; } })() : null };
+    meta.active = n;
+    writeMeta();
+  }
   const flushSoon = () => { if (small && !later && A.g && A.slot === small.n) A.save(); textNow(); flush(); };
   // Save leve: mudanças só de tática/escalação gravam num cantinho à parte (rápido),
   // que é aplicado por cima do save completo ao abrir. O save completo vem no próximo jogo ou ao sair.
@@ -85,13 +93,10 @@
   }
   A.slot = null;
   A.save = () => {
+    P._ovv++; P._cov++;
     const g = A.g; if (!g) return;
     if (!A.slot) A.slot = A.setup.slot || firstFree() || 1;
-    const c = P.club(g, g.user);
-    let hl = null; try { hl = P.headline ? P.headline(g) : null; } catch (e) { hl = null; }
-    meta.s[A.slot] = { mgr: g.manager, club: c.name, badge: P.badge(c, 48), div: c.div, dn: P.divName(c.div), mode: P.isNormal(g) ? 'n' : 'u', season: g.season, week: g.week, over: !!g.over, at: Date.now(), head: hl && hl.head, dek: hl && hl.dek, x: P.frontExtra ? (() => { try { return P.frontExtra(g); } catch (e) { return null; } })() : null };
-    meta.active = A.slot;
-    writeMeta();
+    if (!meta.s[A.slot]) writeSlotMeta(A.slot, g); // espaço novo: aparece na capa na hora
     if (later) clearTimeout(later.t);
     // não grava no meio de um toque/arrasto (a gravação pesada travaria o movimento)
     const fire = () => { if (down) { later.t = setTimeout(fire, 400); return; } flushSoon(); };

@@ -7,6 +7,35 @@
   const avg = (p) => (p.s.j ? p.s.nt / p.s.j : 0);
 
   // Chance de vitória: simula o jogo várias vezes sem alterar nada no save
+  const sigOf = (g, m) => { const t = g.tac[g.user]; return [g.season, g.week, m.h, m.a, t.xi.join(','), t.men, t.pre, JSON.stringify(t.ins || {}), JSON.stringify(t.xy || ''), JSON.stringify(t.roles || '')].join('|'); };
+  // Mesma previsão, calculada aos poucos (não trava a tela inicial; cada simulação completa é pesada)
+  let job = null;
+  P.predictAsync = function (g, m, n, done) {
+    const sig = sigOf(g, m);
+    if (g._pred && g._pred.sig === sig) { done(g._pred.r); return true; }
+    if (job && job.sig === sig) { job.cbs.push(done); return false; }
+    const J = job = { sig, i: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, cbs: [done] };
+    const home = m.h === g.user;
+    const step = () => {
+      if (job !== J || A.g !== g) return;
+      const t = g.tac[g.user], saved = t.xi.slice();
+      if (t.auto) t.xi = P.autoXI(g, g.user, t.f); else P.fixXI(g, g.user);
+      const end = Math.min(n, J.i + 12);
+      for (; J.i < end; J.i++) {
+        const r = P.simulate(g, { h: m.h, a: m.a, neutral: m.neutral });
+        const f = home ? r.hg : r.ag, c = home ? r.ag : r.hg;
+        J.gf += f; J.ga += c; if (f > c) J.w++; else if (f < c) J.l++; else J.d++;
+      }
+      t.xi = saved;
+      if (J.i < n) { setTimeout(step, 20); return; }
+      const res = { w: Math.round(J.w / n * 100), d: Math.round(J.d / n * 100), l: Math.round(J.l / n * 100), gf: J.gf / n, ga: J.ga / n };
+      res.adv = Math.round(res.w + res.d / 2);
+      Object.defineProperty(g, '_pred', { value: { sig, r: res }, writable: true, configurable: true, enumerable: false });
+      job = null; J.cbs.forEach((cb) => cb(res));
+    };
+    setTimeout(step, 60);
+    return false;
+  };
   P.predict = function (g, m, n) {
     n = n || 300;
     const t = g.tac[g.user];
@@ -66,11 +95,13 @@
   // Resumo no card do próximo jogo
   P.scoutLine = function (g, um) {
     const m = um.m, opp = m.h === g.user ? m.a : m.h, c = P.club(g, opp);
-    const st = style(g, opp), k = keyPlayers(g, opp), pr = P.predict(g, m, 200);
+    const st = style(g, opp), k = keyPlayers(g, opp);
+    let pr = null;
+    P.predictAsync(g, m, 200, (r) => { if (!pr) { const el = document.getElementById('pred-slot'); if (el) el.innerHTML = probBar(r); } pr = pr || r; });
     const danger = k.top ? `${k.top.name} (${k.top.s.g + k.top.s.cg} gols)` : `${k.star.name} (força ${P.ovr(k.star)})`;
     return `<div class="scout-line"><span class="label">Adjunto</span>
       <p style="margin:4px 0 8px">O ${esc(c.name)} joga no ${esc(st.f)}: ${esc(st.txt)}. Cuidado com ${esc(danger)}.</p>
-      ${probBar(pr)}
+      <div id="pred-slot">${pr ? probBar(pr) : '<div class="prob-lbl muted"><span>O adjunto está calculando as chances…</span></div>'}</div>
       <button class="btn sm" data-a="scoutOpen" style="margin-top:8px">Ver relatório do adversário</button></div>`;
   };
   function probBar(pr) {

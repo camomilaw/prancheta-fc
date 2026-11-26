@@ -21,6 +21,7 @@
 
   A.db = () => (A.g ? A.g.db : A.setup.db);
   A.save = () => {
+    P._ovv++; P._cov++;
     if (!A.g) return;
     if (!P.store.set(SAVE_KEY, JSON.stringify(A.g))) A.toast('Não deu para salvar neste navegador. Use Mais › Exportar carreira.');
   };
