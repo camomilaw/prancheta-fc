@@ -159,6 +159,18 @@
   // Folha anual / cota de TV de cada divisão no banco fictício: referência para calibrar patches
   P.PAY_TV_RATIO = [1.63, 1.80, 2.17, 2.49, 3.11, 3.16, 3.18, 3.37];
   P.calibrateTv = function (db) {
+    if (db && db.world) { // Carreira normal: piso de cota por divisão do mundo (o nível econômico vem do tier)
+      const pay = {}, n = {};
+      for (const c of db.clubs) n[c.div] = (n[c.div] || 0) + 1;
+      const div = {}; for (const c of db.clubs) div[c.id] = c.div;
+      for (const p of Object.values(db.players)) { const d = div[p.clubId]; if (d) pay[d] = (pay[d] || 0) + (p.wage || P.wageFor(p)) * 12; }
+      db.tvW = db.world.divs.map((o) => {
+        const ratio = P.PAY_TV_RATIO[P.clamp(Math.round(o.tier), 1, P.PAY_TV_RATIO.length) - 1];
+        return n[o.d] ? Math.round((pay[o.d] || 0) / n[o.d] / (ratio * 0.8) / 1e5) * 1e5 : 0;
+      });
+      P.applyEcon(db);
+      return db.tvW;
+    }
     db.tv = P.ECON_TV0.map((base, i) => {
       const cs = db.clubs.filter((c) => c.div === i + 1);
       if (!cs.length) return base;

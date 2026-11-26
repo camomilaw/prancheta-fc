@@ -551,8 +551,19 @@
     }
     const r = P.rng(Date.now() % 100000);
     let n = 0, np = 0;
-    for (const pc of patch.clubs) {
-      const c = db.clubs.find((x) => x.id === pc.id);
+    // Carreira normal: o clube pode vir por vaga ("ENG-1-3" = 3º clube gerado na 1ª divisão da Inglaterra),
+    // que não depende da ordem interna dos países. Vagas só existem no mundo da Carreira normal.
+    const idn = (x) => Number(String(x.id).slice(1)) || 0;
+    const bySlot = (s) => {
+      const m = /^([A-Z]{3})-(\d+)-(\d+)$/.exec(String(s || ''));
+      if (!m || !db.world) return null;
+      const dv = db.world.divs.find((o) => o.c === m[1] && o.lvl === Number(m[2]));
+      if (!dv) return null;
+      return db.clubs.filter((x) => x.div === dv.d).sort((a, b) => idn(a) - idn(b))[Number(m[3]) - 1] || null;
+    };
+    const slots = patch.clubs.map((pc) => (pc && pc.slot ? bySlot(pc.slot) : undefined)); // resolve tudo antes de mexer
+    for (const [ix, pc] of patch.clubs.entries()) {
+      const c = pc.slot ? slots[ix] : db.clubs.find((x) => x.id === pc.id);
       if (!c) continue;
       for (const k of ['name', 'short', 'city', 'stadium', 'country']) if (pc[k]) c[k] = String(pc[k]);
       if (Array.isArray(pc.colors) && pc.colors.length >= 2) c.colors = pc.colors.slice(0, 2);

@@ -103,7 +103,7 @@
   P.applyEcon = function (db) {
     P.setWorld(db);
     origEcon(db);
-    if (db && db.world) P.ECON.tv = db.world.divs.map((o) => tvAt(o.tier));
+    if (db && db.world) P.ECON.tv = db.world.divs.map((o, i) => Math.max(tvAt(o.tier), (db.tvW && db.tvW[i]) || 0)); // tvW: piso dos patches com elencos reais
   };
 
   // ---------- Gerar o mundo ----------
