@@ -340,7 +340,22 @@
     tr: [['Kara', 'Ak', 'Yeni', 'Göl', 'Deniz', 'Kızıl', 'Sarı', 'Gök', 'Taş', 'Ova'],
       ['köy', 'tepe', 'dere', 'pınar', 'kent', 'kaya', 'su', 'yurt', 'bağ']],
     gr: [['Nea', 'Agia', 'Palaia', 'Ano', 'Kato', 'Megali'],
-      ['Kastro', 'Limani', 'Chora', 'Polis', 'Dafni', 'Elaia', 'Akti', 'Petra']]
+      ['Kastro', 'Limani', 'Chora', 'Polis', 'Dafni', 'Elaia', 'Akti', 'Petra']],
+    // Carreira normal: Ásia e clubes convidados das copas continentais
+    jp: [['Kita', 'Minami', 'Higashi', 'Nishi', 'Shima', 'Yama', 'Kawa', 'Matsu', 'Sakura', 'Taka', 'Aki', 'Hiro', 'Oka', 'Mori', 'Fuji', 'Nagi'],
+      ['moto', 'saki', 'hara', 'zawa', 'yama', 'kawa', 'shima', 'mura', 'oka', 'ta', 'no', 'sato', 'gawa', 'mi']],
+    kr: [['Han', 'Seo', 'Dong', 'Nam', 'Buk', 'Gang', 'Cheong', 'Gwang', 'Mok', 'Jin', 'Yeong', 'Hae', 'Song', 'Dae'],
+      ['san', 'ju', 'cheon', 'won', 'gu', 'do', 'pyeong', 'ryeong', 'yang', 'hae', 'chang', 'jeong']],
+    cn: [['Jin', 'Hai', 'Shan', 'Dong', 'Xi', 'Nan', 'Bei', 'Long', 'Feng', 'Qing', 'Hua', 'Yun', 'He', 'Chang'],
+      ['zhou', 'yang', 'ning', 'an', 'cheng', 'shan', 'jiang', 'kou', 'tai', 'xing', 'yuan', 'hai']],
+    ar: [['Umm ', 'Dar ', 'Bir ', 'Ras ', 'Wadi ', 'Jabal ', 'Bab ', 'Ain '],
+      ['Nour', 'Rimal', 'Najma', 'Wahat', 'Saqr', 'Fajr', 'Bahr', 'Qamar', 'Shams', 'Zahra', 'Ward', 'Riyah']],
+    sl: [['Novi', 'Stari', 'Gornji', 'Donji', 'Beli', 'Zeleni', 'Kamen', 'Visoki', 'Mali', 'Veliki'],
+      [' Grad', ' Most', ' Dol', 'ograd', 'ovac', 'ica', ' Brod', 'ovo', ' Polje', 'ice']],
+    sc: [['Norr', 'Söder', 'Väster', 'Öster', 'Sjö', 'Berg', 'Lund', 'Strand', 'Fjell', 'Dal', 'Hav', 'Skog'],
+      ['by', 'vik', 'holm', 'stad', 'køping', 'fors', 'berg', 'havn', 'sund', 'lund']],
+    sea: [['Ban', 'Kota', 'Sri', 'Muang', 'Tan', 'Bang', 'Pulau', 'Nong', 'Phu', 'Kuala'],
+      [' Raya', ' Baru', 'pura', ' Indah', ' Lam', 'nakhon', ' Jaya', ' Thong', ' Mas', ' Hai']]
   };
   const SPACE_LANGS = ['pt', 'es', 'gr'];
   const STYLE = {
@@ -361,7 +376,15 @@
     BEL: ['Royal {T}', 'KV {T}', 'Sporting {T}', 'RFC {T}'],
     NED: ['FC {T}', 'SC {T}', 'VV {T}', 'SV {T}'],
     TUR: ['{T}spor', '{T} SK', '{T} Belediyespor', '{T} FK'],
-    GRE: ['AE {T}', 'AO {T}', '{T} FC', 'PAE {T}']
+    GRE: ['AE {T}', 'AO {T}', '{T} FC', 'PAE {T}'],
+    JPN: ['{T} FC', 'FC {T}', '{T} United', '{T} Sporting', 'Sporting {T}', '{T} SC'],
+    KOR: ['{T} FC', '{T} United', '{T} Citizen', '{T} City FC'],
+    CHN: ['{T} FC', '{T} United', '{T} Port FC', '{T} City'],
+    _ar: ['Al {T} Club', '{T} SC', 'Al {T}', '{T} FC'],
+    _sl: ['FK {T}', 'NK {T}', '{T} FC', 'Dinamo {T}', 'Sloga {T}', 'Rapid {T}'],
+    _sc: ['{T} IF', '{T} BK', 'IF {T}', '{T} FK', 'IK {T}'],
+    _sea: ['{T} FC', '{T} United', '{T} City', 'PSM {T}'],
+    _en: ['{T} FC', '{T} United', '{T} City', '{T} Rovers']
   };
   const STADIUM = {
     pt: ['Estádio {T}', 'Arena {T}', 'Estádio Municipal de {T}'], es: ['Estadio {T}', 'Estadio Municipal de {T}', 'Arena {T}'],
@@ -375,7 +398,7 @@
     const parts = TOWN[lang] || TOWN.pt;
     for (let i = 0; i < 80; i++) {
       const a = P.pick(r, parts[0]), b = P.pick(r, parts[1]);
-      const t = SPACE_LANGS.includes(lang) ? a + ' ' + b : a + b;
+      const t = (SPACE_LANGS.includes(lang) && !/ $/.test(a) && !/^ /.test(b) ? a + ' ' + b : a + b).replace(/\s+/g, ' ').trim();
       if (!usedTowns.has(t)) { usedTowns.add(t); return t; }
     }
     return P.pick(r, parts[0]) + ' ' + P.pick(r, parts[1]) + ' ' + Math.floor(r() * 90 + 10);
@@ -485,16 +508,16 @@
   };
 
   // Nome, sigla, cidade, estádio e cores de um clube novo de um país (usado pela Carreira normal)
-  const STYLE_LANG = { pt: 'BRA', es: 'ARG', en: 'ENG', de: 'GER', it: 'ITA', fr: 'FRA', nl: 'NED', tr: 'TUR', gr: 'GRE' };
+  const STYLE_LANG = { pt: 'BRA', es: 'ARG', en: '_en', de: 'GER', it: 'ITA', fr: 'FRA', nl: 'NED', tr: 'TUR', gr: 'GRE', jp: 'JPN', kr: 'KOR', cn: 'CHN', ar: '_ar', sl: '_sl', sc: '_sc', sea: '_sea', af: '_en', hi: '_en', pac: '_en' };
   P.clubMeta = function (r, country, towns, shorts) {
     const lang = (P.COUNTRIES[country] || P.COUNTRIES.BRA).lang;
-    const tl = TOWN[lang] ? lang : 'pt';
+    const tl = TOWN[lang] ? lang : 'en';
     const town = makeTown(r, tl, towns);
     const styles = STYLE[country] || STYLE[STYLE_LANG[lang]] || STYLE.BRA;
     const name = P.pick(r, styles).replace('{T}', town).replace('{t}', town.toLowerCase());
     const c1 = P.pick(r, PALETTE); let c2 = P.pick(r, PALETTE);
     while (c2 === c1) c2 = P.pick(r, PALETTE);
-    return { name, short: makeShort(name, shorts), city: town, stadium: P.pick(r, STADIUM[tl] || STADIUM.pt).replace('{T}', town), colors: [c1, c2] };
+    return { name, short: makeShort(name, shorts), city: town, stadium: P.pick(r, STADIUM[tl] || STADIUM.en).replace('{T}', town), colors: [c1, c2] };
   };
 
   // Aplica um patch (nomes, cores, países... e, se vier, o elenco) aos clubes pelo id.

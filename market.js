@@ -210,6 +210,7 @@
 
     // 2. transferências entre clubes da IA
     const tries = 10;
+    const all = Object.values(g.db.players);
     for (let i = 0; i < tries; i++) {
       const buyer = P.pick(rnd, clubs);
       if (buyer.id === g.user || buyer.bal < 1e5) continue;
@@ -220,7 +221,7 @@
       const bar = (mineLine[0] || 40) + 1;
       const budget = buyer.bal * 0.45;
       const sample = [];
-      const all = Object.values(g.db.players), off = Math.floor(rnd() * all.length);
+      const off = Math.floor(rnd() * all.length);
       for (let k = 0; k < all.length; k++) {
         const p = all[(off + k) % all.length];
         if (P.LINE[p.pos] !== line || p.clubId === buyer.id || p.clubId === g.user || p.loan || p.pendId) continue;

@@ -15,7 +15,7 @@
     if (!ctx.live) { const res = P.endWeek(g, ctx); A.save(); A.startMatchday(res); return; }
     const step = ctx.step, myDiv = club(g.user).div;
     let others = ctx.results.map(({ it }) => ({
-      h: it.m.h, a: it.m.a, div: it.div, comp: it.comp, pen: it.m.pen || null, ctry: it.ctry, z: it.z,
+      h: it.m.h, a: it.m.a, div: it.div, comp: it.comp, pen: it.m.pen || null, ctry: it.ctry, z: it.z, kid: it.kid,
       goals: it.m.ev.filter((e) => e.t === 'gol').map((e) => ({ m: e.m, x: e.x, s: e.s }))
     }));
     if (step.t === 'lg') others = others.filter((o) => o.div === myDiv);
@@ -23,6 +23,7 @@
     if (step.t === 'rz') others = others.filter((o) => o.comp === ctx.live.it.comp);
     if (step.t === 'nc') others = others.filter((o) => o.ctry === ctx.live.it.ctry);
     if (step.t === 'cc') others = others.filter((o) => o.z === ctx.live.it.z);
+    if (step.t === 'ko') others = others.filter((o) => o.kid === ctx.live.it.kid);
     A.live = { ctx, side: ctx.live.side, st: ctx.live.st, m: ctx.live.it.m, ko: ctx.live.it.ko, step, T: 0, speed: 1, pause: null, ht: false, others, sel: {}, done: false, msg: '',
       hlQ: [], hl: null, hlCtl: null, evSeen: 0, hide: [0, 0], pend: new Set(), hlHost: null };
     let el = document.getElementById('md');
@@ -186,7 +187,7 @@
     if (done && L.ko && !L.shoot) verdict = `<p class="verdict ${m.w === A.g.user ? 'good' : 'bad'}">${m.w === A.g.user ? 'Classificado!' : 'Eliminado.'}</p>`;
     const controls = done ? '' : L.pause ? '<span class="chip sus" style="font-size:.75rem">Pausado</span>'
       : `<div class="seg"><button class="${L.speed === 1 ? 'on' : ''}" data-a="lvSpeed" data-s="1">Normal</button><button class="${L.speed === 3 ? 'on' : ''}" data-a="lvSpeed" data-s="3">Rápido</button></div><button class="btn sm" data-a="lvPause">Pausar</button><button class="btn sm" data-a="lvSkip">Pular</button>`;
-    const label = L.step.t === 'lg' ? `Outros jogos da ${P.divName(club(A.g.user).div)}` : L.step.t === 'cup' || L.step.t === 'sc' || L.step.t === 'nc' || L.step.t === 'cc' ? 'Outros jogos da fase' : L.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g)}` : 'Playoffs';
+    const label = L.step.t === 'lg' ? `Outros jogos da ${P.divName(club(A.g.user).div)}` : L.step.t === 'cup' || L.step.t === 'sc' || L.step.t === 'nc' || L.step.t === 'cc' || L.step.t === 'ko' ? 'Outros jogos da fase' : L.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g)}` : 'Playoffs';
     // Manchete do gol: aparece por alguns minutos depois de cada gol
     let goalHead = '';
     const lastGoal = evs.find((e) => e.t === 'gol');

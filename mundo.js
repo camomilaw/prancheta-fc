@@ -213,11 +213,11 @@
   P.generateDatabase = function () { const db = origGen.apply(this, arguments); P.setWorld(db); return db; };
   P.modePick = function () {
     const s = A.setup, normal = P.isNormal(s.db);
-    const cs = P.WORLD_DEF.map((w) => w.c), fol = s.follow || (s.follow = []);
+    const cs = (P.WORLD2 || P.WORLD_DEF).map((w) => w.c), fol = s.follow || (s.follow = []);
     const card = (k, t, d) => `<button class="nc-mode ${(k === 'n') === normal ? 'on' : ''}" data-a="ncMode" data-k="${k}" aria-pressed="${(k === 'n') === normal}"><b>${t}</b><small>${d}</small></button>`;
     return `<div class="field"><span class="jr-step">Modo de jogo</span>
       <div class="nc-modes">${card('u', 'Ultraliga', '160 clubes de vários países numa pirâmide só, de 8 divisões. Copa Ultra, Supercopa e copas por divisão.')}
-      ${card('n', 'Carreira normal', '15 países com as suas ligas (40 divisões, 738 clubes). Acesso e rebaixamento dentro do país, copa nacional e copas continentais.')}</div></div>
+      ${card('n', 'Carreira normal', '18 países com as suas ligas no formato real (mais de mil clubes): Apertura e Clausura, playoffs, repescagens, copas nacionais e as copas continentais da Europa, Américas e Ásia.')}</div></div>
       ${normal ? `<div class="field"><span class="jr-step">Ligas para acompanhar de perto</span>
         <div class="nc-follow">${cs.map((c) => `<label class="nc-fl ${fol.includes(c) ? 'on' : ''}"><input type="checkbox" data-a="ncFollow" data-k="${c}" ${fol.includes(c) ? 'checked' : ''}> ${esc(P.countryName(c))}</label>`).join('')}</div>
         <small class="jr-note">O país do seu clube é sempre acompanhado. Nas ligas acompanhadas você vê tabela, rodadas, copa e recebe propostas dos clubes. As outras jogam em silêncio: os resultados aparecem só na retrospectiva do fim da temporada, e os clubes delas não fazem propostas, mas os jogadores podem ser contratados. Menos ligas acompanhadas deixam o jogo mais rápido.</small></div>` : ''}`;

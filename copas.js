@@ -260,7 +260,7 @@
   const origEnd = P.endSeason;
   P.endSeason = function (g) {
     const r = origEnd.apply(this, arguments);
-    if (P.isNormal(g)) {
+    if (P.isNormal(g) && !(P.isV2 && P.isV2(g))) {
       g.ccq = {};
       for (const c of P.worldCountries()) g.ccq[c] = P.table(g, P.topDivOf(c)).map((x) => x.cid).slice(0, 8);
       // títulos para a tela de campeões e para a Bola de Ouro

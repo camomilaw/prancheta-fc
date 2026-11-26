@@ -95,6 +95,11 @@
     if (st.t === 'po' && (!g.po || (st.r === 1 && !g.po[2].final))) return { pending: true };
     if (st.t === 'rz' && !(P.rzReady && P.rzReady(g, st.r))) return { pending: true };
     if (st.t === 'sc' && !(g.scup && g.scup.cur && g.scup.cur.season === g.season && g.scup.cur.rounds[st.r])) return { pending: true };
+    if (st.t === 'ko' && i > g.week && g.ko) { // mata-mata da Carreira normal: sorteio só na semana
+      const myC = P.divCountry(P.club(g, g.user).div);
+      const mineK = st.ev.some(([id, ri]) => { const K = g.ko[id]; if (!K || ri === 'lp' || K.rounds[ri]) return false; return K.c === myC || (K.lp ? K.lp.ids.includes(g.user) : (K.fixedSeeds || []).includes(g.user)); });
+      if (mineK) return { pending: true };
+    }
     if ((st.t === 'nc' || st.t === 'cc') && i > g.week) { // copa da Carreira normal: só depois do sorteio
       const me = P.club(g, g.user), c = P.divCountry(me.div), cup = g.nc && g.nc[c];
       if (st.t === 'nc' && cup) { const k = st.r - cup.start; if (k < 0) return { pending: false, m: null }; if (k > 0 && !cup.rounds[k]) return { pending: true }; }
@@ -139,7 +144,7 @@
             void won; res = `<b class="res ${r}">${gf}-${ga}</b>`;
           }
           inner = `<span class="opp">${home ? 'C' : 'F'} ${esc(opp.short)}</span>${res}`;
-        } else inner = `<span class="opp muted">${info.pending ? '?' : st.t === 'cup' ? 'Copa' : st.t === 'po' ? 'PO' : st.t === 'sc' ? 'Super' : st.t === 'nc' ? 'Copa' : st.t === 'cc' ? 'Cont.' : st.t === 'rz' ? ((P.tierOf && P.tierOf(g)) || { short: 'Copa' }).short : '—'}</span>`;
+        } else inner = `<span class="opp muted">${info.pending ? '?' : st.t === 'cup' ? 'Copa' : st.t === 'po' ? 'PO' : st.t === 'sc' ? 'Super' : st.t === 'nc' ? 'Copa' : st.t === 'cc' ? 'Cont.' : st.t === 'ko' ? '—' : st.t === 'rz' ? ((P.tierOf && P.tierOf(g)) || { short: 'Copa' }).short : '—'}</span>`;
         if (tr(g).plan[i]) cls += ' planned';
       }
       if (i === cur && !g.over) cls += ' today';

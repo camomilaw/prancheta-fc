@@ -321,6 +321,7 @@
     }
     return g.cup.byes.includes(g.user) ? 'Na 1ª fase' : g.cup.rounds.length ? 'Eliminado' : 'Aguardando';
   };
+  function zoneOfU(d, i, n) { return zoneOf(d, i, n); }
   function zoneOf(d, i, n) {
     const z = P.zoneRules(d);
     if (!z.up) return i === 0 ? 'z1' : z.down && i >= n - z.down ? 'z3' : '';
@@ -701,7 +702,7 @@
     if (st.div == null) st.div = me.div;
     const d = st.div;
     const normal = P.isNormal(g);
-    const TABS = normal ? [['class', 'Classificação'], ['meus', 'Meus jogos'], ['art', 'Estatísticas'], ['rod', 'Rodadas'], ['nc', 'Copa nacional'], ['cc', 'Copas continentais']]
+    const TABS = normal ? [['class', 'Classificação'], ['meus', 'Meus jogos'], ['art', 'Estatísticas'], ['rod', 'Rodadas']].concat(P.isV2(g) ? [['po', 'Playoffs']] : [], [['nc', 'Copa nacional'], ['cc', 'Copas continentais']])
       : [['class', 'Classificação'], ['meus', 'Meus jogos'], ['art', 'Estatísticas'], ['rod', 'Rodadas'], ['cup', 'Copa Ultra'], ['rz', (P.rzStatusName && P.rzStatusName(g)) || 'Copas regionais'], ['sc', 'Supercopa']];
     if (!TABS.some(([k]) => k === st.tab)) st.tab = 'class';
     const tabs = `<div class="seg tabs-x">${TABS.map(([k, n]) => `<button class="${st.tab === k ? 'on' : ''}" data-a="tab" data-k="${k}">${n}</button>`).join('')}</div>`;
@@ -709,10 +710,15 @@
     if (st.tab === 'cup') return `<div class="card"><div class="head"><h2>Copa Ultra ${g.season}</h2>${tabs}</div>${cupView(g)}</div>`;
     if (st.tab === 'rz') return `<div class="card"><div class="head"><h2>Copas por divisão ${g.season}</h2>${tabs}</div>${P.raizesView(g)}</div>`;
     if (st.tab === 'sc') return `<div class="card"><div class="head"><h2>Supercopa Ultra</h2>${tabs}</div>${P.superView(g)}</div>`;
+    if (st.tab === 'po') return `<div class="card"><div class="head"><h2>Playoffs ${g.season}</h2>${tabs}</div>${P.poView2(g, d)}</div>`;
     if (st.tab === 'nc') return `<div class="card"><div class="head"><h2>Copas nacionais ${g.season}</h2>${tabs}</div>${P.ncView(g)}</div>`;
     if (st.tab === 'cc') return `<div class="card"><div class="head"><h2>Copas continentais ${g.season}</h2>${tabs}</div>${P.ccView(g)}</div>`;
     if (st.tab === 'class') {
-      const tb = P.table(g, d), n = tb.length;
+      const views = P.isV2(g) && P.divViews ? P.divViews(g, d) : null;
+      let vw = null;
+      if (views) { vw = views.find((v) => v.k === st.dvw) || views[0]; st.dvw = vw.k; }
+      const tb = vw ? vw.rows() : P.table(g, d), n = tb.length;
+      const zoneOf = vw && P.zoneFor2 ? (dd, i, nn) => P.zoneFor2(g, dd, vw.k, i, nn) : zoneOfU;
       body = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="n">#</th><th>Clube</th><th class="n">P</th><th class="n">J</th><th class="n">V</th><th class="n">E</th><th class="n">D</th><th class="n hide-sm">GP</th><th class="n hide-sm">GC</th><th class="n">SG</th><th class="hide-sm">Últimos</th></tr></thead><tbody>
         ${tb.map((r, i) => {
           const c = club(r.cid);
@@ -721,7 +727,8 @@
             <td class="n"><b>${r.pts}</b></td><td class="n">${r.j}</td><td class="n">${r.v}</td><td class="n">${r.e}</td><td class="n">${r.d}</td>
             <td class="n hide-sm">${r.gp}</td><td class="n hide-sm">${r.gc}</td><td class="n">${r.gp - r.gc}</td>
             <td class="hide-sm"><span class="form">${r.form.slice(-5).map((f) => `<i class="${f}">${f}</i>`).join('')}</span></td></tr>`;
-        }).join('')}</tbody></table></div>${zoneLegend(d)}${playoffView(g, d)}`;
+        }).join('')}</tbody></table></div>${vw ? (P.zoneLegend2 ? P.zoneLegend2(g, d, vw.k) : '') : zoneLegend(d)}${playoffView(g, d)}`;
+      if (views && views.length > 1) body = `<div class="seg tbl-views" style="margin-bottom:10px;flex-wrap:wrap">${views.map((v) => `<button class="${v.k === vw.k ? 'on' : ''}" data-a="dvw" data-k="${v.k}">${esc(v.n)}</button>`).join('')}</div>` + body;
     } else if (st.tab === 'meus') {
       const hist = userHistory(g).reverse();
       const W = hist.filter((x) => { const h = x.m.h === g.user; return (h ? x.m.hg > x.m.ag : x.m.ag > x.m.hg) || (x.m.pen && x.m.w === g.user && x.m.hg === x.m.ag); }).length;
@@ -920,6 +927,7 @@
     if (res.step.t === 'rz' && mine) others = others.filter((x) => x.comp === mine.comp);
     if (res.step.t === 'nc' && mine) others = others.filter((x) => x.ctry === mine.ctry);
     if (res.step.t === 'cc' && mine) others = others.filter((x) => x.z === mine.z);
+    if (res.step.t === 'ko' && mine) others = others.filter((x) => x.kid === mine.kid);
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     A.md = { step: res.step, mine, others, T: reduce || !mine ? 96 : 0, speed: 1 };
     let el = document.getElementById('md');
@@ -960,7 +968,7 @@
       const flash = o.goals.some((e) => key(e) <= T && key(e) > T - 3);
       return ogRow({ h: o.h, a: o.a }, h, a, { flash: flash && !done, pen: done ? o.pen : null });
     }).join('');
-    const othersLabel = md.step.t === 'lg' ? `Outros jogos da ${P.divName(x ? x.div : club(A.g.user).div)}` : md.step.t === 'cup' || md.step.t === 'sc' || md.step.t === 'nc' || md.step.t === 'cc' ? 'Outros jogos da fase' : md.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g) || 'rodada'}` : 'Playoffs';
+    const othersLabel = md.step.t === 'lg' ? `Outros jogos da ${P.divName(x ? x.div : club(A.g.user).div)}` : md.step.t === 'cup' || md.step.t === 'sc' || md.step.t === 'nc' || md.step.t === 'cc' || md.step.t === 'ko' ? 'Outros jogos da fase' : md.step.t === 'rz' ? `Outros jogos da ${P.rzStatusName(A.g) || 'rodada'}` : 'Playoffs';
     el.innerHTML = `<div class="md-in">
       <div class="row"><h2 style="flex:1;min-width:0">${esc(P.stepLabel(md.step))}</h2>
         ${done ? '' : `<div class="seg"><button class="${md.speed === 1 ? 'on' : ''}" data-a="mdSpeed" data-s="1">Normal</button><button class="${md.speed === 3 ? 'on' : ''}" data-a="mdSpeed" data-s="3">Rápido</button></div><button class="btn sm" data-a="mdSkip">Pular</button>`}
@@ -1330,7 +1338,7 @@
     sort(el) { A.st.sort = el.value; A.render(); },
     formation(el) { const g = A.g, t = g.tac[g.user]; t.f = el.value; t.xi = P.autoXI(g, g.user, t.f); A.saveTac(); A.render(); A.toast('Formação ' + t.f); },
     auto(el) { const g = A.g; g.tac[g.user].auto = el.checked; A.saveTac(); },
-    tblDiv(el) { A.st.div = Number(el.value); A.st.rd = null; A.render(); },
+    tblDiv(el) { A.st.div = Number(el.value); A.st.rd = null; A.st.dvw = null; A.render(); },
     cupR(el) { A.st.cupR = Number(el.value); A.render(); },
     setupDiv(el) { A.setup.divF = Number(el.value); A.setup.q = ''; A.render(); },
     ccDiv(el) { A.setup.form.div = Number(el.value); A.setup.form.replaceId = null; A.render(); },

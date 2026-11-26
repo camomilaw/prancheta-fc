@@ -214,7 +214,20 @@
   };
 
   // ---------- Acesso ao estado (com índice de elencos em cache) ----------
-  P.club = (g, cid) => g.db.clubs.find((c) => c.id === cid);
+  // busca de clube por id com índice (o mundo da Carreira normal tem mais de mil clubes)
+  P.club = (g, cid) => {
+    const db = g.db; let m = db._ci;
+    if (!m || m.n !== db.clubs.length) {
+      m = new Map(); db.clubs.forEach((c) => m.set(c.id, c)); m.n = db.clubs.length;
+      Object.defineProperty(db, '_ci', { value: m, writable: true, configurable: true, enumerable: false });
+    }
+    const c = m.get(cid);
+    if (c && c.id === cid) return c;
+    const f = db.clubs.find((x) => x.id === cid);
+    if (f) m.set(cid, f);
+    return f;
+  };
+  P._ovv = 0; // versão da força dos clubes (muda com transferências e a cada semana)
   P.dirty = (g) => { if (g) g._sq = null; };
   P.squad = function (g, cid) {
     if (!g._sq) {
@@ -225,6 +238,12 @@
     return (g._sq[cid] || []).slice();
   };
   P.clubOvrs = function (db) {
+    if (db._ov && db._ov.v === P._ovv) return Object.assign({}, db._ov.o);
+    const out = calcOvrs(db);
+    Object.defineProperty(db, '_ov', { value: { v: P._ovv, o: out }, writable: true, configurable: true, enumerable: false });
+    return Object.assign({}, out);
+  };
+  function calcOvrs(db) {
     const by = {};
     for (const p of Object.values(db.players)) if (p.clubId) (by[p.clubId] = by[p.clubId] || []).push(P.ovr(p));
     const out = {};
@@ -233,7 +252,7 @@
       out[c.id] = ps.length ? Math.round(ps.reduce((a, b) => a + b, 0) / ps.length) : 0;
     }
     return out;
-  };
+  }
   P.clubOvr = function (db, cid) {
     const ps = Object.values(db.players).filter((p) => p.clubId === cid).map(P.ovr).sort((a, b) => b - a).slice(0, 14);
     return ps.length ? Math.round(ps.reduce((a, b) => a + b, 0) / ps.length) : 0;
@@ -847,6 +866,7 @@
     ctx.results.push({ it, r });
   };
   P.beginWeek = function (g, interactive) {
+    P._ovv++; // atributos mudam com treino e jogos: força recalculada uma vez por semana
     const step = g.cal[g.week];
     const items = P.stepMatches(g, step);
     const ovrs = P.clubOvrs(g.db);
@@ -1030,7 +1050,7 @@
 
     // 7. dados da animação (antes de enxugar o que não precisa ficar salvo)
     const anim = results.map(({ it }) => ({
-      h: it.m.h, a: it.m.a, comp: it.comp, div: it.div, pen: it.m.pen || null, ctry: it.ctry, z: it.z,
+      h: it.m.h, a: it.m.a, comp: it.comp, div: it.div, pen: it.m.pen || null, ctry: it.ctry, z: it.z, kid: it.kid,
       goals: it.m.ev.filter((e) => e.t === 'gol').map((e) => ({ m: e.m, x: e.x, s: e.s })),
       full: it.m
     }));
@@ -1043,7 +1063,7 @@
     if (g.week >= g.cal.length) P.endSeason(g);
     else if (g.cal[g.week].t !== 'lg') P.stepMatches(g); // sorteia copa/playoff da próxima semana
     // rodadas da Taça Raízes sem jogo seu passam direto (não viram uma semana vazia para você)
-    while (!g.over && g.week < g.cal.length && (g.cal[g.week].t === 'rz' || g.cal[g.week].t === 'nc' || g.cal[g.week].t === 'cc' || (g.cal[g.week].t === 'lg' && P.isNormal && P.isNormal(g))) && !P.userMatch(g)) P.endWeek(g, P.beginWeek(g, false));
+    while (!g.over && g.week < g.cal.length && (g.cal[g.week].t === 'rz' || g.cal[g.week].t === 'nc' || g.cal[g.week].t === 'cc' || g.cal[g.week].t === 'ko' || (g.cal[g.week].t === 'lg' && P.isNormal && P.isNormal(g))) && !P.userMatch(g)) P.endWeek(g, P.beginWeek(g, false));
     return { step, anim };
   };
 
@@ -1215,7 +1235,7 @@
       }
       p.s = P.blankStats(); p.cs = {}; p.cond = 100; p.mor = 70; p.inj = 0; p.susp = 0; p.ylw = 0;
     }
-    P.dirty(g);
+    P.dirty(g); P._ovv++;
     g.season++;
     // elenco mínimo: se faltar gente, jovens da base sobem
     const mineNow = P.squad(g, g.user);
