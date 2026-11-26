@@ -30,6 +30,7 @@
   // Copa de um clube nesta temporada (pelo sorteio; antes dele, pela divisão)
   P.tierOf = function (g, cid) {
     cid = cid || g.user;
+    if (P.isNormal && P.isNormal(g)) return null; // Carreira normal não tem as copas por faixa
     let drawn = false;
     for (const t of P.TIERS) { const z = zOf(g, t.k); if (z) { drawn = true; if (z.ids.includes(cid)) return t; } }
     return drawn ? null : P.tierOfDiv((club(g, cid) || {}).div);

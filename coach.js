@@ -35,7 +35,7 @@
     const same = g && g.coach && g.coach.nat && toCid === g.user && p.nat === g.coach.nat;
     let d = origDemand.apply(this, arguments);
     if (!same) return d;
-    if (d == null) { const from = p.clubId ? P.club(g, p.clubId) : null, to = P.club(g, toCid); if (from && to.div - from.div <= 4) d = Math.round(P.wageFor(p) * 1.8 / 500) * 500; else return d; }
+    if (d == null) { const from = p.clubId ? P.club(g, p.clubId) : null, to = P.club(g, toCid); if (from && P.dt(to) - P.dt(from) <= 4) d = Math.round(P.wageFor(p) * 1.8 / 500) * 500; else return d; }
     return Math.round(d * 0.9 / 500) * 500;
   };
   // palavras conforme o gênero escolhido

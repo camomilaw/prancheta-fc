@@ -42,7 +42,7 @@
   P.playerDemand = function (g, p, toCid) {
     const to = P.club(g, toCid);
     const from = p.clubId ? P.club(g, p.clubId) : null;
-    const diff = from ? to.div - from.div : 0;
+    const diff = from ? P.dt(to) - P.dt(from) : 0;
     if (from && diff >= 3 && P.ovr(p) >= 72) return null;
     let d = Math.max(p.clubId ? p.wage * 1.05 : 0, P.wageFor(p) * (p.clubId ? 1 : 1.05));
     if (diff > 0) d *= 1 + diff * 0.15;
@@ -179,7 +179,7 @@
     if (!g.over && mine.length > P.MARKET.minSquad && rnd() < (listed.length ? (open ? 0.8 : 0.35) : (open ? 0.55 : 0.15))) {
       const p = listed.length && rnd() < 0.7 ? P.pick(rnd, listed) : P.weighted(rnd, mine, (x) => P.value(x));
       const me = P.club(g, g.user);
-      const buyers = clubs.filter((c) => c.id !== g.user && c.div <= me.div + 1 && c.bal > P.value(p) * 1.3 && P.ovr(p) >= ovrs[c.id] - 6);
+      const buyers = clubs.filter((c) => c.id !== g.user && P.dt(c) <= P.dt(me) + 1 && P.followed(g, c.div) && c.bal > P.value(p) * 1.3 && P.ovr(p) >= ovrs[c.id] - 6);
       if (buyers.length && !(g.offers || []).some((o) => o.pid === p.id)) {
         const b = P.pick(rnd, buyers);
         const fee = Math.round(P.value(p) * (p.listed ? 0.8 + rnd() * 0.25 : 0.9 + rnd() * 0.4) * (isStarter(g, p) ? 1.15 : 1) * (P.diffM ? P.diffM(g, 'offer') : 1) * (P.coachHas && P.coachHas(g, 'negociador') ? 1.05 : 1) / 10000) * 10000;
@@ -196,7 +196,7 @@
     if (lend.length && mine.length > P.MARKET.minSquad && rnd() < 0.6) {
       const p = P.pick(rnd, lend), me = P.club(g, g.user);
       if (!(g.offers || []).some((o) => o.pid === p.id)) {
-        const takers = clubs.filter((c) => c.id !== g.user && c.div >= me.div - 1 && c.div <= me.div + 3 && P.squad(g, c.id).length < 28 && P.ovr(p) >= (ovrs[c.id] || 60) - 8);
+        const takers = clubs.filter((c) => c.id !== g.user && P.followed(g, c.div) && P.dt(c) >= P.dt(me) - 1 && P.dt(c) <= P.dt(me) + 3 && P.squad(g, c.id).length < 28 && P.ovr(p) >= (ovrs[c.id] || 60) - 8);
         if (takers.length) {
           const b = P.pick(rnd, takers), oid = P.uid('o');
           const fee = Math.round(P.value(p) * P.MARKET.loanFee * (0.6 + rnd() * 0.6) / 10000) * 10000;
@@ -225,7 +225,7 @@
         const p = all[(off + k) % all.length];
         if (P.LINE[p.pos] !== line || p.clubId === buyer.id || p.clubId === g.user || p.loan || p.pendId) continue;
         const c = p.clubId && P.club(g, p.clubId);
-        if (c && (c.div < buyer.div || c.div > buyer.div + 2)) continue;
+        if (c && (P.dt(c) < P.dt(buyer) - (P.isNormal(g) ? 0.6 : 0) || P.dt(c) > P.dt(buyer) + 2)) continue;
         if (P.ovr(p) < bar) continue;
         sample.push(p);
         if (sample.length > 40) break;

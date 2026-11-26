@@ -172,7 +172,9 @@
   function playYouthRound(g, step) {
     const r = Math.random;
     const myStr = P.youthStrength(g);
+    const only = P.isNormal && P.isNormal(g) ? P.club(g, g.user).div : null; // Carreira normal: só o Sub-20 da sua divisão
     for (let d = 1; d <= P.DIVS; d++) {
+      if (only && d !== only) continue;
       const rd = g.lg[d][step.r] || [];
       const out = rd.map((m) => {
         const sh = m.h === g.user ? myStr : g.y.str[m.h] || 50;

@@ -10,12 +10,15 @@
   const LEAGUE_W = [30, 14, 11, 9, 7, 6, 5, 4];
   const W = { cup: 22, sc: 8, po: 4, tier: { as: 8, tv: 6, rz: 5 } };
 
+  // peso pelo nível da divisão (na Carreira normal o nível é fracionado: 1ª da Inglaterra = 1, 1ª do Chile ≈ 4,8)
+  const byTier = (arr, d) => { const t = P.divTier ? P.divTier(d) : d, i = Math.max(0, Math.min(arr.length - 1, t - 1)), lo = Math.floor(i), f = i - lo; return lo >= arr.length - 1 ? arr[arr.length - 1] : arr[lo] * (1 - f) + arr[lo + 1] * f; };
+  const lw = (d) => byTier(LEAGUE_W, d);
   // Títulos de cada clube na temporada que acabou: [{ n: nome, w: peso }]
   function titles(g) {
     const t = {};
     const add = (cid, n, w) => { if (!cid) return; (t[cid] = t[cid] || []).push({ n, w }); };
     const s = g.summary;
-    if (s) s.divs.forEach((d) => add(d.champ, d.d === 1 ? 'Ultraliga' : `${d.d}ª divisão`, LEAGUE_W[d.d - 1] || 4));
+    if (s) s.divs.forEach((d) => add(d.champ, P.leagueTitle ? P.leagueTitle(d.d) : d.d === 1 ? 'Ultraliga' : `${d.d}ª divisão`, lw(d.d)));
     if (g.cup && g.cup.winner) add(g.cup.winner, 'Copa Ultra', W.cup);
     const sc = g.scup && g.scup.eds && g.scup.eds.find((e) => e.season === g.season);
     if (sc && sc.w) add(sc.w, 'Supercopa', W.sc);
@@ -33,7 +36,7 @@
       const s = p.s, gl = (s.g || 0) + (s.cg || 0), avg = s.j ? s.nt / s.j : 0;
       const tl = tt[p.clubId] || [];
       const tw = tl.reduce((x, y) => x + y.w, 0) * Math.min(1, s.j / 20);
-      const ind = (gl * 4 + (s.as || 0) * 2.5 + Math.max(0, avg - 6.2) * 45 * Math.min(1, s.j / 30)) * (DIV_F[c.div - 1] || 0.25);
+      const ind = (gl * 4 + (s.as || 0) * 2.5 + Math.max(0, avg - 6.2) * 45 * Math.min(1, s.j / 30)) * byTier(DIV_F, c.div);
       rows.push({ id: p.id, n: p.name, c: p.clubId, pos: p.pos, age: p.age, j: s.j, g: gl, as: s.as || 0, nt: Math.round(avg * 10) / 10, t: tl.map((x) => x.n), sc: Math.round((ind + tw) * 10) / 10 });
     }
     return rows.sort((a, b) => b.sc - a.sc).slice(0, 10);

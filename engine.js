@@ -129,7 +129,7 @@
   // ---------- Economia: salários, valores, contratos ----------
   P.ECON = {
     tv: [40e6, 24e6, 14e6, 8e6, 5e6, 3e6, 2e6, 1.2e6],            // cota de TV por temporada, por divisão
-    ticket: (div) => 15 + (8 - div) * 6.5,                         // ingresso médio (R$)
+    ticket: (div) => 15 + (8 - (P.divTier ? P.divTier(div) : div)) * 6.5,                         // ingresso médio (R$)
     prizeFactor: 0.6,                                              // premiação final = cota × fator × (21 - posição) / 20
     cupPrize: [0.2e6, 0.4e6, 0.8e6, 1.5e6, 3e6, 5e6, 8e6, 15e6],   // por vitória em cada fase da copa
     wageBase: 9400, wageGrowth: 1.125                              // salário mensal de um jogador de força 55 (era 11000)
@@ -715,8 +715,16 @@
     const r = P.rng((Date.now() + g.season) & 0xffffffff);
     g.lg = {};
     for (let d = 1; d <= P.DIVS; d++) g.lg[d] = P.makeFixtures(P.divClubs(g.db, d).map((c) => c.id), r);
-    const rounds = g.lg[1].length;
+    let rounds = 0;
+    for (let d = 1; d <= P.DIVS; d++) rounds = Math.max(rounds, g.lg[d].length);
+    if (P.padRounds) for (let d = 1; d <= P.DIVS; d++) g.lg[d] = P.padRounds(g.lg[d], rounds);
     g.cal = [];
+    if (P.isNormal && P.isNormal(g)) { // Carreira normal: ligas + copas nacionais e continentais
+      P.normalCalendar(g, rounds);
+      g.cup = { rounds: [], byes: [], winner: null }; g.po = null;
+      g.week = 0; g.over = false; g.summary = null;
+      return;
+    }
     for (let lr = 0; lr < rounds; lr++) {
       g.cal.push({ t: 'lg', r: lr });
       const ci = P.CUP_AFTER.indexOf(lr + 1);
@@ -846,8 +854,11 @@
     const warn = [];
     if (P.trainWeek) P.trainWeek(g, step);
 
-    // 1. escalações
-    for (const { m } of items) {
+    // 1. escalações (ligas silenciosas não precisam: o placar sai direto da força dos times)
+    const quiet = (it) => P.isNormal && P.isNormal(g) && it.m.h !== g.user && it.m.a !== g.user && P.silentClub(g, it.m.h) && P.silentClub(g, it.m.a);
+    for (const it of items) {
+      const m = it.m;
+      if (quiet(it)) { it.quiet = true; continue; }
       for (const [cid, opp, home] of [[m.h, m.a, true], [m.a, m.h, false]]) {
         if (cid === g.user) {
           const t = g.tac[cid];
@@ -861,6 +872,7 @@
     // 2. jogos (o seu fica para depois, se for ao vivo)
     const ctx = { step, userDiv, results: [], playing: new Set(), live: null };
     for (const it of items) {
+      if (it.quiet) { P.quickMatch(g, it, ovrs); ctx.quiet = (ctx.quiet || []).concat([it]); continue; }
       const mineM = it.m.h === g.user || it.m.a === g.user;
       if (interactive && mineM) { ctx.live = { it, side: it.m.h === g.user ? 0 : 1, st: P.simInit(g, it.m, { manual: it.m.h === g.user ? 0 : 1 }) }; continue; }
       applyResult(ctx, it, P.simulate(g, it.m));
@@ -950,6 +962,11 @@
       else P.pay(g, m.h, gate, 'Bilheteria');
       if (it.comp === 'cup') P.pay(g, m.w, P.ECON.cupPrize[step.r], 'Premiação');
     }
+    for (const it of ctx.quiet || []) { // jogos silenciosos: bilheteria estimada
+      const hc = P.club(g, it.m.h);
+      P.pay(g, it.m.h, Math.round(hc.cap * 0.62 * P.ECON.ticket(hc.div)), 'Bilheteria');
+    }
+    if (P.normalWeekPrizes) P.normalWeekPrizes(g, step, results.map((x) => x.it).concat(ctx.quiet || []));
     if (step.t === 'lg') for (const c of g.db.clubs) P.pay(g, c.id, P.ECON.tv[c.div - 1] / g.lg[c.div].length, 'Cotas de TV');
     const wages = {};
     for (const p of Object.values(g.db.players)) if (p.clubId) wages[p.clubId] = (wages[p.clubId] || 0) + p.wage;
@@ -1067,11 +1084,11 @@
     if (!c) return '';
     ovrs = ovrs || P.clubOvrs(db);
     const rank = P.divClubs(db, c.div).map((x) => x.id).sort((a, b) => ovrs[b] - ovrs[a]).indexOf(cid) + 1;
-    if (c.div === 1) return rank <= 2 ? 'Brigar pelo título' : rank <= 6 ? 'Terminar entre os 6' : rank <= 14 ? 'Meio de tabela' : 'Evitar o rebaixamento';
+    if (P.isTopDiv ? P.isTopDiv(c.div) : c.div === 1) return rank <= 2 ? 'Brigar pelo título' : rank <= 6 ? 'Terminar entre os 6' : rank <= 14 ? 'Meio de tabela' : 'Evitar o rebaixamento';
     if (rank <= 2) return 'Subir de divisão';
     if (rank <= 6) return 'Brigar pelo acesso';
     if (rank <= 14) return 'Meio de tabela';
-    return c.div < P.DIVS ? 'Evitar o rebaixamento' : 'Fazer uma campanha digna';
+    return (P.divBelow ? P.divBelow(c.div) : c.div < P.DIVS) ? 'Evitar o rebaixamento' : 'Fazer uma campanha digna';
   };
 
   // ---------- Novo jogo ----------
@@ -1088,7 +1105,7 @@
     P.buildSeason(g);
     P.ensureEconomy(g);
     const club = P.club(g, userCid);
-    P.news(g, `${g.manager} é ${P.cw ? P.cw(g).o + ' ' + P.cw(g).novo + ' ' + P.cw(g).tec : 'o novo técnico'} do ${club.name}, na ${club.div}ª divisão. A diretoria quer: ${P.expectation(g, userCid).toLowerCase()}.`, 'good');
+    P.news(g, `${g.manager} é ${P.cw ? P.cw(g).o + ' ' + P.cw(g).novo + ' ' + P.cw(g).tec : 'o novo técnico'} do ${club.name}, na ${P.divName(club.div)}. A diretoria quer: ${P.expectation(g, userCid).toLowerCase()}.`, 'good');
     return g;
   };
 
@@ -1096,8 +1113,9 @@
   P.endSeason = function (g) {
     g.over = true;
     const sum = { season: g.season, divs: [], cup: g.cup.winner };
-    const moves = {};
-    for (let d = 1; d <= P.DIVS; d++) {
+    let moves = {};
+    if (P.isNormal && P.isNormal(g)) moves = P.normalMoves(g, sum);
+    else for (let d = 1; d <= P.DIVS; d++) {
       const tb = P.table(g, d).map((x) => x.cid);
       const up = d > 1 ? tb.slice(0, P.RULES.autoUp).concat(g.po && g.po[d] && g.po[d].final ? [g.po[d].final.w] : []) : [];
       const down = d < P.DIVS ? tb.slice(-P.RULES.down) : [];
@@ -1110,22 +1128,27 @@
     g.summary = sum;
     // premiação pela posição final
     for (let d = 1; d <= P.DIVS; d++) {
-      P.table(g, d).forEach((row, i) => P.pay(g, row.cid, P.ECON.tv[d - 1] * P.ECON.prizeFactor * (20 - i) / 20, 'Premiação'));
+      const n = P.divSize ? P.divSize(d) : 20;
+      P.table(g, d).forEach((row, i) => P.pay(g, row.cid, P.ECON.tv[d - 1] * P.ECON.prizeFactor * (n - i) / n, 'Premiação'));
     }
     const me = P.club(g, g.user);
     const tbMine = P.table(g, me.div).map((x) => x.cid);
     const pos = tbMine.indexOf(g.user) + 1;
     let result = 'Permaneceu';
-    if (moves[g.user] < me.div) result = 'Acesso';
-    if (moves[g.user] > me.div) result = 'Rebaixado';
-    if (pos === 1) result = me.div === 1 ? 'Campeão da Ultraliga' : 'Campeão e acesso';
+    const above = P.divAbove ? P.divAbove(me.div) : me.div - 1;
+    if (moves[g.user] && moves[g.user] === above) result = 'Acesso';
+    else if (moves[g.user]) result = 'Rebaixado';
+    const topLg = P.isTopDiv ? P.isTopDiv(me.div) : me.div === 1;
+    if (pos === 1) result = topLg ? (P.isNormal && P.isNormal(g) ? 'Campeão nacional' : 'Campeão da Ultraliga') : 'Campeão e acesso';
+    const champD = P.isNormal && P.isNormal(g) ? P.topDivOf(P.divCountry(me.div)) : 1;
+    const champRow = sum.divs.find((x) => x.d === champD) || sum.divs[0];
     if (P.potentialUpdate) P.potentialUpdate(g, 'end');
     if (P.seasonStats) P.seasonStats(g);
     if (P.boardSeasonEnd) P.boardSeasonEnd(g);
-    const top = P.scorers(g, 1, 1)[0];
+    const top = P.scorers(g, champD, 1)[0];
     g.hist.push({
-      season: g.season, div: me.div, pos, result,
-      champ: P.club(g, sum.divs[0].champ).name,
+      season: g.season, div: me.div, pos, result, lvl: P.divLvl ? P.divLvl(me.div) : me.div, dn: P.divName ? P.divName(me.div) : '',
+      champ: P.club(g, champRow.champ).name,
       cup: g.cup.winner ? P.club(g, g.cup.winner).name : '-',
       cupMine: g.cup.winner === g.user,
       top: top ? `${top.name} (${top.s.g})` : '-',
@@ -1134,7 +1157,7 @@
     if (P.scSeasonEnd) P.scSeasonEnd(g);
     if (P.rzSeasonEnd) P.rzSeasonEnd(g);
     if (P.mgrSeasonEnd) P.mgrSeasonEnd(g);
-    P.news(g, `Fim de temporada! ${P.club(g, sum.divs[0].champ).name} é o campeão da Ultraliga. Seu time terminou em ${pos}º na ${me.div}ª divisão: ${result.toLowerCase()}.`, result === 'Rebaixado' ? 'bad' : 'good');
+    P.news(g, `Fim de temporada! ${P.club(g, champRow.champ).name} é o campeão ${P.isNormal && P.isNormal(g) ? P.countryPrep(P.divCountry(champD)) : 'da Ultraliga'}. Seu time terminou em ${pos}º na ${P.divName(me.div)}: ${result.toLowerCase()}.`, result === 'Rebaixado' ? 'bad' : 'good');
   };
 
   // Rodadas da liga já disputadas antes da semana w (regras do ano ancoradas na liga)
@@ -1214,7 +1237,7 @@
     const me = P.club(g, g.user);
     if (left.length) P.news(g, `Contratos encerrados, deixaram o clube: ${left.join(', ')}.`, 'warn');
     if (promoted.length) P.news(g, `Para completar o elenco, subiram da base: ${promoted.map((p) => p.name).join(', ')}.`, '');
-    P.news(g, `Começa a temporada ${g.season} na ${me.div}ª divisão. Meta da diretoria: ${P.expectation(g, g.user).toLowerCase()}.`, 'good');
+    P.news(g, `Começa a temporada ${g.season} na ${P.divName(me.div)}. Meta da diretoria: ${P.expectation(g, g.user).toLowerCase()}.`, 'good');
     retired.forEach((t) => P.news(g, t + '.', ''));
     if (P.clubNewSeason) P.clubNewSeason(g);
   };

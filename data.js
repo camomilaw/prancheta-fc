@@ -348,6 +348,7 @@
     POR: ['SC {T}', 'FC {T}', 'CD {T}', 'Académico de {T}', 'Desportivo de {T}', 'União de {T}'],
     ARG: ['Club Atlético {T}', '{T} Juniors', 'Deportivo {T}', 'Sportivo {T}', 'Club Social {T}'],
     URU: ['Club {T}', 'Atlético {T}', 'Sportivo {T}'],
+    CHI: ['Club Deportivo {T}', 'Deportes {T}', 'Unión {T}', '{T} FC', 'Club Social {T}'],
     COL: ['Deportivo {T}', 'Atlético {T}', 'Independiente {T}', 'Real {T}'],
     MEX: ['Club {T}', 'Deportivo {T}', 'Atlético {T}', 'Real {T}', 'Unión {T}'],
     ESP: ['Real {T}', '{T} CF', 'CD {T}', 'UD {T}', 'Atlético {T}', 'SD {T}', 'Racing {T}'],
@@ -481,6 +482,19 @@
       P.makeSquad(r, db, club, used, () => 'p' + (pc++));
     });
     return db;
+  };
+
+  // Nome, sigla, cidade, estádio e cores de um clube novo de um país (usado pela Carreira normal)
+  const STYLE_LANG = { pt: 'BRA', es: 'ARG', en: 'ENG', de: 'GER', it: 'ITA', fr: 'FRA', nl: 'NED', tr: 'TUR', gr: 'GRE' };
+  P.clubMeta = function (r, country, towns, shorts) {
+    const lang = (P.COUNTRIES[country] || P.COUNTRIES.BRA).lang;
+    const tl = TOWN[lang] ? lang : 'pt';
+    const town = makeTown(r, tl, towns);
+    const styles = STYLE[country] || STYLE[STYLE_LANG[lang]] || STYLE.BRA;
+    const name = P.pick(r, styles).replace('{T}', town).replace('{t}', town.toLowerCase());
+    const c1 = P.pick(r, PALETTE); let c2 = P.pick(r, PALETTE);
+    while (c2 === c1) c2 = P.pick(r, PALETTE);
+    return { name, short: makeShort(name, shorts), city: town, stadium: P.pick(r, STADIUM[tl] || STADIUM.pt).replace('{T}', town), colors: [c1, c2] };
   };
 
   // Aplica um patch (nomes, cores, países... e, se vier, o elenco) aos clubes pelo id.

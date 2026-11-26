@@ -41,7 +41,7 @@
     const ovrs = P.clubOvrs(g.db);
     const teamOvr = ovrs[g.user] || 60;
     const busy = (p) => p.pendId || (g.offers || []).some((o) => o.pid === p.id);
-    const bigger = (p, extra) => g.db.clubs.filter((c) => c.id !== g.user && (c.div < me.div || c.rep > me.rep + 8) && c.bal > (extra || P.value(p)) * 1.3 && ovrs[c.id] <= P.ovr(p) + 4);
+    const bigger = (p, extra) => g.db.clubs.filter((c) => c.id !== g.user && P.followed(g, c.div) && (P.dt(c) < P.dt(me) || c.rep > me.rep + 8) && c.bal > (extra || P.value(p)) * 1.3 && ovrs[c.id] <= P.ovr(p) + 4);
 
     // 1. jogador pede para sair (clube maior apareceu)
     if (rnd() < 0.1) {

@@ -40,9 +40,9 @@
   const lvlFromRep = (rep) => P.clamp(Math.round(rep / 20), 1, 5);
   P.facOf = (c) => (c.fac = c.fac || { base: lvlFromRep(c.rep), ct: lvlFromRep(c.rep), sede: lvlFromRep(c.rep), price: 1 });
   P.facLvl = (g, k) => P.facOf(P.club(g, g.user))[k];
-  const scale = (div) => 0.5 + (8 - div) * 0.6;
+  const scale = (div) => 0.5 + (8 - (P.divTier ? P.divTier(div) : div)) * 0.6;
   P.facCost = (c, k) => { const n = P.facOf(c)[k]; return n >= 5 ? null : Math.round([0, 1, 2.5, 5, 10][n] * 1e6 * scale(c.div) / 10000) * 10000; };
-  P.seatCost = (c) => Math.round(5000 * 1500 * (0.6 + (8 - c.div) * 0.15) / 10000) * 10000; // ampliação de 5 mil lugares
+  P.seatCost = (c) => Math.round(5000 * 1500 * (0.6 + (8 - P.dt(c)) * 0.15) / 10000) * 10000; // ampliação de 5 mil lugares
 
   // Bilheteria: o preço muda a lotação (mais caro = estádio mais vazio)
   P.gateFor = function (g, c, occ) {
@@ -104,7 +104,7 @@
 
   function jobOffers(g, better) {
     const me = P.club(g, g.user);
-    const pool = g.db.clubs.filter((c) => c.id !== g.user && (better ? c.div < me.div || (c.div === me.div && c.rep > me.rep + 5) : c.div >= me.div && c.div <= me.div + 2));
+    const pool = g.db.clubs.filter((c) => c.id !== g.user && P.followed(g, c.div) && (better ? P.dt(c) < P.dt(me) || (c.div === me.div && c.rep > me.rep + 5) : P.dt(c) >= P.dt(me) && P.dt(c) <= P.dt(me) + 2));
     return P.shuffle(Math.random, pool).slice(0, better ? 2 : 3).map((c) => c.id);
   }
   function fire(g) {

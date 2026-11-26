@@ -26,7 +26,7 @@
     for (const c of clubs) {
       const near = clubs.filter((o) => o.id !== c.id && o.country === c.country && o.div === c.div && Math.abs(o.rep - c.rep) < 8)
         .sort((x, y) => Math.abs(x.rep - c.rep) - Math.abs(y.rep - c.rep))[0];
-      if (near && !riv[key(c.id, near.id)]) riv[key(c.id, near.id)] = Math.abs(near.rep - c.rep) < 1 && c.div <= 2 ? 2 : 1;
+      if (near && !riv[key(c.id, near.id)]) riv[key(c.id, near.id)] = Math.abs(near.rep - c.rep) < 1 && P.dt(c) <= 2 ? 2 : 1;
     }
     return riv;
   };
